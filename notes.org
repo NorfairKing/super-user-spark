@@ -1,0 +1,10 @@
+* Configuration method:
+Declarative 'card' files that describe how to deploy configuration files.
+
+** Possible configurables:
+- Symlink files
+- Recursively deploy other cards/directories/git-repositories
+- spark off other cards
+
+* Parser:
+Try Haskells parsec
