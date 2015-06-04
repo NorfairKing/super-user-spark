@@ -10,6 +10,8 @@ import           Text.ParserCombinators.Parsec
 
 testFileName = "testFileName.txt"
 
+--[ Parser helper functions ]---
+
 parserTest :: (Show a, Eq a) => SparkParser a -> a -> String -> Assertion
 parserTest p result str = assertEqual (Right result) parseResult
   where parseResult = runParser p (initialState testFileName) testFileName str
@@ -21,7 +23,47 @@ parserTests p tests = sequence_ $ map (\(result, strs) -> sequence_ $ map (\s ->
 parseSuccess :: SparkParser String -> String -> Assertion
 parseSuccess p result = parserTest p result result
 
+parseSuccesses :: SparkParser String -> [String] -> Assertion
+parseSuccesses p results = sequence_ $ map (parseSuccess p) results
+
+
 ---[ Tests ]---
+
+test_card_empty = parserTests card $
+    [
+        (Card Nothing [], [
+              "card {}"
+            , "card \n {}"
+            , "\n\ncard \n\t\n{\n\t\r\n}\n"
+            ]
+        )
+    ,   (Card (Just "") [], [
+              "card \"\" {}"
+            ]
+        )
+    ,   (Card (Just "hi") [], [
+              "card hi {}"
+            , "card \"hi\" {}"
+            , "card \nhi\n{}"
+            ]
+        )
+    ,   (Card (Just "something spaced") [], [
+              "card \"something spaced\" {}"
+            , "  card   \"something spaced\" {\n}"
+            , " \t \n card \n\r  \"something spaced\" \t\n{\n\r}"
+            ]
+        )
+    ]
+
+test_intoDir = parserTests intoDir $
+    [
+        (IntoDir "~", [
+              "into ~"
+            , "into \t  ~"
+            , "into\t \t   ~"
+            ]
+        )
+    ]
 
 test_deployment = parserTests deployment $
     [
@@ -50,6 +92,22 @@ test_deploymentKind_link    = parserTest deploymentKind LinkDeployment "l->"
 test_deploymentKind_copy    = parserTest deploymentKind CopyDeployment "c->"
 test_deploymentKind_default = parserTest deploymentKind UnspecifiedDeployment "->"
 
+test_directory = parseSuccesses directory $
+    [
+        "~"
+    ,   "~/"
+    ,   "~/.vim"
+    ,   "~/Dropbox"
+    ]
+test_filepath = parseSuccesses filepath $
+    [
+        "withoutExtension"
+    ,   "test.txt"
+    ,   "file.something"
+
+    ,   "/home/user/test.txt"
+    ,   "/home/user/test.txt"
+    ]
 test_filepath_absolute      = parseSuccess filepath "/home/user/test.txt"
 test_filepath_relative      = parseSuccess filepath "test.txt"
 test_filepath_quoted        = parserTest filepath "/home/user/long/path/with spaces" "\"/home/user/long/path/with spaces\""

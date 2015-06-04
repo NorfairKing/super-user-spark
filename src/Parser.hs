@@ -16,21 +16,22 @@ gets f = do
     return $ f s
 
 data ParseState = ParseState {
-        stateDeploymentKind :: DeploymentKind
-    ,   stateCurrentFile    :: FilePath
+        stateCurrentFile :: FilePath
     }
 
 initialState :: FilePath -> ParseState
 initialState file = ParseState {
-        stateDeploymentKind = LinkDeployment
-    ,   stateCurrentFile = file
+        stateCurrentFile = file
     }
 
 ---[ Types ]---
 
-type CardName = String
+type CardIdentifier = String
+type CardName = Maybe CardIdentifier
 type Source = FilePath
 type Destination = FilePath
+type Directory = FilePath
+type Repo = String
 
 data Card = Card CardName [Declaration]
     deriving (Show, Eq)
@@ -39,18 +40,24 @@ data DeploymentKind = LinkDeployment
                     | CopyDeployment
                     | UnspecifiedDeployment
     deriving (Show, Eq)
-data Declaration = SparkOff String -- Dunno
+
+data SparkTarget = TargetGit Repo
+                 | TargetCardName CardIdentifier
+    deriving (Show, Eq)
+
+data Declaration = SparkOff SparkTarget
                  | Deploy Source Destination DeploymentKind
+                 | IntoDir Directory -- Relative
     deriving (Show, Eq)
 
 
 ---[ Parsing ]---
 
 sparkFile :: SparkParser [Card]
-sparkFile = sepEndBy1 card whitespace
-    {-clean <- eatComments
+sparkFile = do
+    clean <- eatComments
     setInput clean
-    sepEndBy1 card whitespace-}
+    sepEndBy1 card whitespace
 
 
 card :: SparkParser Card
@@ -64,10 +71,13 @@ card = do
     return $ Card name content
 
 cardName :: SparkParser CardName
-cardName = do
-    filename <- gets stateCurrentFile
-    name <- option filename $ many1 letter <|> inQuotes (many1 $ noneOf "\"")
-    return name
+cardName = optionMaybe cardIdentifier
+
+cardIdentifier :: SparkParser CardIdentifier
+cardIdentifier = try quotedIdentifier <|> try simpelIdentifier
+    where
+        simpelIdentifier = many1 $ noneOf " \t\n\r\"{"
+        quotedIdentifier = inQuotes $ many $ noneOf "\"\n\r"
 
 cardContent :: SparkParser [Declaration]
 cardContent = inBraces $ do
@@ -77,16 +87,32 @@ cardContent = inBraces $ do
     return content
 
 declaration :: SparkParser Declaration
-declaration = do
-    linespace
-    dec <- try deployment <|> sparkOff
-    linespace
-    return dec
+declaration = inWhiteSpace $ try deployment <|> try sparkOff <|> try intoDir
 
 sparkOff :: SparkParser Declaration
 sparkOff = do
-    str <- string "spark" -- placeholder
-    return $ SparkOff str
+    string "spark" -- placeholder
+    target <- try sparkCard <|> try sparkGit
+    return $ SparkOff target
+
+sparkCard :: SparkParser SparkTarget
+sparkCard = do
+    string "Card"
+    ident <- cardIdentifier
+    return $ TargetCardName ident
+
+sparkGit :: SparkParser SparkTarget
+sparkGit = do
+    string "Git"
+    r <- repo
+    return $ TargetGit r
+
+intoDir :: SparkParser Declaration
+intoDir = do
+    string "into"
+    linespace
+    dir <- directory
+    return $ IntoDir dir
 
 deployment :: SparkParser Declaration
 deployment = do
@@ -107,8 +133,14 @@ deploymentKind = try link <|> try copy <|> def
 filepath :: SparkParser FilePath
 filepath = try quoted <|> plain
     where
-        plain = many $ noneOf " \t\n\r"
+        plain = many1 $ noneOf " \t\n\r"
         quoted = inQuotes $ many $ noneOf ['\"','\n','\r']
+
+directory :: SparkParser Directory
+directory = filepath
+
+repo :: SparkParser Repo
+repo = filepath
 
 --[ Comments ]--
 comment :: SparkParser ()
@@ -145,8 +177,11 @@ inQuotes = between (char '"') (char '"')
 inLineSpace :: SparkParser a -> SparkParser a
 inLineSpace = between linespace linespace
 
+inWhiteSpace :: SparkParser a -> SparkParser a
+inWhiteSpace = between whitespace whitespace
+
 delim :: SparkParser String
-delim = try (delimiter >> linespace >> eol) <|> try eol <|> delimiter
+delim = try eol <|> delimiter
     where
         delimiter = string ";"
 
