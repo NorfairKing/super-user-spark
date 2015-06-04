@@ -6,7 +6,9 @@ GHC = ghc
 GHC_OPTIMISATION = -O2
 GHC_FLAGS = 	-fwarn-unused-imports \
 				-fforce-recomp \
-				-fwarn-incomplete-patterns
+				-fwarn-incomplete-patterns \
+				-Wall \
+				-fno-warn-unused-do-bind
 GHC_SRC_DIRS = 	-i$(SRC_DIR) \
 			   	-ibenchmarks \
 			   	-itests

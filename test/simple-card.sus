@@ -1,4 +1,0 @@
-card {
-    bashrc -> ~/.bashrc;
-    "john"-> "mary";
-}
