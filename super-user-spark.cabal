@@ -19,7 +19,7 @@ executable super-user-spark
   default-language:    Haskell2010
   
 
-test-suite super-user-spark-tests
+test-suite spark-tests
   type:              exitcode-stdio-1.0
   main-is:           TestMain.hs
   hs-source-dirs:    src, test

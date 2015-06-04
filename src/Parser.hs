@@ -47,17 +47,19 @@ data SparkTarget = TargetGit Repo
 
 data Declaration = SparkOff SparkTarget
                  | Deploy Source Destination DeploymentKind
-                 | IntoDir Directory -- Relative
+                 | IntoDir Directory
+                 | OutofDir Directory
+                 | Block [Declaration]
     deriving (Show, Eq)
 
 
 ---[ Parsing ]---
 
 sparkFile :: SparkParser [Card]
-sparkFile = do
-    clean <- eatComments
+sparkFile = sepEndBy1 card whitespace
+    {-clean <- eatComments
     setInput clean
-    sepEndBy1 card whitespace
+    sepEndBy1 card whitespace-}
 
 
 card :: SparkParser Card
@@ -68,26 +70,31 @@ card = do
     name <- cardName
     whitespace
     content <- cardContent
+    whitespace
     return $ Card name content
 
 cardName :: SparkParser CardName
 cardName = optionMaybe cardIdentifier
 
 cardIdentifier :: SparkParser CardIdentifier
-cardIdentifier = try quotedIdentifier <|> try simpelIdentifier
+cardIdentifier = try quotedIdentifier <|> try simpleIdentifier
     where
-        simpelIdentifier = many1 $ noneOf " \t\n\r\"{"
+        simpleIdentifier = many1 $ noneOf " ;\t\n\r\"{}"
         quotedIdentifier = inQuotes $ many $ noneOf "\"\n\r"
 
 cardContent :: SparkParser [Declaration]
-cardContent = inBraces $ do
-    whitespace
-    content <- declaration `sepEndBy` delim
-    whitespace
-    return content
+cardContent = declarations
+
+declarations :: SparkParser [Declaration]
+declarations = inBraces $ inWhiteSpace $ declaration `sepEndBy` delim
 
 declaration :: SparkParser Declaration
-declaration = inWhiteSpace $ try deployment <|> try sparkOff <|> try intoDir
+declaration = inLineSpace $ try block <|> try deployment <|> try sparkOff <|> try intoDir <|> try outOfDir
+
+block :: SparkParser Declaration
+block = do
+    ds <- declarations
+    return $ Block ds
 
 sparkOff :: SparkParser Declaration
 sparkOff = do
@@ -114,6 +121,13 @@ intoDir = do
     dir <- directory
     return $ IntoDir dir
 
+outOfDir :: SparkParser Declaration
+outOfDir = do
+    string "outof"
+    linespace
+    dir <- directory
+    return $ OutofDir dir
+
 deployment :: SparkParser Declaration
 deployment = do
     source <- filepath
@@ -133,7 +147,7 @@ deploymentKind = try link <|> try copy <|> def
 filepath :: SparkParser FilePath
 filepath = try quoted <|> plain
     where
-        plain = many1 $ noneOf " \t\n\r"
+        plain = many1 $ noneOf " \t\n\r;{}"
         quoted = inQuotes $ many $ noneOf ['\"','\n','\r']
 
 directory :: SparkParser Directory
@@ -181,9 +195,7 @@ inWhiteSpace :: SparkParser a -> SparkParser a
 inWhiteSpace = between whitespace whitespace
 
 delim :: SparkParser String
-delim = try eol <|> delimiter
-    where
-        delimiter = string ";"
+delim = string ";" <|> whitespace
 
 linespace :: SparkParser String
 linespace = many $ oneOf " \t"

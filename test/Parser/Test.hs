@@ -55,6 +55,19 @@ test_card_empty = parserTests card $
         )
     ]
 
+test_cardContent = parserTests cardContent $
+    [
+        ([IntoDir "~", Deploy "bashrc" ".bashrc" UnspecifiedDeployment],
+            [
+              "{into ~;bashrc -> .bashrc}"
+            , "{ into ~\n\tbashrc -> .bashrc}"
+            , "{\n\tinto \"~\"\nbashrc -> .bashrc}"
+            , "{\n    into ~\n    bashrc -> .bashrc\n}"
+            , "{\n    into \"~\"\n    \"bashrc\" -> \".bashrc\"\n}"
+            ]
+        )
+    ]
+
 test_intoDir = parserTests intoDir $
     [
         (IntoDir "~", [
@@ -99,6 +112,7 @@ test_directory = parseSuccesses directory $
     ,   "~/.vim"
     ,   "~/Dropbox"
     ]
+
 test_filepath = parseSuccesses filepath $
     [
         "withoutExtension"
@@ -107,9 +121,9 @@ test_filepath = parseSuccesses filepath $
 
     ,   "/home/user/test.txt"
     ,   "/home/user/test.txt"
+
     ]
-test_filepath_absolute      = parseSuccess filepath "/home/user/test.txt"
-test_filepath_relative      = parseSuccess filepath "test.txt"
+
 test_filepath_quoted        = parserTest filepath "/home/user/long/path/with spaces" "\"/home/user/long/path/with spaces\""
 
 -- TODO comments
