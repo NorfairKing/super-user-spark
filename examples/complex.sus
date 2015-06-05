@@ -1,0 +1,40 @@
+card main {
+
+    spark card configs
+    spark card scripts
+
+}
+
+card configs {
+
+    into ~
+
+    {
+        outof bash
+    
+        bashrc          -> .bashrc
+        bash_login      -> .bash_login
+        bash_aliases    -> .bash_aliases
+    }
+    {
+        outof zsh
+
+        zshrc           -> .zshrc
+        zshenv          -> .zshenv
+        zlogin          -> .zlogin
+        
+    }
+
+    vim -> .vim
+
+}
+
+card scripts {
+
+    outof scripts
+    into /usr/bin
+    kind copy
+    
+    clean -> clean
+
+}

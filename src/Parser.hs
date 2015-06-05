@@ -12,18 +12,19 @@ parseFile file = do
     return p
 
 type SparkParser = Parsec String ParseState
+
 gets :: (ParseState -> a) -> SparkParser a
 gets f = do
     s <- getState
     return $ f s
 
 data ParseState = ParseState {
-        stateCurrentFile :: FilePath
+        state_current_file :: FilePath
     }
 
 initialState :: FilePath -> ParseState
 initialState file = ParseState {
-        stateCurrentFile = file
+        state_current_file = file
     }
 
 
@@ -71,7 +72,8 @@ card = do
     whitespace
     content <- cardContent
     whitespace
-    return $ Card name content
+    fp <- gets state_current_file
+    return $ Card name fp content
 
 cardName :: SparkParser CardName
 cardName = optionMaybe cardIdentifier
@@ -89,7 +91,7 @@ declarations :: SparkParser [Declaration]
 declarations = inBraces $ inWhiteSpace $ declaration `sepEndBy` delim
 
 declaration :: SparkParser Declaration
-declaration = inLineSpace $ try block <|> try deployment <|> try sparkOff <|> try intoDir <|> try outOfDir
+declaration = inLineSpace $ try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> try deployment
 
 block :: SparkParser Declaration
 block = do
@@ -98,20 +100,21 @@ block = do
 
 sparkOff :: SparkParser Declaration
 sparkOff = do
-    string "spark" -- placeholder
+    string "spark"
+    linespace
     target <- try sparkCard <|> try sparkGit
     return $ SparkOff target
 
 sparkCard :: SparkParser SparkTarget
 sparkCard = do
-    string "Card"
+    string "card"
     linespace
     ident <- cardIdentifier
     return $ TargetCardName ident
 
 sparkGit :: SparkParser SparkTarget
 sparkGit = do
-    string "Git"
+    string "git"
     linespace
     r <- gitRepo
     return $ TargetGit r
@@ -129,6 +132,16 @@ outOfDir = do
     linespace
     dir <- directory
     return $ OutofDir dir
+
+deploymentKindOverride :: SparkParser Declaration
+deploymentKindOverride = do
+    string "kind"
+    linespace
+    kind <- copy <|> link
+    return $ DeployKindOverride kind
+  where
+    copy = string "copy" >> return CopyDeployment
+    link = string "link" >> return LinkDeployment
 
 deployment :: SparkParser Declaration
 deployment = do

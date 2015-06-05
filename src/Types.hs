@@ -33,7 +33,7 @@ type Source = FilePath
 type Destination = FilePath
 type Directory = FilePath
 
-data Card = Card CardName [Declaration]
+data Card = Card CardName FilePath [Declaration]
     deriving (Show, Eq)
 
 data DeploymentKind = LinkDeployment
@@ -49,6 +49,7 @@ data Declaration = SparkOff SparkTarget
                  | Deploy Source Destination DeploymentKind
                  | IntoDir Directory
                  | OutofDir Directory
+                 | DeployKindOverride DeploymentKind
                  | Block [Declaration]
     deriving (Show, Eq)
 
@@ -61,7 +62,10 @@ data Deployment = Copy FilePath FilePath
 type SparkCompiler = StateT CompilerState (Writer [Deployment])
 
 data CompilerState = CompilerState {
-        state_declarations_left        :: [Declaration]
+        state_current_card             :: Card
+    ,   state_current_directory        :: FilePath
+    ,   state_all_cards                :: [Card]
+    ,   state_declarations_left        :: [Declaration]
     ,   state_deployment_kind_override :: DeploymentKind
     ,   state_into_prefix              :: FilePath
     ,   state_outof_prefix             :: FilePath

@@ -8,7 +8,7 @@ import           Types
 sparkDir :: IO FilePath
 sparkDir = getUserDataDir "spark"
 
-repoDir :: Repo -> IO FilePath
+repoDir :: GitRepo -> IO FilePath
 repoDir repo = do
     spark <- sparkDir
     return $ spark </> repo_path repo
