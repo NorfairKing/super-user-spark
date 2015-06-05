@@ -25,7 +25,7 @@ checkSystemConsistency = do
 
 sparkGitRepo :: Repo -> IO ()
 sparkGitRepo repo = do
-    print =<< sparkDir
+    print =<< repoDir repo
 
 
 cloneRepo :: Repo -> IO ()

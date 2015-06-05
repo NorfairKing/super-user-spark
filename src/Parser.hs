@@ -3,6 +3,8 @@ module Parser where
 import           Text.Parsec                   (Parsec)
 import           Text.ParserCombinators.Parsec
 
+import           Types
+
 parseFile :: FilePath -> IO (Either ParseError [Card])
 parseFile file = do
     ls <- readFile file
@@ -31,16 +33,6 @@ type CardName = Maybe CardIdentifier
 type Source = FilePath
 type Destination = FilePath
 type Directory = FilePath
-type Host = String
-
-data GitRepo = GitRepo {
-        repo_protocol :: GitProtocol
-    ,   repo_host     :: Host
-    ,   repo_path     :: FilePath
-    } deriving (Show, Eq)
-
-data GitProtocol = HTTPS | Git
-    deriving (Show, Eq)
 
 data Card = Card CardName [Declaration]
     deriving (Show, Eq)

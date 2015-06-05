@@ -6,6 +6,7 @@ import           Parser
 import           Test.Framework
 import           Test.HUnit                    (Assertion)
 import           Text.ParserCombinators.Parsec
+import           Types
 
 
 testFileName = "testFileName.txt"

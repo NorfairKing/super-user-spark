@@ -11,4 +11,4 @@ sparkDir = getUserDataDir "spark"
 repoDir :: Repo -> IO FilePath
 repoDir repo = do
     spark <- sparkDir
-    return $ spark </> repo
+    return $ spark </> repo_path repo
