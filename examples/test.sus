@@ -1,0 +1,5 @@
+card test {
+    outof files
+    into ~
+    test.txt c-> test.txt
+}

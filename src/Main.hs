@@ -1,15 +1,21 @@
 module Main where
 
-import           System.Directory   (createDirectoryIfMissing)
+import           System.Directory   (createDirectoryIfMissing,
+                                     getCurrentDirectory, getHomeDirectory)
 import           System.Environment (getArgs)
 
 import           Compiler
+import           Deployer
 import           Parser
 import           Paths
 import           Types
 
 main :: IO ()
 main = do
+    checkSystemConsistency
+    cdir <- getCurrentDirectory
+    home <- getHomeDirectory
+    print home
     args <- getArgs
     case args of
      (file:[]) -> do
@@ -18,8 +24,9 @@ main = do
             Left err -> print err
             Right cs -> do
                     print cs
-                    let dp = compile (head cs) cs
+                    let dp = compile (head cs) cs cdir home
                     print dp
+                    deploy dp
      _ -> putStrLn "error parsing arguments"
 
 
