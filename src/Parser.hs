@@ -26,32 +26,6 @@ initialState file = ParseState {
         stateCurrentFile = file
     }
 
----[ Types ]---
-
-type CardIdentifier = String
-type CardName = Maybe CardIdentifier
-type Source = FilePath
-type Destination = FilePath
-type Directory = FilePath
-
-data Card = Card CardName [Declaration]
-    deriving (Show, Eq)
-
-data DeploymentKind = LinkDeployment
-                    | CopyDeployment
-                    | UnspecifiedDeployment
-    deriving (Show, Eq)
-
-data SparkTarget = TargetGit GitRepo
-                 | TargetCardName CardIdentifier
-    deriving (Show, Eq)
-
-data Declaration = SparkOff SparkTarget
-                 | Deploy Source Destination DeploymentKind
-                 | IntoDir Directory
-                 | OutofDir Directory
-                 | Block [Declaration]
-    deriving (Show, Eq)
 
 ---[ Git repo parsing ]---
 gitRepo :: SparkParser GitRepo
