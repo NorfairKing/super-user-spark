@@ -15,7 +15,6 @@ main = do
     checkSystemConsistency
     cdir <- getCurrentDirectory
     home <- getHomeDirectory
-    print home
     args <- getArgs
     case args of
      (file:[]) -> do
