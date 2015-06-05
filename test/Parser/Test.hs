@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Parser.Test (htf_thisModulesTests) where
 
-
-import           Parser
 import           Test.Framework
 import           Test.HUnit                    (Assertion)
 import           Text.ParserCombinators.Parsec
+
+import           Parser
 import           Types
 
 

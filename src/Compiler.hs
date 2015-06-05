@@ -3,6 +3,7 @@ module Compiler where
 import           Control.Monad             (unless)
 import           Control.Monad.State.Lazy  (get, gets, modify, put, runStateT)
 import           Control.Monad.Writer.Lazy (runWriter, tell)
+import           System.FilePath           ((<.>), (</>))
 
 import           Types
 
@@ -22,7 +23,10 @@ initialState ds = CompilerState {
     }
 
 pop :: SparkCompiler Declaration
-pop = fmap head $ gets state_declarations_left
+pop = do
+    dec <- gets state_declarations_left
+    modify (\s -> s {state_declarations_left = tail dec})
+    return $ head dec
 
 done :: SparkCompiler Bool
 done = fmap null $ gets state_declarations_left
@@ -32,7 +36,7 @@ compileDeployments = do
     d <- done
     if d
     then return ()
-    else processDeclaration
+    else processDeclaration >> compileDeployments
 
 add :: Deployment -> SparkCompiler ()
 add dep = tell [dep]
@@ -46,10 +50,10 @@ processDeclaration = do
             let resultKind = if override == UnspecifiedDeployment
                 then kind
                 else override
-            into <- gets state_into_prefix
             outof <- gets state_outof_prefix
-            let source = outof ++ src
-            let destination = into ++ dst
+            into <- gets state_into_prefix
+            let source = outof </> src
+            let destination = into </> dst
             let dep = case kind of
                     LinkDeployment -> Link source destination
                     CopyDeployment -> Copy source destination
@@ -57,7 +61,7 @@ processDeclaration = do
             add dep
         SparkOff st -> undefined
         IntoDir dir -> modify (\s -> s {state_into_prefix = dir} )
-        OutofDir dir -> modify (\s -> s {state_into_prefix = dir} )
+        OutofDir dir -> modify (\s -> s {state_outof_prefix = dir} )
         Block ds -> do
             before <- get
             modify (\s -> s {state_declarations_left = ds})
