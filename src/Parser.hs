@@ -31,7 +31,16 @@ type CardName = Maybe CardIdentifier
 type Source = FilePath
 type Destination = FilePath
 type Directory = FilePath
-type Repo = String
+type Host = String
+
+data GitRepo = GitRepo {
+        repo_protocol :: GitProtocol
+    ,   repo_host     :: Host
+    ,   repo_path     :: FilePath
+    } deriving (Show, Eq)
+
+data GitProtocol = HTTPS | Git
+    deriving (Show, Eq)
 
 data Card = Card CardName [Declaration]
     deriving (Show, Eq)
@@ -41,7 +50,7 @@ data DeploymentKind = LinkDeployment
                     | UnspecifiedDeployment
     deriving (Show, Eq)
 
-data SparkTarget = TargetGit Repo
+data SparkTarget = TargetGit GitRepo
                  | TargetCardName CardIdentifier
     deriving (Show, Eq)
 
@@ -51,6 +60,31 @@ data Declaration = SparkOff SparkTarget
                  | OutofDir Directory
                  | Block [Declaration]
     deriving (Show, Eq)
+
+---[ Git repo parsing ]---
+gitRepo :: SparkParser GitRepo
+gitRepo = do
+    prot <- gitProtocol
+    case prot of
+        HTTPS -> do
+            host <- manyTill anyToken (string "/")
+            path <- many anyToken
+            return $ GitRepo {
+                    repo_protocol = HTTPS, repo_host = host, repo_path = path
+                }
+        Git   -> do
+            host <- manyTill anyToken (string ":")
+            path <- manyTill anyToken (string ".git")
+            return $ GitRepo {
+                    repo_protocol = Git, repo_host = host, repo_path = path
+                }
+
+gitProtocol :: SparkParser GitProtocol
+gitProtocol = https <|> git
+  where
+    https = string "https://" >> return HTTPS
+    git   = string "git@"     >> return Git
+
 
 
 ---[ Parsing ]---
@@ -105,13 +139,15 @@ sparkOff = do
 sparkCard :: SparkParser SparkTarget
 sparkCard = do
     string "Card"
+    linespace
     ident <- cardIdentifier
     return $ TargetCardName ident
 
 sparkGit :: SparkParser SparkTarget
 sparkGit = do
     string "Git"
-    r <- repo
+    linespace
+    r <- gitRepo
     return $ TargetGit r
 
 intoDir :: SparkParser Declaration
@@ -152,9 +188,6 @@ filepath = try quoted <|> plain
 
 directory :: SparkParser Directory
 directory = filepath
-
-repo :: SparkParser Repo
-repo = filepath
 
 --[ Comments ]--
 comment :: SparkParser ()

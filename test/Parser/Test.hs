@@ -27,6 +27,19 @@ parseSuccesses :: SparkParser String -> [String] -> Assertion
 parseSuccesses p results = sequence_ $ map (parseSuccess p) results
 
 
+test_gitRepo = parserTests gitRepo $
+    [
+        (GitRepo {repo_protocol = HTTPS, repo_host = "github.com", repo_path = "NorfairKing/sus-depot"},
+        ["https://github.com/NorfairKing/sus-depot"])
+    ,   (GitRepo {repo_protocol = Git  , repo_host = "github.com", repo_path = "NorfairKing/sus-depot"},
+        ["git@github.com:NorfairKing/sus-depot.git"])
+    ,   (GitRepo {repo_protocol = HTTPS, repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"},
+        ["https://bitbucket.org/syd_kerckhove/private-depot"])
+    ,   (GitRepo {repo_protocol = Git  , repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"},
+        ["git@bitbucket.org:syd_kerckhove/private-depot.git"])
+    ]
+
+
 ---[ Tests ]---
 
 test_card_empty = parserTests card $
