@@ -14,22 +14,26 @@ main = do
     checkSystemConsistency
     args <- getArgs
     case args of
-     (file:flags) -> runSparker Config $ do
-        ecs <- parseFile file
-        case ecs of
-            Left err -> liftIO $ print err
-            Right cs -> do
-                    liftIO $ putStrLn $ formatCards cs
-                    dp <- compile (head cs) cs
-                    liftIO $ putStrLn $ formatDeployments dp
-                    if ("--dry" `elem` flags)
-                    then return ()
-                    else deploy dp
+     (file:_) -> do
+        config <- loadConfig
+        runSparker config $ do
+            ecs <- parseFile file
+            case ecs of
+                Left err -> liftIO $ print err
+                Right cs -> do
+                        liftIO $ putStrLn $ formatCards cs
+                        dp <- compile (head cs) cs
+                        liftIO $ putStrLn $ formatDeployments dp
+                        deploy dp
      _ -> putStrLn "error parsing arguments"
 
 
 loadConfig :: IO SparkConfig
-loadConfig = return Config
+loadConfig = do
+    (file:flags) <- getArgs
+    return $ Config {
+        conf_dry = True -- FTM "--dry" `elem` flags
+    }
 
 checkSystemConsistency :: IO ()
 checkSystemConsistency = do

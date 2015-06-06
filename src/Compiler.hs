@@ -13,7 +13,6 @@ compile card allCards = do
     ((_,_),dps) <- runSparkCompiler initial compileDeployments
     return dps
 
-
 initialState :: Card -> [Card] -> Sparker CompilerState
 initialState c@(Card name fp ds) cds = do
     currentDir <- liftIO getCurrentDirectory

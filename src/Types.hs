@@ -45,7 +45,9 @@ data GitProtocol = HTTPS | Git
 ---[ Base monad ]---
 
 type Sparker = ReaderT SparkConfig IO
-data SparkConfig = Config
+data SparkConfig = Config {
+        conf_dry :: Bool
+    } deriving (Show, Eq)
 
 runSparker :: SparkConfig -> Sparker a -> IO a
 runSparker = flip runReaderT
@@ -117,4 +119,15 @@ data CompilerState = CompilerState {
 
 ---[ Deploying Types ]---
 
-type SparkDeployer = Sparker
+type SparkDeployer = StateT DeployerState Sparker
+data DeployerState = DeployerState {
+        state_deployments_left :: [Deployment]
+    }
+
+runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
+runSparkDeployer state func = runStateT func state
+
+
+
+
+
