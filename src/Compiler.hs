@@ -83,7 +83,7 @@ processDeclaration = do
                 TargetGit repo -> error "not yet implemented"
                 TargetCardName name -> do
                     allCards <- gets state_all_cards
-                    case find (\(Card (Just n) _ _) -> n == name) allCards of -- FIXME this is unsafe
+                    case find (\(Card n _ _) -> n == name) allCards of -- FIXME this is unsafe
                         Nothing -> error "card not found" -- FIXME this is unsafe as well.
                         Just c@(Card cn fp dcs) -> do
                             before <- get

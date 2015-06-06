@@ -69,10 +69,7 @@ card = do
     return $ Card name fp content
 
 cardName :: SparkParser CardName
-cardName = optionMaybe cardIdentifier
-
-cardIdentifier :: SparkParser CardIdentifier
-cardIdentifier = try quotedIdentifier <|> try simpleIdentifier
+cardName = try quotedIdentifier <|> try simpleIdentifier
     where
         simpleIdentifier = many1 $ noneOf " ;\t\n\r\"{}"
         quotedIdentifier = inQuotes $ many $ noneOf "\"\n\r"
@@ -102,7 +99,7 @@ sparkCard :: SparkParser SparkTarget
 sparkCard = do
     string "card"
     linespace
-    ident <- cardIdentifier
+    ident <- cardName
     return $ TargetCardName ident
 
 sparkGit :: SparkParser SparkTarget

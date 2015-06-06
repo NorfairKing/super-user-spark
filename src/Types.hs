@@ -35,8 +35,7 @@ data ParseState = ParseState {
         state_current_file :: FilePath
     }
 
-type CardIdentifier = String
-type CardName = Maybe CardIdentifier
+type CardName = String
 type Source = FilePath
 type Destination = FilePath
 type Directory = FilePath
@@ -50,7 +49,7 @@ data DeploymentKind = LinkDeployment
     deriving (Show, Eq)
 
 data SparkTarget = TargetGit GitRepo
-                 | TargetCardName CardIdentifier
+                 | TargetCardName CardName
     deriving (Show, Eq)
 
 data Declaration = SparkOff SparkTarget
