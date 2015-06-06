@@ -1,9 +1,10 @@
-module Types where
+module Types (module Types, liftIO) where
 
-import           Control.Monad.Reader (ReaderT)
-import           Control.Monad.State  (StateT)
-import           Control.Monad.Writer (WriterT)
-import           Text.Parsec          (Parsec)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader   (ReaderT, runReaderT)
+import           Control.Monad.State    (StateT)
+import           Control.Monad.Writer   (WriterT)
+import           Text.Parsec            (Parsec)
 
 
 type Repo = String
@@ -26,6 +27,16 @@ instance Show GitRepo where
 
 data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
+
+
+---[ Base monad ]---
+
+type Sparker = ReaderT SparkConfig IO
+data SparkConfig = Config
+
+runSparker :: SparkConfig -> Sparker a -> IO a
+runSparker = flip runReaderT
+
 
 ---[ Parsing Types ]---
 
@@ -60,13 +71,14 @@ data Declaration = SparkOff SparkTarget
                  | Block [Declaration]
     deriving (Show, Eq)
 
+
 ---[ Compiling Types ]---
 data Deployment = Copy FilePath FilePath
                 | Link FilePath FilePath
                 | Spark SparkTarget
     deriving (Show, Eq)
 
-type SparkCompiler = StateT CompilerState (WriterT [Deployment] IO)
+type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
 
 data CompilerState = CompilerState {
         state_current_card             :: Card
@@ -79,8 +91,7 @@ data CompilerState = CompilerState {
     ,   state_outof_prefix             :: FilePath
     } deriving (Show, Eq)
 
+
 ---[ Deploying Types ]---
 
-type SparkDeployer = ReaderT DeployConfig IO
-
-data DeployConfig = DeployConfig
+type SparkDeployer = Sparker

@@ -5,12 +5,12 @@ import           System.Posix.Files (createSymbolicLink)
 
 import           Types
 
-deploy :: [Deployment] -> IO ()
+deploy :: [Deployment] -> Sparker ()
 deploy dp = sequence_ $ map oneDeployment dp
 
-oneDeployment :: Deployment -> IO ()
-oneDeployment (Link src dst) = createSymbolicLink src dst
-oneDeployment (Copy src dst) = copyFile src dst
+oneDeployment :: Deployment -> Sparker ()
+oneDeployment (Link src dst) = liftIO $ createSymbolicLink src dst
+oneDeployment (Copy src dst) = liftIO $ copyFile src dst
 
 formatDeployments :: [Deployment] -> String
 formatDeployments = unlines . map formatDeployment

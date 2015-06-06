@@ -4,9 +4,9 @@ import           Text.ParserCombinators.Parsec
 
 import           Types
 
-parseFile :: FilePath -> IO (Either ParseError [Card])
+parseFile :: FilePath -> Sparker (Either ParseError [Card])
 parseFile file = do
-    ls <- readFile file
+    ls <- liftIO $ readFile file
     let p = runParser sparkFile (initialState file) file ls
     return p
 

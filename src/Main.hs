@@ -1,8 +1,9 @@
 module Main where
 
-import           System.Directory   (createDirectoryIfMissing,
-                                     getCurrentDirectory, getHomeDirectory)
-import           System.Environment (getArgs)
+import           Control.Monad.IO.Class (liftIO)
+import           System.Directory       (createDirectoryIfMissing,
+                                         getCurrentDirectory, getHomeDirectory)
+import           System.Environment     (getArgs)
 
 import           Compiler
 import           Deployer
@@ -17,14 +18,14 @@ main = do
     home <- getHomeDirectory
     args <- getArgs
     case args of
-     (file:flags) -> do
+     (file:flags) -> runSparker Config $ do
         ecs <- parseFile file
         case ecs of
-            Left err -> print err
+            Left err -> liftIO $ print err
             Right cs -> do
-                    putStrLn $ formatCards cs
+                    liftIO $ putStrLn $ formatCards cs
                     dp <- compile (head cs) cs cdir home
-                    putStrLn $ formatDeployments dp
+                    liftIO $ putStrLn $ formatDeployments dp
                     if ("--dry" `elem` flags)
                     then return ()
                     else deploy dp

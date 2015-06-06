@@ -8,12 +8,12 @@ import           System.FilePath           (takeDirectory, (<.>), (</>))
 
 import           Types
 
-compile :: Card -> [Card] -> FilePath -> FilePath -> IO [Deployment]
+compile :: Card -> [Card] -> FilePath -> FilePath -> Sparker [Deployment]
 compile card allCards currentDir home = do
     ((_,_),dps) <- runSparkCompiler (initialState card allCards currentDir home) compileDeployments
     return dps
 
-runSparkCompiler :: CompilerState -> SparkCompiler a -> IO ((a,CompilerState), [Deployment])
+runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
 runSparkCompiler s func = runWriterT (runStateT func s)
 
 initialState :: Card -> [Card] -> FilePath -> FilePath -> CompilerState
