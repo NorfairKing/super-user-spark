@@ -1,6 +1,5 @@
 module Parser where
 
-import           Text.Parsec                   (Parsec)
 import           Text.ParserCombinators.Parsec
 
 import           Types
@@ -11,16 +10,10 @@ parseFile file = do
     let p = runParser sparkFile (initialState file) file ls
     return p
 
-type SparkParser = Parsec String ParseState
-
 gets :: (ParseState -> a) -> SparkParser a
 gets f = do
     s <- getState
     return $ f s
-
-data ParseState = ParseState {
-        state_current_file :: FilePath
-    }
 
 initialState :: FilePath -> ParseState
 initialState file = ParseState {

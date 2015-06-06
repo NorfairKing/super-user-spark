@@ -1,7 +1,9 @@
 module Types where
 
-import           Control.Monad.State.Lazy  (StateT)
-import           Control.Monad.Writer.Lazy (WriterT)
+import           Control.Monad.Reader (ReaderT)
+import           Control.Monad.State  (StateT)
+import           Control.Monad.Writer (WriterT)
+import           Text.Parsec          (Parsec)
 
 
 type Repo = String
@@ -26,6 +28,12 @@ data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
 
 ---[ Parsing Types ]---
+
+type SparkParser = Parsec String ParseState
+
+data ParseState = ParseState {
+        state_current_file :: FilePath
+    }
 
 type CardIdentifier = String
 type CardName = Maybe CardIdentifier
@@ -73,3 +81,7 @@ data CompilerState = CompilerState {
     } deriving (Show, Eq)
 
 ---[ Deploying Types ]---
+
+type SparkDeployer = ReaderT DeployConfig IO
+
+data DeployConfig = DeployConfig
