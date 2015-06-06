@@ -1,4 +1,0 @@
-card "Example Card" {
-    # This is an example card.
-    bashrc -> ~/.bashrc
-}

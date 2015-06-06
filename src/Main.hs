@@ -22,7 +22,7 @@ main = do
         case ecs of
             Left err -> print err
             Right cs -> do
-                    print cs
+                    putStrLn $ formatCards cs
                     dp <- compile (head cs) cs cdir home
                     putStrLn $ formatDeployments dp
                     if ("--dry" `elem` flags)

@@ -102,3 +102,28 @@ processDeclaration = do
             modify (\s -> s {state_declarations_left = ds})
             compileDeployments
             put before
+
+
+formatCards :: [Card] -> String
+formatCards = unlines . map formatCard
+
+formatCard :: Card -> String
+formatCard (Card name _ decs) = unlines $ name:map formatDeclaration decs
+
+formatDeclaration :: Declaration -> String
+formatDeclaration (Deploy src dst kind) = unwords [src, formatDeployKind kind, dst]
+formatDeclaration (SparkOff st) = unwords ["spark", formatSparkTarget st]
+formatDeclaration (IntoDir dir) = unwords ["into", dir]
+formatDeclaration (OutofDir dir) = unwords ["outof", dir]
+formatDeclaration (DeployKindOverride kind) =  unwords ["kind", formatDeployKind kind]
+formatDeclaration (Block ds) = unlines $ map formatDeclaration ds
+
+formatDeployKind :: DeploymentKind -> String
+formatDeployKind LinkDeployment = "l->"
+formatDeployKind CopyDeployment = "c->"
+formatDeployKind UnspecifiedDeployment = "->"
+
+formatSparkTarget :: SparkTarget -> String
+formatSparkTarget (TargetGit repo) = unwords ["git", show repo]
+formatSparkTarget (TargetCardName name) = unwords ["card", name]
+
