@@ -107,7 +107,6 @@ runSparkCompiler s func = runWriterT (runStateT func s)
 data CompilerState = CompilerState {
         state_current_card             :: Card
     ,   state_current_directory        :: FilePath
-    ,   state_home_dir                 :: FilePath
     ,   state_all_cards                :: [Card]
     ,   state_declarations_left        :: [Declaration]
     ,   state_deployment_kind_override :: DeploymentKind

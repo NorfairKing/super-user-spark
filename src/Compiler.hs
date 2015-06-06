@@ -1,20 +1,25 @@
 module Compiler where
 
-import           Data.List       (find, isPrefixOf)
-import           System.FilePath (takeDirectory, (<.>), (</>))
+import           Data.List        (find, isPrefixOf)
+import           System.Directory (getCurrentDirectory, getHomeDirectory)
+import           System.FilePath  (takeDirectory, (<.>), (</>))
+
 
 import           Types
 
-compile :: Card -> [Card] -> FilePath -> FilePath -> Sparker [Deployment]
-compile card allCards currentDir home = do
-    ((_,_),dps) <- runSparkCompiler (initialState card allCards currentDir home) compileDeployments
+compile :: Card -> [Card] -> Sparker [Deployment]
+compile card allCards = do
+    initial <- initialState card allCards
+    ((_,_),dps) <- runSparkCompiler initial compileDeployments
     return dps
 
-initialState :: Card -> [Card] -> FilePath -> FilePath -> CompilerState
-initialState c@(Card name fp ds) cds currentDir homeDir = CompilerState {
+
+initialState :: Card -> [Card] -> Sparker CompilerState
+initialState c@(Card name fp ds) cds = do
+    currentDir <- liftIO getCurrentDirectory
+    return $ CompilerState {
         state_current_card = c
     ,   state_current_directory = currentDir </> takeDirectory fp
-    ,   state_home_dir = homeDir
     ,   state_all_cards = cds
     ,   state_declarations_left = ds
     ,   state_deployment_kind_override = UnspecifiedDeployment
@@ -41,10 +46,12 @@ compileDeployments = do
 add :: Deployment -> SparkCompiler ()
 add dep = tell [dep]
 
-replaceHome :: FilePath -> FilePath -> FilePath
-replaceHome home path = if "~" `isPrefixOf` path
-                        then home </> drop 2 path
-                        else path
+replaceHome :: FilePath -> SparkCompiler FilePath
+replaceHome path = do
+    home <- liftIO getHomeDirectory
+    return $ if "~" `isPrefixOf` path
+        then home </> drop 2 path
+        else path
 
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
@@ -58,13 +65,12 @@ processDeclaration = do
                     (_, k) -> k
 
             dir <- gets state_current_directory
-            home <- gets state_home_dir
 
             outof <- gets state_outof_prefix
             into <- gets state_into_prefix
 
             let source = dir </> outof </> src
-            let destination = replaceHome home $ into </> dst
+            destination <- replaceHome $ into </> dst
 
             let dep = case resultKind of
                     LinkDeployment -> Link source destination
@@ -77,8 +83,8 @@ processDeclaration = do
                 TargetGit repo -> error "not yet implemented"
                 TargetCardName name -> do
                     allCards <- gets state_all_cards
-                    case find (\(Card n _ _) -> n == name) allCards of -- FIXME this is unsafe
-                        Nothing -> error "card not found" -- FIXME this is unsafe as well.
+                    case find (\(Card n _ _) -> n == name) allCards of
+                        Nothing -> error "card not found" -- FIXME this is unsafe.
                         Just c@(Card cn fp dcs) -> do
                             before <- get
                             modify (\s -> s {state_declarations_left = dcs

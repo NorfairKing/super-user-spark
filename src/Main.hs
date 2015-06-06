@@ -1,7 +1,6 @@
 module Main where
 
-import           System.Directory   (createDirectoryIfMissing,
-                                     getCurrentDirectory, getHomeDirectory)
+import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
 
 import           Compiler
@@ -13,8 +12,6 @@ import           Types
 main :: IO ()
 main = do
     checkSystemConsistency
-    cdir <- getCurrentDirectory
-    home <- getHomeDirectory
     args <- getArgs
     case args of
      (file:flags) -> runSparker Config $ do
@@ -23,12 +20,16 @@ main = do
             Left err -> liftIO $ print err
             Right cs -> do
                     liftIO $ putStrLn $ formatCards cs
-                    dp <- compile (head cs) cs cdir home
+                    dp <- compile (head cs) cs
                     liftIO $ putStrLn $ formatDeployments dp
                     if ("--dry" `elem` flags)
                     then return ()
                     else deploy dp
      _ -> putStrLn "error parsing arguments"
+
+
+loadConfig :: IO SparkConfig
+loadConfig = return Config
 
 checkSystemConsistency :: IO ()
 checkSystemConsistency = do
