@@ -57,7 +57,8 @@ runSparker = flip runReaderT
 
 type SparkParser = ParsecT String ParseState Sparker
 data ParseState = ParseState {
-        state_current_file :: FilePath
+        state_starting_file :: FilePath
+    ,   state_current_file  :: FilePath
     }
 runSparkParser :: ParseState -> SparkParser a -> String -> Sparker (Either ParseError a)
 runSparkParser state func str = runParserT func state (state_current_file state) str

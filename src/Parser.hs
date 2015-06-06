@@ -11,7 +11,8 @@ parseFile file = do
 
 initialState :: FilePath -> ParseState
 initialState file = ParseState {
-        state_current_file = file
+        state_starting_file = file
+    ,   state_current_file = file
     }
 
 
@@ -44,10 +45,10 @@ gitProtocol = https <|> git
 ---[ Parsing ]---
 
 sparkFile :: SparkParser [Card]
-sparkFile = sepEndBy1 card whitespace
-    {-clean <- eatComments
+sparkFile = do -- sepEndBy1 card whitespace
+    clean <- eatComments
     setInput clean
-    sepEndBy1 card whitespace-}
+    sepEndBy1 card whitespace
 
 
 card :: SparkParser Card
@@ -159,7 +160,7 @@ comment = lineComment -- <|> blockComment
         lineComment :: SparkParser ()
         lineComment = do
             string "#"
-            manyTill anyChar eol
+            manyTill anyChar (try $ lookAhead eol)
             return ()
 
 notComment :: SparkParser String
@@ -170,7 +171,8 @@ eatComments = do
   optional comment
   xs <- sepBy notComment comment
   optional comment
-  return $ concat xs
+  let withoutComments = concat xs
+  return withoutComments
 
 
 word :: SparkParser String
