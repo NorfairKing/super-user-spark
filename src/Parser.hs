@@ -2,6 +2,7 @@ module Parser where
 
 import           Text.Parsec
 
+import           Constants
 import           Types
 
 parseFile :: FilePath -> Sparker (Either ParseError [Card])
@@ -48,13 +49,17 @@ sparkFile :: SparkParser [Card]
 sparkFile = do -- sepEndBy1 card whitespace
     clean <- eatComments
     setInput clean
+    pos <- getPosition
+    setPosition $ setSourceColumn (setSourceLine pos 1) 1
+    inp <- getInput
+    liftIO $ print inp
     sepEndBy1 card whitespace
 
 
 card :: SparkParser Card
 card = do
     whitespace
-    string "card"
+    string keywordCard
     whitespace
     name <- cardName
     whitespace
@@ -64,10 +69,7 @@ card = do
     return $ Card name fp content
 
 cardName :: SparkParser CardName
-cardName = try quotedIdentifier <|> try simpleIdentifier
-    where
-        simpleIdentifier = many1 $ noneOf " ;\t\n\r\"{}"
-        quotedIdentifier = inQuotes $ many $ noneOf "\"\n\r"
+cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 cardContent :: SparkParser [Declaration]
 cardContent = declarations
@@ -85,48 +87,48 @@ block = do
 
 sparkOff :: SparkParser Declaration
 sparkOff = do
-    string "spark"
+    string keywordSpark
     linespace
     target <- try sparkCard <|> try sparkGit
     return $ SparkOff target
 
 sparkCard :: SparkParser SparkTarget
 sparkCard = do
-    string "card"
+    string keywordCard
     linespace
     ident <- cardName
     return $ TargetCardName ident
 
 sparkGit :: SparkParser SparkTarget
 sparkGit = do
-    string "git"
+    string keywordGit
     linespace
     r <- gitRepo
     return $ TargetGit r
 
 intoDir :: SparkParser Declaration
 intoDir = do
-    string "into"
+    string keywordInto
     linespace
     dir <- directory
     return $ IntoDir dir
 
 outOfDir :: SparkParser Declaration
 outOfDir = do
-    string "outof"
+    string keywordOutof
     linespace
     dir <- directory
     return $ OutofDir dir
 
 deploymentKindOverride :: SparkParser Declaration
 deploymentKindOverride = do
-    string "kind"
+    string keywordKindOverride
     linespace
     kind <- copy <|> link
     return $ DeployKindOverride kind
   where
-    copy = string "copy" >> return CopyDeployment
-    link = string "link" >> return LinkDeployment
+    copy = string keywordCopy >> return CopyDeployment
+    link = string keywordLink >> return LinkDeployment
 
 deployment :: SparkParser Declaration
 deployment = do
@@ -140,15 +142,12 @@ deployment = do
 deploymentKind :: SparkParser DeploymentKind
 deploymentKind = try link <|> try copy <|> def
     where
-        link = string "l->" >> return LinkDeployment
-        copy = string "c->" >> return CopyDeployment
-        def  = string "->"  >> return UnspecifiedDeployment
+        link = string linkKindSymbol >> return LinkDeployment
+        copy = string copyKindSymbol >> return CopyDeployment
+        def  = string unspecifiedKindSymbol >> return UnspecifiedDeployment
 
 filepath :: SparkParser FilePath
-filepath = try quoted <|> plain
-    where
-        plain = many1 $ noneOf " \t\n\r;{}"
-        quoted = inQuotes $ many $ noneOf ['\"','\n','\r']
+filepath = try quotedIdentifier <|> plainIdentifier
 
 directory :: SparkParser Directory
 directory = filepath
@@ -159,7 +158,7 @@ comment = lineComment -- <|> blockComment
     where
         lineComment :: SparkParser ()
         lineComment = do
-            string "#"
+            string lineCommentStr
             manyTill anyChar (try $ lookAhead eol)
             return ()
 
@@ -184,7 +183,7 @@ inBraces :: SparkParser a -> SparkParser a
 inBraces = between (char '{') (char '}')
 
 inQuotes :: SparkParser a -> SparkParser a
-inQuotes = between (char '"') (char '"')
+inQuotes = between (char quotesChar) (char quotesChar)
 
 inLineSpace :: SparkParser a -> SparkParser a
 inLineSpace = between linespace linespace
@@ -193,13 +192,19 @@ inWhiteSpace :: SparkParser a -> SparkParser a
 inWhiteSpace = between whitespace whitespace
 
 delim :: SparkParser String
-delim = string ";" <|> whitespace
+delim = string lineDelimiter <|> whitespace
 
 linespace :: SparkParser String
-linespace = many $ oneOf " \t"
+linespace = many $ oneOf linespaceChars
 
 whitespace :: SparkParser String
-whitespace = many $ oneOf " \t\n\r"
+whitespace = many $ oneOf whitespaceChars
+
+plainIdentifier :: SparkParser String
+plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
+
+quotedIdentifier :: SparkParser String
+quotedIdentifier = inQuotes $ many $ noneOf $ quotesChar:endOfLineChars
 
 eol :: SparkParser String
 eol =   try (string "\n\r")

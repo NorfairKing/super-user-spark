@@ -7,6 +7,7 @@ import           Compiler
 import           Deployer
 import           Parser
 import           Paths
+import           Pretty
 import           Types
 
 main :: IO ()
