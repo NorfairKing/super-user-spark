@@ -1,7 +1,7 @@
 module Types where
 
 import           Control.Monad.State.Lazy  (StateT)
-import           Control.Monad.Writer.Lazy (Writer)
+import           Control.Monad.Writer.Lazy (WriterT)
 
 
 type Repo = String
@@ -59,7 +59,7 @@ data Deployment = Copy FilePath FilePath
                 | Spark SparkTarget
     deriving (Show, Eq)
 
-type SparkCompiler = StateT CompilerState (Writer [Deployment])
+type SparkCompiler = StateT CompilerState (WriterT [Deployment] IO)
 
 data CompilerState = CompilerState {
         state_current_card             :: Card
@@ -71,3 +71,5 @@ data CompilerState = CompilerState {
     ,   state_into_prefix              :: FilePath
     ,   state_outof_prefix             :: FilePath
     } deriving (Show, Eq)
+
+---[ Deploying Types ]---

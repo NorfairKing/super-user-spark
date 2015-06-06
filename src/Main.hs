@@ -17,17 +17,18 @@ main = do
     home <- getHomeDirectory
     args <- getArgs
     case args of
-     (file:[]) -> do
+     (file:flags) -> do
         ecs <- parseFile file
         case ecs of
             Left err -> print err
             Right cs -> do
                     print cs
-                    let dp = compile (head cs) cs cdir home
+                    dp <- compile (head cs) cs cdir home
                     print dp
-                    deploy dp
+                    if ("--dry" `elem` flags)
+                    then return ()
+                    else deploy dp
      _ -> putStrLn "error parsing arguments"
-
 
 checkSystemConsistency :: IO ()
 checkSystemConsistency = do
