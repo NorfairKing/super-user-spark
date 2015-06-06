@@ -3,19 +3,24 @@ module Pretty where
 
 import           Text.PrettyPrint
 
+import           Data.List        (intersperse)
+
 import           Constants
 import           Types
 
 formatCards :: [Card] -> String
-formatCards cs = render $ hsep $ map pretty cs
+formatCards cs = render $ vcat $ intersperse (zeroWidthText "") $ map pretty cs
 
-indent = nest 4
+indentation = 4
+indent = nest indentation
+
+inBraces d = braces $ zeroWidthText "" $+$ indent d $+$ zeroWidthText ""
 
 class Pretty a where
     pretty :: a -> Doc
 
 instance Pretty Card where
-    pretty (Card name _ decs) = text name <+> hsep (map pretty decs)
+    pretty (Card name _ decs) = (text keywordCard <+> text name) $+$ (inBraces $ vcat $ map pretty decs)
 
 instance Pretty Declaration where
     pretty (SparkOff st) = hsep [text keywordSpark, pretty st]
@@ -23,7 +28,7 @@ instance Pretty Declaration where
     pretty (IntoDir dir) = hsep [text keywordInto, text dir]
     pretty (OutofDir dir) = hsep [text keywordOutof, text dir]
     pretty (DeployKindOverride kind) = hsep [text keywordKindOverride, pretty kind]
-    pretty (Block ds) = braces . indent . hsep $ map pretty ds
+    pretty (Block ds) = inBraces . sep $ map pretty ds
 
 instance Pretty DeploymentKind where
     pretty LinkDeployment = text linkKindSymbol
