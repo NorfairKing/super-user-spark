@@ -1,10 +1,23 @@
-module Types (module Types, liftIO) where
+module Types
+    (
+      module Types
+    , liftIO
+    , gets
+    , get
+    , put
+    , ask
+    , tell
+    , asks
+    , modify
+    ) where
 
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ReaderT, runReaderT)
-import           Control.Monad.State    (StateT)
-import           Control.Monad.Writer   (WriterT)
-import           Text.Parsec            (Parsec)
+import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
+import           Control.Monad.State    (StateT, get, gets, modify, put,
+                                         runStateT)
+import           Control.Monad.Writer   (WriterT, runWriterT, tell)
+import           Text.Parsec            (ParseError, ParsecT, Stream, getState,
+                                         runParserT)
 
 
 type Repo = String
@@ -40,11 +53,18 @@ runSparker = flip runReaderT
 
 ---[ Parsing Types ]---
 
-type SparkParser = Parsec String ParseState
-
+type SparkParser = ParsecT String ParseState Sparker
 data ParseState = ParseState {
         state_current_file :: FilePath
     }
+runSparkParser :: ParseState -> SparkParser a -> String -> Sparker (Either ParseError a)
+runSparkParser state func str = runParserT func state (state_current_file state) str
+
+getStates :: (ParseState -> a) -> SparkParser a
+getStates f = do
+    s <- getState
+    return $ f s
+
 
 type CardName = String
 type Source = FilePath
@@ -79,6 +99,10 @@ data Deployment = Copy FilePath FilePath
     deriving (Show, Eq)
 
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
+
+runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
+runSparkCompiler s func = runWriterT (runStateT func s)
+
 
 data CompilerState = CompilerState {
         state_current_card             :: Card

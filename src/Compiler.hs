@@ -1,10 +1,7 @@
 module Compiler where
 
-import           Control.Monad             (unless)
-import           Control.Monad.State.Lazy  (get, gets, modify, put, runStateT)
-import           Control.Monad.Writer.Lazy (runWriterT, tell)
-import           Data.List                 (find, isPrefixOf)
-import           System.FilePath           (takeDirectory, (<.>), (</>))
+import           Data.List       (find, isPrefixOf)
+import           System.FilePath (takeDirectory, (<.>), (</>))
 
 import           Types
 
@@ -12,9 +9,6 @@ compile :: Card -> [Card] -> FilePath -> FilePath -> Sparker [Deployment]
 compile card allCards currentDir home = do
     ((_,_),dps) <- runSparkCompiler (initialState card allCards currentDir home) compileDeployments
     return dps
-
-runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
-runSparkCompiler s func = runWriterT (runStateT func s)
 
 initialState :: Card -> [Card] -> FilePath -> FilePath -> CompilerState
 initialState c@(Card name fp ds) cds currentDir homeDir = CompilerState {

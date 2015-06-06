@@ -1,9 +1,8 @@
 module Main where
 
-import           Control.Monad.IO.Class (liftIO)
-import           System.Directory       (createDirectoryIfMissing,
-                                         getCurrentDirectory, getHomeDirectory)
-import           System.Environment     (getArgs)
+import           System.Directory   (createDirectoryIfMissing,
+                                     getCurrentDirectory, getHomeDirectory)
+import           System.Environment (getArgs)
 
 import           Compiler
 import           Deployer

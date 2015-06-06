@@ -1,19 +1,13 @@
 module Parser where
 
-import           Text.ParserCombinators.Parsec
+import           Text.Parsec
 
 import           Types
 
 parseFile :: FilePath -> Sparker (Either ParseError [Card])
 parseFile file = do
     ls <- liftIO $ readFile file
-    let p = runParser sparkFile (initialState file) file ls
-    return p
-
-gets :: (ParseState -> a) -> SparkParser a
-gets f = do
-    s <- getState
-    return $ f s
+    runSparkParser (initialState file) sparkFile ls
 
 initialState :: FilePath -> ParseState
 initialState file = ParseState {
@@ -65,7 +59,7 @@ card = do
     whitespace
     content <- cardContent
     whitespace
-    fp <- gets state_current_file
+    fp <- getStates state_current_file
     return $ Card name fp content
 
 cardName :: SparkParser CardName
