@@ -24,7 +24,7 @@ main = do
             Right cs -> do
                     print cs
                     dp <- compile (head cs) cs cdir home
-                    print dp
+                    putStrLn $ formatDeployments dp
                     if ("--dry" `elem` flags)
                     then return ()
                     else deploy dp
