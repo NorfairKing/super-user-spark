@@ -56,7 +56,7 @@ spark card <card-name>
 ```
 - By file.
 ```
-spark card <file-path> <card-name>
+spark file <file-path> <card-name>
 ```
 The `<card-name>` argument is optional, if it is not given the reference will lead to the first card in the file.
 - By repository.
