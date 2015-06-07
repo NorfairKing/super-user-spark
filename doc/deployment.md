@@ -13,8 +13,17 @@ What are the possible situations:
 
 #### Bad
 - The source does not exist.
+
+Panic
+
 - The source is a symbolic link.
+
+Warning
+
 - The source has no read permissions.
+
+Panic
+(configurable: fix this automatically if current user is owner)
 
 ### Destination
 #### Good
@@ -23,14 +32,35 @@ What are the possible situations:
 
 #### Bad
 - The destination already exists and is a file.
+
+Panic
+(configurable: replace existing file.)
+
 - The destination already exists and is a directory.
+
+Panic
+(configurable: replace existing directory.)
+
 - The destination already exists and is a symbolic link.
+
+Panic
+(configurable: unlink the existing symbolic link.)
+
 - The parent directory of the destination doesn't exist.
+
+Automatic fix: make the parent directories.
+(configurable: don't make parent directories automatically.)
+
 - The parent directory of the destination has no write permissions.
+
+Panic
+(configurable: fix this automatically if current user is owner)
 
 ## During deployment
 #### Bad
 - There is not enough space on the destination device to deploy the file or directory.
+
+Panic
 
 ## After a depoyment
 ### Destination
