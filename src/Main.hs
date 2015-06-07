@@ -22,7 +22,8 @@ main = do
             case ecs of
                 Left err -> liftIO $ print err
                 Right cs -> do
-                        liftIO $ putStrLn $ formatCards cs
+                        css <- formatCards cs
+                        liftIO $ putStrLn css
                         dp <- compile (head cs) cs
                         liftIO $ putStrLn $ formatDeployments dp
                         deploy dp

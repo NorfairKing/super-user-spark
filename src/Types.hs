@@ -13,7 +13,7 @@ module Types
 
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State    (StateT, get, gets, modify, put,
+import           Control.Monad.State    (State, StateT, get, gets, modify, put,
                                          runStateT)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 import           Text.Parsec            (ParseError, ParsecT, Stream, getState,
@@ -128,7 +128,13 @@ data DeployerState = DeployerState {
 runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
 runSparkDeployer state func = runStateT func state
 
+---[ Pretty Types ]---
 
+type SparkFormatter = StateT FormatterState (WriterT String Sparker)
+data FormatterState = FormatterState {
+        state_current_indent :: Int
+    ,   state_longest_src    :: Int
+    }
 
-
-
+runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
+runSparkFormatter state func = runWriterT (runStateT func state)
