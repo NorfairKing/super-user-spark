@@ -45,9 +45,13 @@ oneDeployment = do
         (Copy src dst) -> liftIO $ copyFile src dst
 
 formatDeployments :: [Deployment] -> String
-formatDeployments = unlines . map formatDeployment
+formatDeployments ds = unlines $ map (formatDeployment (maximum $ map srcLen ds)) ds
+  where
+    srcLen (Link src _) = length src
+    srcLen (Copy src _) = length src
+    srclen _ = 0
 
-formatDeployment :: Deployment -> String
-formatDeployment (Link src dst) = unwords [src, "l->", dst]
-formatDeployment (Copy src dst) = unwords [src, "c->", dst]
+formatDeployment :: Int -> Deployment -> String
+formatDeployment n (Link src dst) = unwords [src, replicate (n-length src) ' ', "l->", dst]
+formatDeployment n (Copy src dst) = unwords [src, replicate (n-length src) ' ', "c->", dst]
 

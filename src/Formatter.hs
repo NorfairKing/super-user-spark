@@ -41,10 +41,13 @@ card (Card name _ ds) = do
 
 braces :: SparkFormatter () -> SparkFormatter ()
 braces f = do
+    modify (\s -> s {state_newline_before_deploy = True})
     string "{"
+    newline
     indent 4
     newline
     f
+    newline
     indent (-4)
     newline
     string "}"
@@ -72,6 +75,10 @@ declaration (SparkOff st) = do
     string " "
     sparkTarget st
 declaration (Deploy src dst k) = do
+    nbf <- gets state_newline_before_deploy
+    if nbf
+    then newline
+    else return ()
     string src
     ls <- gets state_longest_src
     string $ replicate (ls - length src) ' '
@@ -79,6 +86,7 @@ declaration (Deploy src dst k) = do
     kind k
     string " "
     string dst
+    modify (\s -> s {state_newline_before_deploy = False})
 declaration (IntoDir dir) = do
     string keywordInto
     string " "
@@ -104,7 +112,7 @@ declaration (Block ds) = do
 kind :: DeploymentKind -> SparkFormatter ()
 kind LinkDeployment = string linkKindSymbol
 kind CopyDeployment = string copyKindSymbol
-kind UnspecifiedDeployment = string unspecifiedKindSymbol
+kind UnspecifiedDeployment = string $ ' ':unspecifiedKindSymbol
 
 sparkTarget :: SparkTarget -> SparkFormatter ()
 sparkTarget (TargetGit repo) = do
@@ -115,32 +123,3 @@ sparkTarget (TargetCardName name) = do
     string keywordCard
     string " "
     string name
-
-{-
-indent = nest indentation
-
-inBraces d = braces $ zeroWidthText "" $+$ indent d $+$ zeroWidthText ""
-
-class Pretty a where
-    pretty :: a -> Doc
-
-instance Pretty Card where
-    pretty (Card name _ decs) = (text keywordCard <+> text name) $+$ (inBraces $ vcat $ map pretty decs)
-
-instance Pretty Declaration where
-    pretty (SparkOff st) = hsep [text keywordSpark, pretty st]
-    pretty (Deploy src dst kind) = hsep [text src, pretty kind, text dst]
-    pretty (IntoDir dir) = hsep [text keywordInto, text dir]
-    pretty (OutofDir dir) = hsep [text keywordOutof, text dir]
-    pretty (DeployKindOverride kind) = hsep [text keywordKindOverride, pretty kind]
-    pretty (Block ds) = inBraces . sep $ map pretty ds
-
-instance Pretty DeploymentKind where
-    pretty LinkDeployment = text linkKindSymbol
-    pretty CopyDeployment = text copyKindSymbol
-    pretty UnspecifiedDeployment = text unspecifiedKindSymbol
-
-instance Pretty SparkTarget where
-    pretty (TargetGit repo) = hsep [text keywordGit, text $ show repo]
-    pretty (TargetCardName name) = hsep [text keywordCard, text name]
--}

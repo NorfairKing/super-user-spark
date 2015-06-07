@@ -132,8 +132,9 @@ runSparkDeployer state func = runStateT func state
 
 type SparkFormatter = StateT FormatterState (WriterT String Sparker)
 data FormatterState = FormatterState {
-        state_current_indent :: Int
-    ,   state_longest_src    :: Int
+        state_current_indent        :: Int
+    ,   state_longest_src           :: Int
+    ,   state_newline_before_deploy :: Bool
     }
 
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
