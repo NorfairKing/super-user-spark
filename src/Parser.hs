@@ -116,8 +116,9 @@ cardRepoReference = do
     linespace
     repo <- gitRepo
     linespace
-    mfpcn <- optionMaybe $ do
+    mfpcn <- optionMaybe $ try $ do
         fp <- filepath
+        linespace
         mcn <- optionMaybe $ try cardName
         return (fp, mcn)
     return $ CardRepo repo mfpcn

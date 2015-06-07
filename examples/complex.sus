@@ -3,11 +3,17 @@ card main {
     spark card configs
     spark card scripts
 
+    spark file bash.sus
+    spark file bash.sus bash
+
+    spark git git@github.com:NorfairKing/sus-depot.git 
+    spark git git@github.com:NorfairKing/sus-depot.git test.sus
+    spark git git@github.com:NorfairKing/sus-depot.git test.sus test
+
 }
 
 card configs {
 
-    # Everything should go into the home directory.
     into ~
 
     {
@@ -26,7 +32,6 @@ card configs {
         
     }
 
-    # This is not coming out of anything, just the root dir of the card.
     vim -> .vim
 
 }
