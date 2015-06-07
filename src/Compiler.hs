@@ -2,7 +2,7 @@ module Compiler where
 
 import           Data.List        (find, isPrefixOf)
 import           System.Directory (getCurrentDirectory, getHomeDirectory)
-import           System.FilePath  (takeDirectory, (<.>), (</>))
+import           System.FilePath  (takeDirectory, (</>))
 
 
 import           Types
@@ -14,7 +14,7 @@ compile card allCards = do
     return dps
 
 initialState :: Card -> [Card] -> Sparker CompilerState
-initialState c@(Card name fp ds) cds = do
+initialState c@(Card _ fp ds) cds = do
     currentDir <- liftIO getCurrentDirectory
     return $ CompilerState {
         state_current_card = c
@@ -79,13 +79,13 @@ processDeclaration = do
             add dep
         SparkOff st -> do
             case st of
-                CardRepo repo mfpcnd -> error "not yet implemented"
-                CardFile fp mcn -> error "not yet implemented"
+                CardRepo _ _ -> error "not yet implemented"
+                CardFile _ _ -> error "not yet implemented"
                 CardName name -> do
                     allCards <- gets state_all_cards
                     case find (\(Card n _ _) -> n == name) allCards of
                         Nothing -> error "card not found" -- FIXME this is unsafe.
-                        Just c@(Card cn fp dcs) -> do
+                        Just c@(Card _ _ dcs) -> do
                             before <- get
                             modify (\s -> s {state_declarations_left = dcs
                                             ,state_current_card = c})

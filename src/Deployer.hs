@@ -47,7 +47,6 @@ oneDeployment = do
 
 
 
-
 copy :: FilePath -> FilePath -> SparkDeployer ()
 copy src dst = do
     liftIO $ copyFile src dst

@@ -99,7 +99,6 @@ data Declaration = SparkOff CardReference
 ---[ Compiling Types ]---
 data Deployment = Copy FilePath FilePath
                 | Link FilePath FilePath
-                | Spark CardReference
     deriving (Show, Eq)
 
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)

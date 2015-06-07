@@ -32,9 +32,9 @@ main = do
 
 loadConfig :: IO SparkConfig
 loadConfig = do
-    (file:flags) <- getArgs
+    (_:flags) <- getArgs
     return $ Config {
-        conf_dry = True -- FTM "--dry" `elem` flags
+        conf_dry = not $ "--no-dry" `elem` flags
     }
 
 checkSystemConsistency :: IO ()
