@@ -144,3 +144,17 @@ cardReference (CardName name) = do
     string keywordCard
     string " "
     string name
+
+
+
+formatDeployments :: [Deployment] -> String
+formatDeployments ds = unlines $ map (formatDeployment (maximum $ map srcLen ds)) ds
+  where
+    srcLen (Link src _) = length src
+    srcLen (Copy src _) = length src
+    srclen _ = 0
+
+formatDeployment :: Int -> Deployment -> String
+formatDeployment n (Link src dst) = unwords [src, replicate (n-length src) ' ', "l->", dst]
+formatDeployment n (Copy src dst) = unwords [src, replicate (n-length src) ' ', "c->", dst]
+

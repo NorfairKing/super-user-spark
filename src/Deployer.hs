@@ -41,17 +41,21 @@ oneDeployment :: SparkDeployer ()
 oneDeployment = do
     dp <- pop
     case dp of
-        (Link src dst) -> liftIO $ createSymbolicLink src dst
-        (Copy src dst) -> liftIO $ copyFile src dst
+        (Link src dst) -> link src dst
+        (Copy src dst) -> copy src dst
 
-formatDeployments :: [Deployment] -> String
-formatDeployments ds = unlines $ map (formatDeployment (maximum $ map srcLen ds)) ds
-  where
-    srcLen (Link src _) = length src
-    srcLen (Copy src _) = length src
-    srclen _ = 0
 
-formatDeployment :: Int -> Deployment -> String
-formatDeployment n (Link src dst) = unwords [src, replicate (n-length src) ' ', "l->", dst]
-formatDeployment n (Copy src dst) = unwords [src, replicate (n-length src) ' ', "c->", dst]
+
+
+
+copy :: FilePath -> FilePath -> SparkDeployer ()
+copy src dst = do
+    liftIO $ copyFile src dst
+
+link :: FilePath -> FilePath -> SparkDeployer ()
+link src dst = do
+    liftIO $ createSymbolicLink src dst
+
+
+
 

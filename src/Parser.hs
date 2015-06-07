@@ -46,7 +46,7 @@ gitProtocol = https <|> git
 ---[ Parsing ]---
 
 sparkFile :: SparkParser [Card]
-sparkFile = do -- sepEndBy1 card whitespace
+sparkFile = do
     clean <- eatComments
     setInput clean
     pos <- getPosition
