@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-module Pretty where
+module Formatter where
 
 import           Data.List (intersperse)
 

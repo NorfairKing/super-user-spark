@@ -5,9 +5,9 @@ import           System.Environment (getArgs)
 
 import           Compiler
 import           Deployer
+import           Formatter
 import           Parser
 import           Paths
-import           Pretty
 import           Types
 
 main :: IO ()
