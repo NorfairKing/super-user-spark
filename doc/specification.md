@@ -50,7 +50,7 @@ Cards should be declared inside a file with a `.sus` extension.
 #### References
 A card can be referenced:
 
-- By name (if its name is unique within all read cards.)
+- By name.
 `spark card <card-name>`
 - By file.
 `spark card <file-path> <card-name>`
