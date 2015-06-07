@@ -21,8 +21,9 @@ Every option can be controlled directly on the command-line *and* in the cards.
 The grammar should be simple to use when you don't need many options, but clear when you do.
 
 
-## Options
-### Agressiveness
+## Usage
+### Options
+#### Agressiveness
 If spark encounters existing files at deploy destinations:
 
 - Should it replace existing files? `--replace-files`
@@ -30,13 +31,13 @@ If spark encounters existing files at deploy destinations:
 - Should it replace existing symbolic links? `--replace-links`
 - Should it replace all of these? `--replace-all`
 
-### Copy or link.
+#### Copy or link.
 By default, all unspecified deployments are links.
 
 - A deployment with an unspecified deployment kind (`->`) can be configured to be a link `--link`, or a copy `--copy`.
 - All deployment kind can be overridden as well: `--override-link` or `--override-copy`.
 
-### Permissions
+#### Permissions
 By default, all files are copied with `rw-r--r--` permissions.
 This can be changed: `--permissions=775`.
 
