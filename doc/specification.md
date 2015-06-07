@@ -52,10 +52,10 @@ A card can be referenced:
 
 - By name (if its name is unique within all read cards.)
 `spark card <card-name>`
-- By name with notice of the file it's stored in.
+- By file.
 `spark card <file-path> <card-name>`
 The `<card-name>` argument is optional, if it is not given the reference will lead to the first card in the file.
-- By name within a repository.
+- By repository.
 `spark git <git-repository> <file-path> <card-name>`
 The `<file-path>` and `<card-name>` arguments are optional, but if `<card-name>` is given, `<filepath>` must be given as well.
 If `<file-path>` is not given, the reference will lead to the first `*.sus` file it can find in the root of the repository.
