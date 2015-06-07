@@ -10,6 +10,7 @@ What are the possible situations:
 - The source is a file.
 - The source is a directory.
 - The source has read permissions.
+
 #### Bad
 - The source does not exist.
 - The source is a symbolic link.
@@ -19,6 +20,7 @@ What are the possible situations:
 #### Good
 - The destination doesn't exist.
 - The destination parent directory has write permissions.
+
 #### Bad
 - The destination already exists and is a file.
 - The destination already exists and is a directory.
@@ -28,7 +30,7 @@ What are the possible situations:
 
 ## During deployment
 #### Bad
-- There is not enough space on the destination device to deploy the file.
+- There is not enough space on the destination device to deploy the file or directory.
 
 ## After a depoyment
 ### Destination
