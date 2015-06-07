@@ -52,29 +52,59 @@ A card can be referenced:
 
 - By name.
 ```
-spark card <card-name>
+card <card-name>
 ```
 - By file.
 ```
-spark file <file-path> <card-name>
+file <file-path> <card-name>
 ```
 The `<card-name>` argument is optional, if it is not given the reference will lead to the first card in the file.
 - By repository.
 ```
-spark git <git-repository> <file-path> <card-name>
+git <git-repository> <file-path> <card-name>
 ```
 The `<file-path>` and `<card-name>` arguments are optional, but if `<card-name>` is given, `<filepath>` must be given as well.
 If `<file-path>` is not given, the reference will lead to the first `*.sus` file it can find in the root of the repository.
 If `<card-name>` is not given the reference will lead to the first card in the file.
 
 
-### Statements
+### Declarations
 #### File deployment
 This is the main operation.
+```
+source <deployment-kind-symbol> destination
+```
+
+##### Deployment Kind
+There are two deployment kinds but three ways of declaring a deployment.
+
+- Link: `l->`
+- Copy: `c->`
+- Unspecified: `->`
+
+An unspecified deployment default to a link, but can be specified, both at the command line and in the card.
 
 #### Sparkoff
 A sparkoff is used to run spark on other cards from within a card.
-
+```
+spark <card identifier>
+```
 If the referenced card is in a remote repository, spark will fetch the repository within the directory that spark is run in.
 
-`spark <card identifier>`
+#### Into directory
+After an `into` declaration, all deployment sources will be prefixed by the argument path.
+```
+into <directory-path>
+```
+
+#### Out of directory
+After an `outof` declaration, all deployment destinations will be prefixed by the argument path.
+```
+outof <directory-path>
+```
+
+#### Deployment Kind Override
+What happens to unspecified deployments can be specified using a deployment kind override declaration:
+```
+kind <deployment-kind-symbol>
+```
