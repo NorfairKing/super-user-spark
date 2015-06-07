@@ -79,8 +79,9 @@ processDeclaration = do
             add dep
         SparkOff st -> do
             case st of
-                TargetGit repo -> error "not yet implemented"
-                TargetCardName name -> do
+                CardRepo repo mfpcnd -> error "not yet implemented"
+                CardFile fp mcn -> error "not yet implemented"
+                CardName name -> do
                     allCards <- gets state_all_cards
                     case find (\(Card n _ _) -> n == name) allCards of
                         Nothing -> error "card not found" -- FIXME this is unsafe.

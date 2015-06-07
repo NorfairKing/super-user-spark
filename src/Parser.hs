@@ -88,22 +88,39 @@ sparkOff :: SparkParser Declaration
 sparkOff = do
     string keywordSpark
     linespace
-    target <- try sparkCard <|> try sparkGit
-    return $ SparkOff target
+    ref <- cardReference
+    return $ SparkOff ref
 
-sparkCard :: SparkParser SparkTarget
-sparkCard = do
+cardReference :: SparkParser CardReference
+cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference
+
+cardNameReference :: SparkParser CardReference
+cardNameReference = do
     string keywordCard
     linespace
-    ident <- cardName
-    return $ TargetCardName ident
+    name <- cardName
+    return $ CardName name
 
-sparkGit :: SparkParser SparkTarget
-sparkGit = do
+cardFileReference :: SparkParser CardReference
+cardFileReference = do
+    string keywordFile
+    linespace
+    fp <- filepath
+    linespace
+    mn <- optionMaybe $ try cardName
+    return $ CardFile fp mn
+
+cardRepoReference :: SparkParser CardReference
+cardRepoReference = do
     string keywordGit
     linespace
-    r <- gitRepo
-    return $ TargetGit r
+    repo <- gitRepo
+    linespace
+    mfpcn <- optionMaybe $ do
+        fp <- filepath
+        mcn <- optionMaybe $ try cardName
+        return (fp, mcn)
+    return $ CardRepo repo mfpcn
 
 intoDir :: SparkParser Declaration
 intoDir = do

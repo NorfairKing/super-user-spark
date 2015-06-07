@@ -70,10 +70,10 @@ declarations :: [Declaration] -> SparkFormatter ()
 declarations = onLines declaration
 
 declaration :: Declaration -> SparkFormatter ()
-declaration (SparkOff st) = do
+declaration (SparkOff cr) = do
     string keywordSpark
     string " "
-    sparkTarget st
+    cardReference cr
 declaration (Deploy src dst k) = do
     nbf <- gets state_newline_before_deploy
     if nbf
@@ -114,12 +114,33 @@ kind LinkDeployment = string linkKindSymbol
 kind CopyDeployment = string copyKindSymbol
 kind UnspecifiedDeployment = string $ ' ':unspecifiedKindSymbol
 
-sparkTarget :: SparkTarget -> SparkFormatter ()
-sparkTarget (TargetGit repo) = do
+cardReference :: CardReference -> SparkFormatter ()
+cardReference (CardRepo repo mfpmcn) = do
     string keywordGit
     string " "
     string $ show repo
-sparkTarget (TargetCardName name) = do
+    case mfpmcn of
+        Nothing -> return ()
+        Just (fp, mcn) -> do
+            string " "
+            string fp
+            case mcn of
+                Nothing -> return ()
+                Just cn -> do
+                    string " "
+                    string cn
+
+cardReference (CardFile fp mcn) = do
+    string keywordFile
+    string " "
+    string fp
+    case mcn of
+        Nothing -> return ()
+        Just cn -> do
+            string " "
+            string cn
+
+cardReference (CardName name) = do
     string keywordCard
     string " "
     string name

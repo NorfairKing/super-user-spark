@@ -41,6 +41,11 @@ instance Show GitRepo where
 data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
 
+data CardReference = CardRepo GitRepo (Maybe (FilePath, Maybe CardName))
+                   | CardFile FilePath (Maybe CardName)
+                   | CardName CardName
+    deriving (Show, Eq)
+
 
 ---[ Base monad ]---
 
@@ -82,11 +87,7 @@ data DeploymentKind = LinkDeployment
                     | UnspecifiedDeployment
     deriving (Show, Eq)
 
-data SparkTarget = TargetGit GitRepo
-                 | TargetCardName CardName
-    deriving (Show, Eq)
-
-data Declaration = SparkOff SparkTarget
+data Declaration = SparkOff CardReference
                  | Deploy Source Destination DeploymentKind
                  | IntoDir Directory
                  | OutofDir Directory
@@ -98,7 +99,7 @@ data Declaration = SparkOff SparkTarget
 ---[ Compiling Types ]---
 data Deployment = Copy FilePath FilePath
                 | Link FilePath FilePath
-                | Spark SparkTarget
+                | Spark CardReference
     deriving (Show, Eq)
 
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)

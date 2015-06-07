@@ -9,6 +9,9 @@ keywordSpark = "spark"
 keywordGit :: String
 keywordGit = "git"
 
+keywordFile :: String
+keywordFile = "file"
+
 keywordInto :: String
 keywordInto = "into"
 
