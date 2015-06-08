@@ -25,10 +25,9 @@ main = do
             liftIO $ putStrLn $ formatDeployments dp
             deploy dp
         case er of
-            Left err -> error err
+            Left err -> putStrLn $ showError err
             _ -> return ()
      _ -> putStrLn "error parsing arguments"
-
 
 loadConfig :: IO SparkConfig
 loadConfig = do
@@ -42,3 +41,6 @@ checkSystemConsistency = do
     dir <- sparkDir
     createDirectoryIfMissing True dir
 
+
+showError :: SparkError -> String
+showError (Parse err) = show err

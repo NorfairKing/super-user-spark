@@ -51,12 +51,14 @@ data CardReference = CardRepo GitRepo (Maybe (FilePath, Maybe CardName))
 
 ---[ Base monad ]---
 
-type Sparker = EitherT String (ReaderT SparkConfig IO)
+type Sparker = EitherT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
         conf_dry :: Bool
     } deriving (Show, Eq)
+data SparkError = Parse ParseError
+    deriving (Show, Eq)
 
-runSparker :: SparkConfig -> Sparker a -> IO (Either String a)
+runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runEitherT func) conf
 
 
@@ -71,7 +73,7 @@ runSparkParser :: ParseState -> SparkParser a -> String -> Sparker a
 runSparkParser state func str = do
     e <- runParserT func state (state_current_file state) str
     case e of
-        Left parseError -> left $ show parseError
+        Left parseError -> left $ Parse parseError
         Right a -> return a
 
 getStates :: (ParseState -> a) -> SparkParser a
