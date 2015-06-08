@@ -9,13 +9,14 @@ module Types
     , tell
     , asks
     , modify
+    , left
     ) where
 
 import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Reader       (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.State        (State, StateT, get, gets, modify,
                                              put, runStateT)
-import           Control.Monad.Trans.Either (EitherT, runEitherT)
+import           Control.Monad.Trans.Either (EitherT, left, runEitherT)
 import           Control.Monad.Writer       (WriterT, runWriterT, tell)
 import           Text.Parsec                (ParseError, ParsecT, Stream,
                                              getState, runParserT)
@@ -66,8 +67,12 @@ data ParseState = ParseState {
         state_starting_file :: FilePath
     ,   state_current_file  :: FilePath
     }
-runSparkParser :: ParseState -> SparkParser a -> String -> Sparker (Either ParseError a)
-runSparkParser state func str = runParserT func state (state_current_file state) str
+runSparkParser :: ParseState -> SparkParser a -> String -> Sparker a
+runSparkParser state func str = do
+    e <- runParserT func state (state_current_file state) str
+    case e of
+        Left parseError -> left $ show parseError
+        Right a -> return a
 
 getStates :: (ParseState -> a) -> SparkParser a
 getStates f = do

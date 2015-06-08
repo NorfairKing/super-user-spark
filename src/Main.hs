@@ -18,15 +18,12 @@ main = do
      (file:_) -> do
         config <- loadConfig
         er <- runSparker config $ do
-            ecs <- parseFile file
-            case ecs of
-                Left err -> liftIO $ print err
-                Right cs -> do
-                        css <- formatCards cs
-                        liftIO $ putStrLn css
-                        dp <- compile (head cs) cs
-                        liftIO $ putStrLn $ formatDeployments dp
-                        deploy dp
+            cs <- parseFile file
+            css <- formatCards cs
+            liftIO $ putStrLn css
+            dp <- compile (head cs) cs
+            liftIO $ putStrLn $ formatDeployments dp
+            deploy dp
         case er of
             Left err -> error err
             _ -> return ()

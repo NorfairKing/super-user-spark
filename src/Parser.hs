@@ -5,7 +5,7 @@ import           Text.Parsec
 import           Constants
 import           Types
 
-parseFile :: FilePath -> Sparker (Either ParseError [Card])
+parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
     ls <- liftIO $ readFile file
     runSparkParser (initialState file) sparkFile ls
