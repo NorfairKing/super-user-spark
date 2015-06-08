@@ -11,13 +11,14 @@ module Types
     , modify
     ) where
 
-import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State    (State, StateT, get, gets, modify, put,
-                                         runStateT)
-import           Control.Monad.Writer   (WriterT, runWriterT, tell)
-import           Text.Parsec            (ParseError, ParsecT, Stream, getState,
-                                         runParserT)
+import           Control.Monad.IO.Class     (liftIO)
+import           Control.Monad.Reader       (ReaderT, ask, asks, runReaderT)
+import           Control.Monad.State        (State, StateT, get, gets, modify,
+                                             put, runStateT)
+import           Control.Monad.Trans.Either (EitherT, runEitherT)
+import           Control.Monad.Writer       (WriterT, runWriterT, tell)
+import           Text.Parsec                (ParseError, ParsecT, Stream,
+                                             getState, runParserT)
 
 
 type Repo = String
@@ -49,13 +50,13 @@ data CardReference = CardRepo GitRepo (Maybe (FilePath, Maybe CardName))
 
 ---[ Base monad ]---
 
-type Sparker = ReaderT SparkConfig IO
+type Sparker = EitherT String (ReaderT SparkConfig IO)
 data SparkConfig = Config {
         conf_dry :: Bool
     } deriving (Show, Eq)
 
-runSparker :: SparkConfig -> Sparker a -> IO a
-runSparker = flip runReaderT
+runSparker :: SparkConfig -> Sparker a -> IO (Either String a)
+runSparker conf func = runReaderT (runEitherT func) conf
 
 
 ---[ Parsing Types ]---

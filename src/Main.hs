@@ -17,7 +17,7 @@ main = do
     case args of
      (file:_) -> do
         config <- loadConfig
-        runSparker config $ do
+        er <- runSparker config $ do
             ecs <- parseFile file
             case ecs of
                 Left err -> liftIO $ print err
@@ -27,6 +27,9 @@ main = do
                         dp <- compile (head cs) cs
                         liftIO $ putStrLn $ formatDeployments dp
                         deploy dp
+        case er of
+            Left err -> error err
+            _ -> return ()
      _ -> putStrLn "error parsing arguments"
 
 
