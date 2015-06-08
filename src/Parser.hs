@@ -114,13 +114,19 @@ cardRepoReference = do
     string keywordGit
     linespace
     repo <- gitRepo
-    linespace
+    mb <- optionMaybe $ try $ do
+        string branchDelimiter
+        branch
     mfpcn <- optionMaybe $ try $ do
+        linespace
         fp <- filepath
         linespace
         mcn <- optionMaybe $ try cardName
         return (fp, mcn)
-    return $ CardRepo repo mfpcn
+    return $ CardRepo repo mb mfpcn
+  where
+    branch :: SparkParser Branch
+    branch = cardName -- Fix this is this is not quite enough.
 
 intoDir :: SparkParser Declaration
 intoDir = do

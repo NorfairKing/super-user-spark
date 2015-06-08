@@ -79,7 +79,7 @@ processDeclaration = do
             add dep
         SparkOff st -> do
             case st of
-                CardRepo _ _ -> throwError $ UnpredictedError "not yet implemented"
+                CardRepo _ _ _ -> throwError $ UnpredictedError "not yet implemented"
                 CardFile _ _ -> throwError $ UnpredictedError "not yet implemented"
                 CardName name -> do
                     allCards <- gets state_all_cards

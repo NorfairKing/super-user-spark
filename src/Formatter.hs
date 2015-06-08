@@ -116,10 +116,15 @@ kind CopyDeployment = string copyKindSymbol
 kind UnspecifiedDeployment = string $ ' ':unspecifiedKindSymbol
 
 cardReference :: CardReference -> SparkFormatter ()
-cardReference (CardRepo repo mfpmcn) = do
+cardReference (CardRepo repo mb mfpmcn) = do
     string keywordGit
     string " "
     string $ show repo
+    case mb of
+        Nothing -> return ()
+        Just b -> do
+            string branchDelimiter
+            string b
     case mfpmcn of
         Nothing -> return ()
         Just (fp, mcn) -> do

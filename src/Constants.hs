@@ -51,6 +51,9 @@ whitespaceChars = linespaceChars ++ endOfLineChars
 lineDelimiter :: String
 lineDelimiter = ";"
 
+branchDelimiter :: String
+branchDelimiter = ":"
+
 quotesChar :: Char
 quotesChar = '"'
 

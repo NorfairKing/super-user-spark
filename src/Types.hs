@@ -43,7 +43,8 @@ instance Show GitRepo where
 data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
 
-data CardReference = CardRepo GitRepo (Maybe (FilePath, Maybe CardName))
+type Branch = String
+data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
                    | CardFile FilePath (Maybe CardName)
                    | CardName CardName
     deriving (Show, Eq)

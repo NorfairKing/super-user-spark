@@ -9,6 +9,7 @@ card main {
     spark git git@github.com:NorfairKing/sus-depot.git 
     spark git git@github.com:NorfairKing/sus-depot.git test.sus
     spark git git@github.com:NorfairKing/sus-depot.git test.sus test
+    spark git git@github.com:NorfairKing/sus-depot.git:development test.sus test
 
 }
 
