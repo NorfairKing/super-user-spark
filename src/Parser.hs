@@ -3,6 +3,7 @@ module Parser where
 import           Text.Parsec
 
 import           Constants
+import           Git
 import           Types
 
 parseFile :: FilePath -> Sparker [Card]

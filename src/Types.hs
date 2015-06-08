@@ -1,15 +1,12 @@
 module Types
     (
       module Types
-    , liftIO
-    , gets
-    , get
-    , put
-    , ask
-    , tell
-    , asks
-    , modify
-    , throwError
+    , module Control.Monad.Except
+    , module Control.Monad.IO.Class
+    , module Control.Monad.Reader
+    , module Control.Monad.State
+    , module Control.Monad.Writer
+    , module Text.Parsec
     ) where
 
 import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
@@ -21,27 +18,6 @@ import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 import           Text.Parsec            (ParseError, ParsecT, getState,
                                          runParserT)
 
-
-type Repo = String
-
-type Host = String
-
-data GitRepo = GitRepo {
-        repo_protocol :: GitProtocol
-    ,   repo_host     :: Host
-    ,   repo_path     :: FilePath
-    } deriving (Eq)
-
-instance Show GitRepo where
-    show repo = case repo_protocol repo of
-        HTTPS -> "https://" ++ h ++ "/" ++ p
-        Git -> "git@" ++ h ++ ":" ++ p ++ ".git"
-      where
-        p = repo_path repo
-        h = repo_host repo
-
-data GitProtocol = HTTPS | Git
-    deriving (Show, Eq)
 
 type Branch = String
 data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
@@ -159,3 +135,24 @@ data FormatterState = FormatterState {
 
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
+
+---[ Repositories ]---
+
+type Host = String
+
+data GitRepo = GitRepo {
+        repo_protocol :: GitProtocol
+    ,   repo_host     :: Host
+    ,   repo_path     :: FilePath
+    } deriving (Eq)
+
+instance Show GitRepo where
+    show repo = case repo_protocol repo of
+        HTTPS -> "https://" ++ h ++ "/" ++ p
+        Git -> "git@" ++ h ++ ":" ++ p ++ ".git"
+      where
+        p = repo_path repo
+        h = repo_host repo
+
+data GitProtocol = HTTPS | Git
+    deriving (Show, Eq)
