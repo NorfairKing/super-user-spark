@@ -30,9 +30,9 @@ deployAll = do
 
 pop :: SparkDeployer Deployment
 pop = do
-    left <- gets state_deployments_left
-    modify (\s -> s {state_deployments_left = tail left})
-    return $ head left
+    deploymentsLeft <- gets state_deployments_left
+    modify (\s -> s {state_deployments_left = tail deploymentsLeft})
+    return $ head deploymentsLeft
 
 done :: SparkDeployer Bool
 done = fmap null $ gets state_deployments_left

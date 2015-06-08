@@ -1,7 +1,7 @@
 module Paths where
 
 import           System.Environment.XDG.BaseDir (getUserDataDir)
-import           System.FilePath                ((<.>), (</>))
+import           System.FilePath                ((</>))
 
 import           Types
 

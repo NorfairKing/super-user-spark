@@ -15,6 +15,7 @@ initialState :: Sparker FormatterState
 initialState = return $ FormatterState {
         state_current_indent = 0
     ,   state_longest_src = 0
+    ,   state_newline_before_deploy = True
     }
 
 indentation :: Int
@@ -26,8 +27,8 @@ cards cs = do
 
 onLines :: (a -> SparkFormatter ()) -> [a] -> SparkFormatter ()
 onLines thingFormatter things = do
-    let all = map  thingFormatter things
-    sequence_ $ intersperse newline all
+    let allThings = map thingFormatter things
+    sequence_ $ intersperse newline allThings
 
 
 card :: Card -> SparkFormatter ()
@@ -106,7 +107,7 @@ declaration (Block ds) = do
     braces $ declarations ds
     modify (\s -> s {state_longest_src = ls} )
   where
-    srcLen (Deploy src dst k) = length src
+    srcLen (Deploy src _ _) = length src
     srcLen _ = 0
 
 kind :: DeploymentKind -> SparkFormatter ()
@@ -152,7 +153,6 @@ formatDeployments ds = unlines $ map (formatDeployment (maximum $ map srcLen ds)
   where
     srcLen (Link src _) = length src
     srcLen (Copy src _) = length src
-    srclen _ = 0
 
 formatDeployment :: Int -> Deployment -> String
 formatDeployment n (Link src dst) = unwords [src, replicate (n-length src) ' ', "l->", dst]

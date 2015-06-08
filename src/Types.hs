@@ -14,12 +14,12 @@ module Types
 
 import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Reader       (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State        (State, StateT, get, gets, modify,
-                                             put, runStateT)
+import           Control.Monad.State        (StateT, get, gets, modify, put,
+                                             runStateT)
 import           Control.Monad.Trans.Either (EitherT, left, runEitherT)
 import           Control.Monad.Writer       (WriterT, runWriterT, tell)
-import           Text.Parsec                (ParseError, ParsecT, Stream,
-                                             getState, runParserT)
+import           Text.Parsec                (ParseError, ParsecT, getState,
+                                             runParserT)
 
 
 type Repo = String

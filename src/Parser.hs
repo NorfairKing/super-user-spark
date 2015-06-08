@@ -51,7 +51,6 @@ sparkFile = do
     setInput clean
     pos <- getPosition
     setPosition $ setSourceColumn (setSourceLine pos 1) 1
-    inp <- getInput
     sepEndBy1 card whitespace
 
 
