@@ -71,20 +71,20 @@ processDeclaration = do
             let source = dir </> outof </> src
             destination <- replaceHome $ into </> dst
 
-            let dep = case resultKind of
-                    LinkDeployment -> Link source destination
-                    CopyDeployment -> Copy source destination
-                    UnspecifiedDeployment -> error "report to author if you see this message"
+            dep <- case resultKind of
+                    LinkDeployment -> return $ Link source destination
+                    CopyDeployment -> return $ Copy source destination
+                    UnspecifiedDeployment -> throwError $ UnpredictedError "report to author if you see this message"
 
             add dep
         SparkOff st -> do
             case st of
-                CardRepo _ _ -> error "not yet implemented"
-                CardFile _ _ -> error "not yet implemented"
+                CardRepo _ _ -> throwError $ UnpredictedError "not yet implemented"
+                CardFile _ _ -> throwError $ UnpredictedError "not yet implemented"
                 CardName name -> do
                     allCards <- gets state_all_cards
                     case find (\(Card n _ _) -> n == name) allCards of
-                        Nothing -> error "card not found" -- FIXME this is unsafe.
+                        Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
                         Just c@(Card _ _ dcs) -> do
                             before <- get
                             modify (\s -> s {state_declarations_left = dcs

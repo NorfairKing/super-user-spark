@@ -38,7 +38,6 @@ card (Card name _ ds) = do
     string name
     string " "
     declaration $ Block ds
-    newline
 
 braces :: SparkFormatter () -> SparkFormatter ()
 braces f = do
@@ -106,6 +105,7 @@ declaration (Block ds) = do
     modify (\s -> s {state_longest_src = m} )
     braces $ declarations ds
     modify (\s -> s {state_longest_src = ls} )
+    newline
   where
     srcLen (Deploy src _ _) = length src
     srcLen _ = 0

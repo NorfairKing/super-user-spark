@@ -9,17 +9,17 @@ module Types
     , tell
     , asks
     , modify
-    , left
+    , throwError
     ) where
 
-import           Control.Monad.IO.Class     (liftIO)
-import           Control.Monad.Reader       (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State        (StateT, get, gets, modify, put,
-                                             runStateT)
-import           Control.Monad.Trans.Either (EitherT, left, runEitherT)
-import           Control.Monad.Writer       (WriterT, runWriterT, tell)
-import           Text.Parsec                (ParseError, ParsecT, getState,
-                                             runParserT)
+import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
+import           Control.Monad.State    (StateT, get, gets, modify, put,
+                                         runStateT)
+import           Control.Monad.Writer   (WriterT, runWriterT, tell)
+import           Text.Parsec            (ParseError, ParsecT, getState,
+                                         runParserT)
 
 
 type Repo = String
@@ -51,17 +51,19 @@ data CardReference = CardRepo GitRepo (Maybe (FilePath, Maybe CardName))
 
 ---[ Base monad ]---
 
-type Sparker = EitherT SparkError (ReaderT SparkConfig IO)
+type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
         conf_dry :: Bool
     } deriving (Show, Eq)
+
 data SparkError = ParseError ParseError
                 | CompileError CompileError
                 | DeployError DeployError
+                | UnpredictedError String
     deriving (Show, Eq)
 
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
-runSparker conf func = runReaderT (runEitherT func) conf
+runSparker conf func = runReaderT (runExceptT func) conf
 
 
 ---[ Parsing Types ]---
@@ -75,7 +77,7 @@ runSparkParser :: ParseState -> SparkParser a -> String -> Sparker a
 runSparkParser state func str = do
     e <- runParserT func state (state_current_file state) str
     case e of
-        Left parseError -> left $ ParseError parseError
+        Left parseError -> throwError $ ParseError parseError
         Right a -> return a
 
 getStates :: (ParseState -> a) -> SparkParser a
