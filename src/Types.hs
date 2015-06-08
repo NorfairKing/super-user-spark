@@ -55,7 +55,9 @@ type Sparker = EitherT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
         conf_dry :: Bool
     } deriving (Show, Eq)
-data SparkError = Parse ParseError
+data SparkError = ParseError ParseError
+                | CompileError CompileError
+                | DeployError DeployError
     deriving (Show, Eq)
 
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
@@ -73,7 +75,7 @@ runSparkParser :: ParseState -> SparkParser a -> String -> Sparker a
 runSparkParser state func str = do
     e <- runParserT func state (state_current_file state) str
     case e of
-        Left parseError -> left $ Parse parseError
+        Left parseError -> left $ ParseError parseError
         Right a -> return a
 
 getStates :: (ParseState -> a) -> SparkParser a
@@ -109,6 +111,8 @@ data Deployment = Copy FilePath FilePath
                 | Link FilePath FilePath
     deriving (Show, Eq)
 
+type CompileError = String
+
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
 
 runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
@@ -132,6 +136,11 @@ type SparkDeployer = StateT DeployerState Sparker
 data DeployerState = DeployerState {
         state_deployments_left :: [Deployment]
     }
+data DeployError = PreDeployError String
+                 | DuringDeployError String
+                 | PostDeployError String
+    deriving (Show, Eq)
+
 
 runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
 runSparkDeployer state func = runStateT func state

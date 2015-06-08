@@ -43,4 +43,6 @@ checkSystemConsistency = do
 
 
 showError :: SparkError -> String
-showError (Parse err) = show err
+showError (ParseError err) = show err
+showError (CompileError err) = err
+showError (DeployError err) = show err
