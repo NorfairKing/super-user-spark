@@ -186,17 +186,24 @@ directory = filepath
 
 --[ Comments ]--
 
-comment :: Parser ()
-comment = lineComment -- <|> blockComment
-    where
-        lineComment :: Parser ()
-        lineComment = do
-            string lineCommentStr
-            anyChar `manyTill` try (lookAhead eol)
-            return ()
+comment :: Parser String
+comment = lineComment <|> blockComment
+
+lineComment :: Parser String
+lineComment = do
+    string lineCommentStr
+    anyChar `manyTill` try (lookAhead eol)
+
+blockComment :: Parser String
+blockComment = between (string start) (string stop) (many anyChar)
+  where (start, stop) = blockCommentStrs
+
+
+skip :: Parser a -> Parser ()
+skip f = f >> return ()
 
 notComment :: Parser String
-notComment = manyTill anyChar (lookAhead (comment <|> eof))
+notComment = manyTill anyChar (lookAhead ((skip comment) <|> eof))
 
 eatComments :: Parser String
 eatComments = do

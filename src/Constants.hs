@@ -58,4 +58,7 @@ quotesChar :: Char
 quotesChar = '"'
 
 lineCommentStr :: String
-lineCommentStr = "#"
+lineCommentStr = "//"
+
+blockCommentStrs :: (String, String)
+blockCommentStrs = ("/*", "*/")
