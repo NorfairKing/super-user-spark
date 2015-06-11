@@ -191,7 +191,7 @@ comment = lineComment <|> blockComment
 
 lineComment :: Parser String
 lineComment = do
-    string lineCommentStr
+    skip $ string lineCommentStr
     anyChar `manyTill` try (lookAhead eol)
 
 blockComment :: Parser String
