@@ -13,18 +13,18 @@ testFileName = "testFileName.txt"
 
 --[ Parser helper functions ]---
 
-parserTest :: (Show a, Eq a) => SparkParser a -> a -> String -> Assertion
+parserTest :: (Show a, Eq a) => Parser a -> a -> String -> Assertion
 parserTest p result str = assertEqual (Right result) parseResult
-  where parseResult = runParser p (initialState testFileName) testFileName str
+  where parseResult = parse p testFileName str
 
-parserTests :: (Show a, Eq a) => SparkParser a -> [(a, [String])] -> Assertion
+parserTests :: (Show a, Eq a) => Parser a -> [(a, [String])] -> Assertion
 parserTests p tests = sequence_ $ map (\(result, strs) -> sequence_ $ map (\s -> assertEqual (Right result) (parseResult s)) strs) tests
-  where parseResult = runParser p (initialState testFileName) testFileName
+  where parseResult = parse p testFileName
 
-parseSuccess :: SparkParser String -> String -> Assertion
+parseSuccess :: Parser String -> String -> Assertion
 parseSuccess p result = parserTest p result result
 
-parseSuccesses :: SparkParser String -> [String] -> Assertion
+parseSuccesses :: Parser String -> [String] -> Assertion
 parseSuccesses p results = sequence_ $ map (parseSuccess p) results
 
 
@@ -45,23 +45,17 @@ test_gitRepo = parserTests gitRepo $
 
 test_card_empty = parserTests card $
     [
-        (Card Nothing [], [
-              "card {}"
-            , "card \n {}"
-            , "\n\ncard \n\t\n{\n\t\r\n}\n"
-            ]
-        )
-    ,   (Card (Just "") [], [
+    (Card "" testFileName[], [
               "card \"\" {}"
             ]
         )
-    ,   (Card (Just "hi") [], [
+    ,   (Card "hi" testFileName [], [
               "card hi {}"
             , "card \"hi\" {}"
             , "card \nhi\n{}"
             ]
         )
-    ,   (Card (Just "something spaced") [], [
+    ,   (Card "something spaced" testFileName [], [
               "card \"something spaced\" {}"
             , "  card   \"something spaced\" {\n}"
             , " \t \n card \n\r  \"something spaced\" \t\n{\n\r}"

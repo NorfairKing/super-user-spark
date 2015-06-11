@@ -5,7 +5,7 @@ import           System.Directory (getCurrentDirectory, getHomeDirectory)
 import           System.FilePath  (takeDirectory, (</>))
 
 
-import           Parser
+import qualified Parser           as P
 import           Types
 
 compile :: Card -> [Card] -> Sparker [Deployment]
@@ -86,7 +86,7 @@ processDeclaration = do
                 CardRepo _ _ _ -> throwError $ UnpredictedError "not yet implemented"
                 CardFile file mn -> do
                     dir <- gets state_current_directory
-                    newCards <- liftSparker $ parseFile $ dir </> file -- Fixme, use mn
+                    newCards <- liftSparker $ P.parseFile $ dir </> file -- Fixme, use mn
                     newDeclarations <- liftSparker $ compile (head newCards) newCards
                     oldCards <- gets state_all_cards
                     modify (\s -> s {state_all_cards = oldCards ++ newCards})

@@ -7,6 +7,7 @@ import           Test.HUnit     (Assertion)
 import           Compiler
 import           Types
 
+{-
 compilerTest :: [Declaration] -> [Deployment] -> Assertion
 compilerTest dc dp = assertEqual dp $ compile dc
 
@@ -34,5 +35,5 @@ test_compiler_both          = compilerTest
     ,OutofDir "xmonad"
     ,Deploy "xmonad.hs" "xmonad.hs" LinkDeployment]
     [Link "xmonad/xmonad.hs" "~/.xmonad/xmonad.hs"]
-
+-}
 

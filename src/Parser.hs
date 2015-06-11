@@ -1,4 +1,4 @@
-module Parser (parseFile) where
+module Parser where
 
 import           Text.Parsec
 import           Text.Parsec.String
@@ -8,9 +8,8 @@ import           Types
 
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
-    ls <- liftIO $ readFile file
-    epcs <- liftIO $ parseFromFile sparkFile file
-    case epcs of
+    str <- liftIO $ readFile file
+    case parse sparkFile file str of
         Left pe -> throwError $ ParseError pe
         Right cs -> return cs
 
@@ -227,6 +226,9 @@ plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars
 
 quotedIdentifier :: Parser String
 quotedIdentifier = inQuotes $ many $ noneOf $ quotesChar:endOfLineChars
+
+word :: Parser String
+word = many1 letter
 
 eol :: Parser String
 eol =   try (string "\n\r")
