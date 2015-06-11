@@ -6,6 +6,7 @@ module Types
     , module Control.Monad.Reader
     , module Control.Monad.State
     , module Control.Monad.Writer
+    , module Control.Monad.Trans
     , module Text.Parsec
     ) where
 
@@ -14,6 +15,7 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.State    (StateT, get, gets, modify, put,
                                          runStateT)
+import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 import           Text.Parsec            (ParseError, ParsecT, getState,
                                          runParserT)

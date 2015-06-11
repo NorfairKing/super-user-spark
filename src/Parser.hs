@@ -1,9 +1,8 @@
-module Parser where
+module Parser (parseFile) where
 
 import           Text.Parsec
 
 import           Constants
-import           Git
 import           Types
 
 parseFile :: FilePath -> Sparker [Card]
@@ -195,10 +194,6 @@ eatComments = do
   optional comment
   let withoutComments = concat xs
   return withoutComments
-
-
-word :: SparkParser String
-word = many1 letter
 
 --[ Whitespace ]--
 

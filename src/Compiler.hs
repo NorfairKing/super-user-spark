@@ -5,6 +5,7 @@ import           System.Directory (getCurrentDirectory, getHomeDirectory)
 import           System.FilePath  (takeDirectory, (</>))
 
 
+import           Parser
 import           Types
 
 compile :: Card -> [Card] -> Sparker [Deployment]
@@ -45,6 +46,9 @@ compileDeployments = do
 add :: Deployment -> SparkCompiler ()
 add dep = tell [dep]
 
+addAll :: [Deployment] -> SparkCompiler ()
+addAll = tell
+
 replaceHome :: FilePath -> SparkCompiler FilePath
 replaceHome path = do
     home <- liftIO getHomeDirectory
@@ -80,7 +84,13 @@ processDeclaration = do
         SparkOff st -> do
             case st of
                 CardRepo _ _ _ -> throwError $ UnpredictedError "not yet implemented"
-                CardFile _ _ -> throwError $ UnpredictedError "not yet implemented"
+                CardFile file mn -> do
+                    dir <- gets state_current_directory
+                    newCards <- liftSparker $ parseFile $ dir </> file -- Fixme, use mn
+                    newDeclarations <- liftSparker $ compile (head newCards) newCards
+                    oldCards <- gets state_all_cards
+                    modify (\s -> s {state_all_cards = oldCards ++ newCards})
+                    addAll newDeclarations
                 CardName name -> do
                     allCards <- gets state_all_cards
                     case find (\(Card n _ _) -> n == name) allCards of
@@ -102,3 +112,6 @@ processDeclaration = do
             modify (\s -> s {state_declarations_left = ds})
             compileDeployments
             put before
+
+liftSparker :: Sparker a -> SparkCompiler a
+liftSparker = lift . lift
