@@ -136,41 +136,86 @@ test_filepath_quoted        = parserTest filepath "/home/user/long/path/with spa
 
 -- TODO comments
 
-test_inBraces_letter        = parserTest (inBraces word) "a" "{a}"
-test_inBraces_word          = parserTest (inBraces word) "abc" "{abc}"
+test_inBraces_letter        = parserTest (inBraces plainIdentifier) "a" "{a}"
+test_inBraces_word          = parserTest (inBraces plainIdentifier) "abc" "{abc}"
 
-test_inQuotes_letter        = parserTest (inQuotes word) "a" "\"a\""
-test_inQuotes_word          = parserTest (inQuotes word) "abc" "\"abc\""
+test_inQuotes_letter        = parserTest (inQuotes plainIdentifier) "a" "\"a\""
+test_inQuotes_word          = parserTest (inQuotes plainIdentifier) "abc" "\"abc\""
 
-test_inLineSpace = parserTests (inLineSpace word) $
+test_delim = parseSuccesses delim $
+    [
+        ";"
+    ,   "\n"
+    ,   "\r"
+    ,   "\n\r"
+    ,   "\r\n"
+    ,   "\n\r  \t \n\t \n"
+    ]
+
+
+test_inLineSpace = parserTests (inLineSpace plainIdentifier) $
     [
         ("a", [
-                "   a \t "
+                "a"
+                , "   a \t "
                 , " a "
                 , "\ta\t"
-                , "a"
               ]
         )
     ,   ("abc", [
-                " abc "
+                "abc"
+                , " abc "
                 , "abc"
                 , "abc\t\t\t\t"
                 ]
         )
     ]
 
-test_linespace_singleSpace  = parseSuccess linespace " "
-test_linespace_many         = parseSuccess linespace " \t\t  "
+test_inWhiteSpace = parserTests (inWhiteSpace plainIdentifier) $
+    [
+        ("a", [
+                "a"
+                , " \n\r  a \t "
+                , " a\n "
+                , "\ta\r\t"
+              ]
+        )
+    ,   ("abc", [
+                "abc"
+                , " abc "
+                , "abc\t\t\t\t"
+                ]
+        )
+    ]
 
-test_witespace_space        = parseSuccess whitespace " "
-test_witespace_tab          = parseSuccess whitespace "\t"
-test_witespace_newline      = parseSuccess whitespace "\n"
-test_witespace_return       = parseSuccess whitespace "\r"
+test_linespace  = parseSuccesses linespace $
+    [
+        ""
+    ,   " "
+    ,   "\t"
+    ,   " \t"
+    ,   "\t "
+    ,   "\t  \t\t\t  \t\t \t"
+    ]
 
-test_whitespace_many        = parseSuccess whitespace "\n\r\t  \n\t\n   "
-test_whitespace_spaces      = parseSuccess whitespace "    "
+test_whitespace = parseSuccesses whitespace $
+    [
+        ""
+    ,   " "
+    ,   "\t"
+    ,   "\n"
+    ,   "\r"
+    ,   " \t"
+    ,   "\n\r"
+    ,   " \t\n\r"
+    ,   " \t \n \r\n\t\t\t  \n\n\r\n"
+    ]
 
-test_eol_windows            = parseSuccess eol "\n\r"
-test_eol_backwardWindows    = parseSuccess eol "\r\n"
-test_eol_linux              = parseSuccess eol "\n"
-test_eol_max                = parseSuccess eol "\r"
+test_eol = parseSuccesses eol $
+    [
+        "\n\r"
+    ,   "\r\n"
+    ,   "\n"
+    ,   "\r"
+    ]
+

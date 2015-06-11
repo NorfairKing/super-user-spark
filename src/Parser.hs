@@ -46,9 +46,13 @@ sparkFile :: Parser [Card]
 sparkFile = do
     clean <- eatComments
     setInput clean
+    resetPosition
+    sepEndBy1 card whitespace
+
+resetPosition :: Parser ()
+resetPosition = do
     pos <- getPosition
     setPosition $ setSourceColumn (setSourceLine pos 1) 1
-    sepEndBy1 card whitespace
 
 
 getFile :: Parser FilePath
@@ -73,17 +77,17 @@ cardName :: Parser CardName
 cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 cardContent :: Parser [Declaration]
-cardContent = declarations
+cardContent = inBraces $ inWhiteSpace declarations
 
 declarations :: Parser [Declaration]
-declarations = inBraces $ inWhiteSpace $ declaration `sepEndBy` delim
+declarations = (inLineSpace declaration) `sepEndBy` delim
 
 declaration :: Parser Declaration
-declaration = inLineSpace $ try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> try deployment
+declaration = try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> deployment
 
 block :: Parser Declaration
 block = do
-    ds <- declarations
+    ds <- inBraces declarations
     return $ Block ds
 
 sparkOff :: Parser Declaration
@@ -171,20 +175,24 @@ deploymentKind = try link <|> try copy <|> def
         copy = string copyKindSymbol >> return CopyDeployment
         def  = string unspecifiedKindSymbol >> return UnspecifiedDeployment
 
+-- [ FilePaths ]--
+
 filepath :: Parser FilePath
 filepath = try quotedIdentifier <|> plainIdentifier
 
 directory :: Parser Directory
 directory = filepath
 
+
 --[ Comments ]--
+
 comment :: Parser ()
 comment = lineComment -- <|> blockComment
     where
         lineComment :: Parser ()
         lineComment = do
             string lineCommentStr
-            manyTill anyChar (try $ lookAhead eol)
+            anyChar `manyTill` try (lookAhead eol)
             return ()
 
 notComment :: Parser String
@@ -193,33 +201,13 @@ notComment = manyTill anyChar (lookAhead (comment <|> eof))
 eatComments :: Parser String
 eatComments = do
   optional comment
-  xs <- sepBy notComment comment
+  xs <- notComment `sepBy` comment
   optional comment
   let withoutComments = concat xs
   return withoutComments
 
---[ Whitespace ]--
 
-inBraces :: Parser a -> Parser a
-inBraces = between (char '{') (char '}')
-
-inQuotes :: Parser a -> Parser a
-inQuotes = between (char quotesChar) (char quotesChar)
-
-inLineSpace :: Parser a -> Parser a
-inLineSpace = between linespace linespace
-
-inWhiteSpace :: Parser a -> Parser a
-inWhiteSpace = between whitespace whitespace
-
-delim :: Parser String
-delim = string lineDelimiter <|> whitespace
-
-linespace :: Parser String
-linespace = many $ oneOf linespaceChars
-
-whitespace :: Parser String
-whitespace = many $ oneOf whitespaceChars
+-- Identifiers
 
 plainIdentifier :: Parser String
 plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
@@ -227,8 +215,40 @@ plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars
 quotedIdentifier :: Parser String
 quotedIdentifier = inQuotes $ many $ noneOf $ quotesChar:endOfLineChars
 
-word :: Parser String
-word = many1 letter
+
+--[ Delimiters ]--
+
+inBraces :: Parser a -> Parser a
+inBraces = between (char '{') (char '}')
+
+inQuotes :: Parser a -> Parser a
+inQuotes = between (char quotesChar) (char quotesChar)
+
+delim :: Parser String
+delim = try (string lineDelimiter) <|> go
+  where
+    go = do
+        e <- eol
+        ss <- many $ try $ do
+            ls <- linespace
+            eo <- eol
+            return $ ls ++ eo
+        return $ concat (e:ss)
+
+
+--[ Whitespace ]--
+
+inLineSpace :: Parser a -> Parser a
+inLineSpace = between linespace linespace
+
+inWhiteSpace :: Parser a -> Parser a
+inWhiteSpace = between whitespace whitespace
+
+linespace :: Parser String
+linespace = many $ oneOf linespaceChars
+
+whitespace :: Parser String
+whitespace = many $ oneOf whitespaceChars
 
 eol :: Parser String
 eol =   try (string "\n\r")
