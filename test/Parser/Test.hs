@@ -68,10 +68,35 @@ test_cardContent = parserTests cardContent $
         ([IntoDir "~", Deploy "bashrc" ".bashrc" UnspecifiedDeployment],
             [
               "{into ~;bashrc -> .bashrc}"
+            , "{into ~ ; \tbashrc -> .bashrc;}"
             , "{ into ~\n\tbashrc -> .bashrc}"
             , "{\n\tinto \"~\"\nbashrc -> .bashrc}"
             , "{\n    into ~\n    bashrc -> .bashrc\n}"
             , "{\n    into \"~\"\n    \"bashrc\" -> \".bashrc\"\n}"
+            ]
+        )
+    ]
+
+test_sparkOff = parserTests sparkOff $
+    [
+        (SparkOff (CardName "name"),
+            [
+              "spark card name"
+            , "sparkcard \"name\""
+            , "spark\tcard\tname"
+            , "spark \tcard\t \tname"
+            ]
+        )
+    ]
+
+test_cardNameReference = parserTests cardNameReference $
+    [
+        (CardName "name",
+            [
+              "card name"
+            , "card \"name\""
+            , "card\tname"
+            , "card\t \tname"
             ]
         )
     ]

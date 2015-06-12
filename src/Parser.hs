@@ -91,6 +91,7 @@ block :: Parser Declaration
 block = do
     ds <- inBraces declarations
     return $ Block ds
+    <?> "block"
 
 sparkOff :: Parser Declaration
 sparkOff = do
@@ -98,9 +99,11 @@ sparkOff = do
     linespace
     ref <- cardReference
     return $ SparkOff ref
+    <?> "sparkoff"
 
 cardReference :: Parser CardReference
 cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference
+    <?> "card reference"
 
 cardNameReference :: Parser CardReference
 cardNameReference = do
@@ -108,6 +111,7 @@ cardNameReference = do
     linespace
     name <- cardName
     return $ CardName name
+    <?> "card name reference"
 
 cardFileReference :: Parser CardReference
 cardFileReference = do
@@ -117,6 +121,7 @@ cardFileReference = do
     linespace
     mn <- optionMaybe $ try cardName
     return $ CardFile fp mn
+    <?> "card file reference"
 
 cardRepoReference :: Parser CardReference
 cardRepoReference = do
@@ -133,6 +138,7 @@ cardRepoReference = do
         mcn <- optionMaybe $ try cardName
         return (fp, mcn)
     return $ CardRepo repo mb mfpcn
+    <?> "card git reference"
   where
     branch :: Parser Branch
     branch = cardName -- Fix this is this is not quite enough.
@@ -143,6 +149,7 @@ intoDir = do
     linespace
     dir <- directory
     return $ IntoDir dir
+    <?> "into directory declaration"
 
 outOfDir :: Parser Declaration
 outOfDir = do
@@ -150,6 +157,7 @@ outOfDir = do
     linespace
     dir <- directory
     return $ OutofDir dir
+    <?> "outof directory declaration"
 
 deploymentKindOverride :: Parser Declaration
 deploymentKindOverride = do
@@ -157,6 +165,7 @@ deploymentKindOverride = do
     linespace
     kind <- copy <|> link
     return $ DeployKindOverride kind
+    <?> "deployment kind override"
   where
     copy = string keywordCopy >> return CopyDeployment
     link = string keywordLink >> return LinkDeployment
@@ -169,9 +178,11 @@ deployment = do
     linespace
     dest <- filepath
     return $ Deploy source dest kind
+    <?> "deployment"
 
 deploymentKind :: Parser DeploymentKind
 deploymentKind = try link <|> try copy <|> def
+    <?> "deployment kind"
     where
         link = string linkKindSymbol >> return LinkDeployment
         copy = string copyKindSymbol >> return CopyDeployment
@@ -188,6 +199,7 @@ directory = do
     return $ if "/" `isSuffixOf` d
     then init d
     else d
+    <?> "directory"
 
 
 --[ Comments ]--
