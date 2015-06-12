@@ -134,8 +134,8 @@ test_filepath = parseSuccesses filepath $
 
 test_filepath_quoted        = parserTest filepath "/home/user/long/path/with spaces" "\"/home/user/long/path/with spaces\""
 
-test_lineComment = error "not implemented"
-test_lineComment = error "not implemented"
+test_lineComment            = parserTest lineComment "hello" "//hello\n"
+test_blockComment           = parserTest blockComment " hellokidoki " "/* hellokidoki */"
 
 test_inBraces_letter        = parserTest (inBraces plainIdentifier) "a" "{a}"
 test_inBraces_word          = parserTest (inBraces plainIdentifier) "abc" "{abc}"

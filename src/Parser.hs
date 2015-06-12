@@ -195,7 +195,9 @@ lineComment = do
     anyChar `manyTill` try (lookAhead eol)
 
 blockComment :: Parser String
-blockComment = between (string start) (string stop) (many anyChar)
+blockComment = do
+    skip $ string start
+    anyChar `manyTill` try (lookAhead $ string stop)
   where (start, stop) = blockCommentStrs
 
 
