@@ -76,6 +76,26 @@ test_cardContent = parserTests cardContent $
         )
     ]
 
+test_cardFileReference = parserTests cardFileReference $
+    [
+        (CardFile "card.sus" Nothing,
+            [
+              "file card.sus"
+            , "file \"card.sus\""
+            , "file\tcard.sus"
+            , "file \t card.sus"
+            ]
+        )
+    ,   (CardFile "card.sus" (Just "name"),
+            [
+              "file card.sus name"
+            , "file \"card.sus\" \"name\""
+            , "file\tcard.sus\tname"
+            , "file \t card.sus \t name"
+            ]
+        )
+    ]
+
 test_cardRepoReference = parserTests cardRepoReference $
     [
         (CardRepo repo Nothing Nothing,
