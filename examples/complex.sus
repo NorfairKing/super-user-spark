@@ -3,27 +3,14 @@ card main {
     spark card configs
     spark card scripts
 
-    spark file bash.sus
-    spark file bash.sus bash
-
-    spark git git@github.com:NorfairKing/sus-depot.git 
-    spark git git@github.com:NorfairKing/sus-depot.git test.sus
-    spark git git@github.com:NorfairKing/sus-depot.git test.sus test
-    spark git git@github.com:NorfairKing/sus-depot.git:development test.sus test
-
 }
 
 card configs {
 
     into ~
 
-    {
-        outof bash
-    
-        bashrc          -> .bashrc
-        bash_login      -> .bash_login
-        bash_aliases    -> .bash_aliases
-    }
+    spark file bash.sus bash
+
     {
         outof zsh
 
