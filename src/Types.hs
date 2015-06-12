@@ -6,6 +6,7 @@ module Types
     , module Control.Monad.Reader
     , module Control.Monad.State
     , module Control.Monad.Writer
+    , module Control.Monad.Trans
     , module Text.Parsec
     ) where
 
@@ -14,9 +15,10 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.State    (StateT, get, gets, modify, put,
                                          runStateT)
+import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
-import           Text.Parsec            (ParseError, ParsecT, getState,
-                                         runParserT)
+
+import           Text.Parsec            (ParseError)
 
 
 type Branch = String
@@ -44,24 +46,6 @@ runSparker conf func = runReaderT (runExceptT func) conf
 
 
 ---[ Parsing Types ]---
-
-type SparkParser = ParsecT String ParseState Sparker
-data ParseState = ParseState {
-        state_starting_file :: FilePath
-    ,   state_current_file  :: FilePath
-    }
-runSparkParser :: ParseState -> SparkParser a -> String -> Sparker a
-runSparkParser state func str = do
-    e <- runParserT func state (state_current_file state) str
-    case e of
-        Left parseError -> throwError $ ParseError parseError
-        Right a -> return a
-
-getStates :: (ParseState -> a) -> SparkParser a
-getStates f = do
-    s <- getState
-    return $ f s
-
 
 type CardName = String
 type Source = FilePath

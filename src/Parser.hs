@@ -1,25 +1,23 @@
 module Parser where
 
 import           Text.Parsec
+import           Text.Parsec.String
+
+import           Data.List          (isSuffixOf)
 
 import           Constants
-import           Git
 import           Types
 
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
-    ls <- liftIO $ readFile file
-    runSparkParser (initialState file) sparkFile ls
-
-initialState :: FilePath -> ParseState
-initialState file = ParseState {
-        state_starting_file = file
-    ,   state_current_file = file
-    }
+    str <- liftIO $ readFile file
+    case parse sparkFile file str of
+        Left pe -> throwError $ ParseError pe
+        Right cs -> return cs
 
 
 ---[ Git repo parsing ]---
-gitRepo :: SparkParser GitRepo
+gitRepo :: Parser GitRepo
 gitRepo = do
     prot <- gitProtocol
     case prot of
@@ -36,7 +34,7 @@ gitRepo = do
                     repo_protocol = Git, repo_host = host, repo_path = path
                 }
 
-gitProtocol :: SparkParser GitProtocol
+gitProtocol :: Parser GitProtocol
 gitProtocol = https <|> git
   where
     https = string "https://" >> return HTTPS
@@ -46,16 +44,26 @@ gitProtocol = https <|> git
 
 ---[ Parsing ]---
 
-sparkFile :: SparkParser [Card]
+sparkFile :: Parser [Card]
 sparkFile = do
     clean <- eatComments
     setInput clean
-    pos <- getPosition
-    setPosition $ setSourceColumn (setSourceLine pos 1) 1
+    resetPosition
     sepEndBy1 card whitespace
 
+resetPosition :: Parser ()
+resetPosition = do
+    pos <- getPosition
+    setPosition $ setSourceColumn (setSourceLine pos 1) 1
 
-card :: SparkParser Card
+
+getFile :: Parser FilePath
+getFile = do
+    pos <- getPosition
+    let file = sourceName pos
+    return file
+
+card :: Parser Card
 card = do
     whitespace
     string keywordCard
@@ -64,44 +72,48 @@ card = do
     whitespace
     content <- cardContent
     whitespace
-    fp <- getStates state_current_file
+    fp <- getFile
     return $ Card name fp content
 
-cardName :: SparkParser CardName
+cardName :: Parser CardName
 cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
-cardContent :: SparkParser [Declaration]
-cardContent = declarations
+cardContent :: Parser [Declaration]
+cardContent = inBraces $ inWhiteSpace declarations
 
-declarations :: SparkParser [Declaration]
-declarations = inBraces $ inWhiteSpace $ declaration `sepEndBy` delim
+declarations :: Parser [Declaration]
+declarations = (inLineSpace declaration) `sepEndBy` delim
 
-declaration :: SparkParser Declaration
-declaration = inLineSpace $ try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> try deployment
+declaration :: Parser Declaration
+declaration = try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> deployment
 
-block :: SparkParser Declaration
+block :: Parser Declaration
 block = do
-    ds <- declarations
+    ds <- inBraces declarations
     return $ Block ds
+    <?> "block"
 
-sparkOff :: SparkParser Declaration
+sparkOff :: Parser Declaration
 sparkOff = do
     string keywordSpark
     linespace
     ref <- cardReference
     return $ SparkOff ref
+    <?> "sparkoff"
 
-cardReference :: SparkParser CardReference
+cardReference :: Parser CardReference
 cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference
+    <?> "card reference"
 
-cardNameReference :: SparkParser CardReference
+cardNameReference :: Parser CardReference
 cardNameReference = do
     string keywordCard
     linespace
     name <- cardName
     return $ CardName name
+    <?> "card name reference"
 
-cardFileReference :: SparkParser CardReference
+cardFileReference :: Parser CardReference
 cardFileReference = do
     string keywordFile
     linespace
@@ -109,8 +121,9 @@ cardFileReference = do
     linespace
     mn <- optionMaybe $ try cardName
     return $ CardFile fp mn
+    <?> "card file reference"
 
-cardRepoReference :: SparkParser CardReference
+cardRepoReference :: Parser CardReference
 cardRepoReference = do
     string keywordGit
     linespace
@@ -125,35 +138,39 @@ cardRepoReference = do
         mcn <- optionMaybe $ try cardName
         return (fp, mcn)
     return $ CardRepo repo mb mfpcn
+    <?> "card git reference"
   where
-    branch :: SparkParser Branch
+    branch :: Parser Branch
     branch = cardName -- Fix this is this is not quite enough.
 
-intoDir :: SparkParser Declaration
+intoDir :: Parser Declaration
 intoDir = do
     string keywordInto
     linespace
     dir <- directory
     return $ IntoDir dir
+    <?> "into directory declaration"
 
-outOfDir :: SparkParser Declaration
+outOfDir :: Parser Declaration
 outOfDir = do
     string keywordOutof
     linespace
     dir <- directory
     return $ OutofDir dir
+    <?> "outof directory declaration"
 
-deploymentKindOverride :: SparkParser Declaration
+deploymentKindOverride :: Parser Declaration
 deploymentKindOverride = do
     string keywordKindOverride
     linespace
     kind <- copy <|> link
     return $ DeployKindOverride kind
+    <?> "deployment kind override"
   where
     copy = string keywordCopy >> return CopyDeployment
     link = string keywordLink >> return LinkDeployment
 
-deployment :: SparkParser Declaration
+deployment :: Parser Declaration
 deployment = do
     source <- filepath
     linespace
@@ -161,75 +178,106 @@ deployment = do
     linespace
     dest <- filepath
     return $ Deploy source dest kind
+    <?> "deployment"
 
-deploymentKind :: SparkParser DeploymentKind
+deploymentKind :: Parser DeploymentKind
 deploymentKind = try link <|> try copy <|> def
+    <?> "deployment kind"
     where
         link = string linkKindSymbol >> return LinkDeployment
         copy = string copyKindSymbol >> return CopyDeployment
         def  = string unspecifiedKindSymbol >> return UnspecifiedDeployment
 
-filepath :: SparkParser FilePath
+-- [ FilePaths ]--
+
+filepath :: Parser FilePath
 filepath = try quotedIdentifier <|> plainIdentifier
 
-directory :: SparkParser Directory
-directory = filepath
+directory :: Parser Directory
+directory = do
+    d <- filepath
+    return $ if "/" `isSuffixOf` d
+    then init d
+    else d
+    <?> "directory"
+
 
 --[ Comments ]--
-comment :: SparkParser ()
-comment = lineComment -- <|> blockComment
-    where
-        lineComment :: SparkParser ()
-        lineComment = do
-            string lineCommentStr
-            manyTill anyChar (try $ lookAhead eol)
-            return ()
 
-notComment :: SparkParser String
-notComment = manyTill anyChar (lookAhead (comment <|> eof))
+comment :: Parser String
+comment = lineComment <|> blockComment
 
-eatComments :: SparkParser String
+lineComment :: Parser String
+lineComment = do
+    skip $ string lineCommentStr
+    anyChar `manyTill` try (lookAhead eol)
+
+blockComment :: Parser String
+blockComment = do
+    skip $ string start
+    anyChar `manyTill` try (lookAhead $ string stop)
+  where (start, stop) = blockCommentStrs
+
+
+skip :: Parser a -> Parser ()
+skip f = f >> return ()
+
+notComment :: Parser String
+notComment = manyTill anyChar (lookAhead ((skip comment) <|> eof))
+
+eatComments :: Parser String
 eatComments = do
   optional comment
-  xs <- sepBy notComment comment
+  xs <- notComment `sepBy` comment
   optional comment
   let withoutComments = concat xs
   return withoutComments
 
 
-word :: SparkParser String
-word = many1 letter
+-- Identifiers
+
+plainIdentifier :: Parser String
+plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
+
+quotedIdentifier :: Parser String
+quotedIdentifier = inQuotes $ many $ noneOf $ quotesChar:endOfLineChars
+
+
+--[ Delimiters ]--
+
+inBraces :: Parser a -> Parser a
+inBraces = between (char '{') (char '}')
+
+inQuotes :: Parser a -> Parser a
+inQuotes = between (char quotesChar) (char quotesChar)
+
+delim :: Parser String
+delim = try (string lineDelimiter) <|> go
+  where
+    go = do
+        e <- eol
+        ss <- many $ try $ do
+            ls <- linespace
+            eo <- eol
+            return $ ls ++ eo
+        return $ concat (e:ss)
+
 
 --[ Whitespace ]--
 
-inBraces :: SparkParser a -> SparkParser a
-inBraces = between (char '{') (char '}')
-
-inQuotes :: SparkParser a -> SparkParser a
-inQuotes = between (char quotesChar) (char quotesChar)
-
-inLineSpace :: SparkParser a -> SparkParser a
+inLineSpace :: Parser a -> Parser a
 inLineSpace = between linespace linespace
 
-inWhiteSpace :: SparkParser a -> SparkParser a
+inWhiteSpace :: Parser a -> Parser a
 inWhiteSpace = between whitespace whitespace
 
-delim :: SparkParser String
-delim = string lineDelimiter <|> whitespace
-
-linespace :: SparkParser String
+linespace :: Parser String
 linespace = many $ oneOf linespaceChars
 
-whitespace :: SparkParser String
+whitespace :: Parser String
 whitespace = many $ oneOf whitespaceChars
 
-plainIdentifier :: SparkParser String
-plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
-
-quotedIdentifier :: SparkParser String
-quotedIdentifier = inQuotes $ many $ noneOf $ quotesChar:endOfLineChars
-
-eol :: SparkParser String
+eol :: Parser String
 eol =   try (string "\n\r")
     <|> try (string "\r\n")
     <|> try (string "\n")

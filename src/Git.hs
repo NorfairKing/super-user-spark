@@ -1,5 +1,7 @@
 module Git where
 
+import           System.Process (createProcess, shell)
+
 import           Types
 
 type GitRepoController = StateT GitRepoControllerState Sparker
@@ -29,6 +31,9 @@ isCloned :: GitRepoController Bool
 isCloned = undefined
 
 clone :: GitRepoController ()
-clone = undefined
-
+clone = do
+    repo <- gets state_repo
+    let proc = shell $ "git clone " ++ show repo
+    liftIO $ createProcess proc -- TODO wait for completion
+    return ()
 
