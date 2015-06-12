@@ -70,16 +70,13 @@ card = do
     whitespace
     name <- cardName
     whitespace
-    content <- cardContent
+    Block ds <- block
     whitespace
     fp <- getFile
-    return $ Card name fp content
+    return $ Card name fp ds
 
 cardName :: Parser CardName
 cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
-
-cardContent :: Parser [Declaration]
-cardContent = inBraces $ inWhiteSpace declarations
 
 declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim
@@ -89,7 +86,7 @@ declaration = try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> tr
 
 block :: Parser Declaration
 block = do
-    ds <- inBraces declarations
+    ds <- inBraces $ inWhiteSpace declarations
     return $ Block ds
     <?> "block"
 
@@ -256,11 +253,8 @@ delim = try (string lineDelimiter) <|> go
   where
     go = do
         e <- eol
-        ss <- many $ try $ do
-            ls <- linespace
-            eo <- eol
-            return $ ls ++ eo
-        return $ concat (e:ss)
+        ws <- whitespace
+        return $ e ++ ws
 
 
 --[ Whitespace ]--

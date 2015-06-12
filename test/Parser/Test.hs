@@ -63,9 +63,9 @@ test_card_empty = parserTests card $
         )
     ]
 
-test_cardContent = parserTests cardContent $
+test_Block = parserTests block $
     [
-        ([IntoDir "~", Deploy "bashrc" ".bashrc" UnspecifiedDeployment],
+        (Block [IntoDir "~", Deploy "bashrc" ".bashrc" UnspecifiedDeployment],
             [
               "{into ~;bashrc -> .bashrc}"
             , "{into ~ ; \tbashrc -> .bashrc;}"
@@ -250,8 +250,8 @@ test_filepath = parseSuccesses filepath $
 
 test_filepath_quoted        = parserTest filepath "/home/user/long/path/with spaces" "\"/home/user/long/path/with spaces\""
 
-test_lineComment            = parserTest lineComment "hello" "//hello\n"
-test_blockComment           = parserTest blockComment " hellokidoki " "/* hellokidoki */"
+test_lineComment            = parserTest lineComment "hello" "#hello\n"
+test_blockComment           = parserTest blockComment " hellokidoki " "[[ hellokidoki ]]"
 
 test_inBraces_letter        = parserTest (inBraces plainIdentifier) "a" "{a}"
 test_inBraces_word          = parserTest (inBraces plainIdentifier) "abc" "{abc}"
