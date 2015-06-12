@@ -98,15 +98,27 @@ After an `into` declaration, all deployment sources will be prefixed by the argu
 ```
 into <directory-path>
 ```
+Successive `into` declarations will append to previous `into` declarations' directories.
 
 #### Out of directory
 After an `outof` declaration, all deployment destinations will be prefixed by the argument path.
 ```
 outof <directory-path>
 ```
+Successive `outof` declarations will append to previous `outof` declarations' directories.
 
 #### Deployment Kind Override
 What happens to unspecified deployments can be specified using a deployment kind override declaration:
 ```
 kind <deployment-kind-symbol>
 ```
+
+#### Alternatives
+Alternative source directories can be specified.
+
+```
+alternatives <primary> <secondary> <tertiary> ... <last>
+```
+
+Spark will look for the source in the primary directory, then the secondary, etc.
+This path is further prepended to the `into` directory.
