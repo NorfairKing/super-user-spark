@@ -65,6 +65,7 @@ data Declaration = SparkOff CardReference
                  | IntoDir Directory
                  | OutofDir Directory
                  | DeployKindOverride DeploymentKind
+                 | Alternatives [Directory]
                  | Block [Declaration]
     deriving (Show, Eq)
 

@@ -60,7 +60,7 @@ declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim
 
 declaration :: Parser Declaration
-declaration = try block <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> deployment
+declaration = try block <|> try alternatives <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> deployment
 
 block :: Parser Declaration
 block = do
@@ -162,6 +162,13 @@ deploymentKind = try link <|> try copy <|> def
         link = string linkKindSymbol >> return LinkDeployment
         copy = string copyKindSymbol >> return CopyDeployment
         def  = string unspecifiedKindSymbol >> return UnspecifiedDeployment
+
+alternatives :: Parser Declaration
+alternatives = do
+    string keywordAlternatives
+    linespace
+    ds <- directory `sepBy` linespace
+    return $ Alternatives ds
 
 -- [ FilePaths ]--
 

@@ -27,6 +27,9 @@ keywordLink = "link"
 keywordCopy :: String
 keywordCopy = "copy"
 
+keywordAlternatives :: String
+keywordAlternatives = "alternatives"
+
 linkKindSymbol :: String
 linkKindSymbol = "l->"
 

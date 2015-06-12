@@ -7,6 +7,8 @@ card main {
 
 card configs {
 
+    alternatives super-laptop shared
+
     into ~
 
     spark file bash.sus bash

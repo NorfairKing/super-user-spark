@@ -55,6 +55,14 @@ braces f = do
 string :: String -> SparkFormatter ()
 string s = tell s
 
+spaced :: [String] -> SparkFormatter ()
+spaced [] = return ()
+spaced [s] = string s
+spaced (s:ss) = do
+    string s
+    string " "
+    spaced ss
+
 newline :: SparkFormatter ()
 newline = do
     string "\n"
@@ -109,6 +117,10 @@ declaration (Block ds) = do
   where
     srcLen (Deploy src _ _) = length src
     srcLen _ = 0
+declaration (Alternatives ds) = do
+    string keywordAlternatives
+    string " "
+    spaced ds
 
 kind :: DeploymentKind -> SparkFormatter ()
 kind LinkDeployment = string linkKindSymbol
@@ -150,6 +162,7 @@ cardReference (CardName name) = do
     string keywordCard
     string " "
     string name
+
 
 
 
