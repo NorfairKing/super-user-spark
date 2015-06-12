@@ -91,6 +91,7 @@ data CompilerState = CompilerState {
     ,   state_deployment_kind_override :: DeploymentKind
     ,   state_into_prefix              :: FilePath
     ,   state_outof_prefix             :: FilePath
+    ,   state_alternatives             :: [Directory]
     } deriving (Show, Eq)
 
 

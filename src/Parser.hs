@@ -167,7 +167,7 @@ alternatives :: Parser Declaration
 alternatives = do
     string keywordAlternatives
     linespace
-    ds <- directory `sepBy` linespace
+    ds <- directory `sepBy1` linespace
     return $ Alternatives ds
 
 -- [ FilePaths ]--

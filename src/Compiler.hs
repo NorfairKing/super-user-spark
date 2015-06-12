@@ -25,6 +25,7 @@ initialState c@(Card _ fp ds) cds = do
     ,   state_deployment_kind_override = UnspecifiedDeployment
     ,   state_into_prefix = ""
     ,   state_outof_prefix = ""
+    ,   state_alternatives = [""]
     }
 
 pop :: SparkCompiler Declaration
@@ -120,6 +121,7 @@ processDeclaration = do
             modify (\s -> s {state_declarations_left = ds})
             compileDeployments
             put before
+        Alternatives ds -> modify (\s -> s {state_alternatives = ds})
 
 liftSparker :: Sparker a -> SparkCompiler a
 liftSparker = lift . lift
