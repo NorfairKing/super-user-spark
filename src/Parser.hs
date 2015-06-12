@@ -16,30 +16,8 @@ parseFile file = do
         Right cs -> return cs
 
 
----[ Git repo parsing ]---
-gitRepo :: Parser GitRepo
-gitRepo = do
-    prot <- gitProtocol
-    case prot of
-        HTTPS -> do
-            host <- manyTill anyToken (string "/")
-            path <- many anyToken
-            return $ GitRepo {
-                    repo_protocol = HTTPS, repo_host = host, repo_path = path
-                }
-        Git   -> do
-            host <- manyTill anyToken (string ":")
-            path <- manyTill anyToken (string ".git")
-            return $ GitRepo {
-                    repo_protocol = Git, repo_host = host, repo_path = path
-                }
-
-gitProtocol :: Parser GitProtocol
-gitProtocol = https <|> git
-  where
-    https = string "https://" >> return HTTPS
-    git   = string "git@"     >> return Git
-
+parseCardReference :: String -> Either ParseError CardReference
+parseCardReference = parse cardReference "Raw String"
 
 
 ---[ Parsing ]---
@@ -277,3 +255,29 @@ eol =   try (string "\n\r")
     <|> try (string "\n")
     <|> string "\r"
     <?> "end of line"
+
+
+--[ Git ]--
+
+gitRepo :: Parser GitRepo
+gitRepo = do
+    prot <- gitProtocol
+    case prot of
+        HTTPS -> do
+            host <- manyTill anyToken (string "/")
+            path <- many anyToken
+            return $ GitRepo {
+                    repo_protocol = HTTPS, repo_host = host, repo_path = path
+                }
+        Git   -> do
+            host <- manyTill anyToken (string ":")
+            path <- manyTill anyToken (string ".git")
+            return $ GitRepo {
+                    repo_protocol = Git, repo_host = host, repo_path = path
+                }
+
+gitProtocol :: Parser GitProtocol
+gitProtocol = https <|> git
+  where
+    https = string "https://" >> return HTTPS
+    git   = string "git@"     >> return Git

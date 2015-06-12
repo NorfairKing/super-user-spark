@@ -104,8 +104,16 @@ processDeclaration = do
 
 
 
-        IntoDir dir -> modify (\s -> s {state_into_prefix = dir} )
-        OutofDir dir -> modify (\s -> s {state_outof_prefix = dir} )
+        IntoDir dir -> do
+            ip <- gets state_into_prefix
+            if null ip
+            then modify (\s -> s {state_into_prefix = dir} )
+            else modify (\s -> s {state_into_prefix = ip </> dir} )
+        OutofDir dir -> do
+            op <- gets state_outof_prefix
+            if null op
+            then modify (\s -> s {state_outof_prefix = dir} )
+            else modify (\s -> s {state_outof_prefix = op </> dir} )
         DeployKindOverride kind -> modify (\s -> s {state_deployment_kind_override = kind })
         Block ds -> do
             before <- get

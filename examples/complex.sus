@@ -27,9 +27,14 @@ card configs {
 card scripts {
 
     outof scripts
-    into /usr/bin
-    kind copy
-    
-    clean -> clean
+    {
+        into /usr
+        {
+            into bin
+            kind copy
+
+            clean -> clean
+        }
+    }
 
 }
