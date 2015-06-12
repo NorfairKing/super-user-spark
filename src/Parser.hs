@@ -3,6 +3,8 @@ module Parser where
 import           Text.Parsec
 import           Text.Parsec.String
 
+import           Data.List          (isSuffixOf)
+
 import           Constants
 import           Types
 
@@ -181,7 +183,11 @@ filepath :: Parser FilePath
 filepath = try quotedIdentifier <|> plainIdentifier
 
 directory :: Parser Directory
-directory = filepath
+directory = do
+    d <- filepath
+    return $ if "/" `isSuffixOf` d
+    then init d
+    else d
 
 
 --[ Comments ]--

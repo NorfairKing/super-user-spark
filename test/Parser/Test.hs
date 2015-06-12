@@ -76,12 +76,81 @@ test_cardContent = parserTests cardContent $
         )
     ]
 
+test_cardRepoReference = parserTests cardRepoReference $
+    [
+        (CardRepo repo Nothing Nothing,
+            [
+              "git " ++ repoStr
+            , "git\t" ++ repoStr
+            , "git \t" ++ repoStr
+            , "git        " ++ repoStr
+            ]
+        )
+    ,   (CardRepo repo (Just "development") Nothing,
+            [
+              "git " ++ repoStr ++ ":development"
+            , "git\t" ++ repoStr ++ ":development"
+            , "git \t" ++ repoStr ++ ":development"
+            , "git        " ++ repoStr ++ ":development"
+            ]
+        )
+    ,   (CardRepo repo Nothing (Just ("card.sus" , Nothing)),
+            [
+              "git " ++ repoStr ++ " card.sus"
+            , "git\t\t" ++ repoStr ++ "\t\tcard.sus"
+            , "git " ++ repoStr ++ " \"card.sus\""
+            ]
+        )
+    ,   (CardRepo repo Nothing (Just ("card.sus" , Just "name")),
+            [
+              "git " ++ repoStr ++ " card.sus name"
+            , "git\t\t" ++ repoStr ++ "\t\tcard.sus\tname"
+            , "git " ++ repoStr ++ " \"card.sus\" \"name\""
+            ]
+        )
+    ,   (CardRepo repo (Just "master") (Just ("card.sus" , Just "name")),
+            [
+              "git " ++ repoStr ++ ":master card.sus name"
+            , "git\t\t" ++ repoStr ++ ":master\t\tcard.sus\tname"
+            , "git " ++ repoStr ++ ":master \"card.sus\" \"name\""
+            ]
+        )
+    ]
+  where
+    repo = GitRepo {repo_protocol = Git  , repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"}
+    repoStr = "git@bitbucket.org:syd_kerckhove/private-depot.git"
+
 test_intoDir = parserTests intoDir $
     [
         (IntoDir "~", [
               "into ~"
             , "into \t  ~"
             , "into\t \t   ~"
+            , "into \"~\""
+            ]
+        )
+    ,   (IntoDir "~/.xmonad", [
+              "into ~/.xmonad"
+            , "into \"~/.xmonad\""
+            , "into ~/.xmonad/"
+            ]
+        )
+    ]
+
+test_outofDir = parserTests outOfDir $
+    [
+        (OutofDir "bash", [
+              "outof bash"
+            , "outof \t bash"
+            , "outof \"bash\""
+            , "outof        bash"
+            ]
+        )
+    ,   (OutofDir "xmonad", [
+              "outof xmonad"
+            , "outof \t\t\txmonad"
+            , "outof \"xmonad\""
+            , "outof      \txmonad"
             ]
         )
     ]
@@ -116,19 +185,21 @@ test_deploymentKind_default = parserTest deploymentKind UnspecifiedDeployment "-
 test_directory = parseSuccesses directory $
     [
         "~"
-    ,   "~/"
     ,   "~/.vim"
     ,   "~/Dropbox"
+
+    ,   "/home/user"
+    ,   "/home/user/.xmonad"
     ]
 
 test_filepath = parseSuccesses filepath $
     [
         "withoutExtension"
     ,   "test.txt"
-    ,   "file.something"
+    ,   "file.somelongextension"
 
     ,   "/home/user/test.txt"
-    ,   "/home/user/test.txt"
+    ,   "/home/user/test.multiple.extensions"
 
     ]
 
