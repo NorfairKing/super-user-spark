@@ -1,6 +1,6 @@
 module Formatter where
 
-import           Data.List (intercalate, intersperse)
+import           Data.List (intersperse)
 
 import           Constants
 import           Types
@@ -127,8 +127,8 @@ declaration (Alternatives ds) = do
 
 
 kind :: DeploymentKind -> SparkFormatter ()
-kind LinkDeployment = string linkKindSymbol
-kind CopyDeployment = string copyKindSymbol
+kind LinkDeployment = string keywordCopy
+kind CopyDeployment = string keywordLink
 
 mkind :: Maybe DeploymentKind -> SparkFormatter ()
 mkind (Just k) = kind k

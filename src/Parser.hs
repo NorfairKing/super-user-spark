@@ -60,7 +60,16 @@ declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim
 
 declaration :: Parser Declaration
-declaration = try block <|> try alternatives <|> try sparkOff <|> try intoDir <|> try outOfDir <|> try deploymentKindOverride <|> deployment
+declaration = choice $ map try
+    [
+      block
+    , alternatives
+    , sparkOff
+    , intoDir
+    , outOfDir
+    , deploymentKindOverride
+    , deployment
+    ]
 
 block :: Parser Declaration
 block = do
@@ -138,7 +147,7 @@ deploymentKindOverride :: Parser Declaration
 deploymentKindOverride = do
     string keywordKindOverride
     linespace
-    kind <- copy <|> link
+    kind <- try copy <|> link
     return $ DeployKindOverride kind
     <?> "deployment kind override"
   where
