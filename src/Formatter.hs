@@ -1,6 +1,6 @@
 module Formatter where
 
-import           Data.List (intersperse)
+import           Data.List (intercalate, intersperse)
 
 import           Constants
 import           Types
@@ -55,13 +55,16 @@ braces f = do
 string :: String -> SparkFormatter ()
 string s = tell s
 
-spaced :: [String] -> SparkFormatter ()
-spaced [] = return ()
-spaced [s] = string s
-spaced (s:ss) = do
+interspersed :: [String] -> String -> SparkFormatter ()
+interspersed [] _ = return ()
+interspersed [s] _ = string s
+interspersed (s:ss) i = do
     string s
-    string " "
+    string i
     spaced ss
+
+spaced :: [String] -> SparkFormatter ()
+spaced strs = interspersed strs " "
 
 newline :: SparkFormatter ()
 newline = do
@@ -91,7 +94,7 @@ declaration (Deploy src dst k) = do
     ls <- gets state_longest_src
     string $ replicate (ls - length src) ' '
     string " "
-    kind k
+    mkind k
     string " "
     string dst
     modify (\s -> s {state_newline_before_deploy = False})
@@ -122,10 +125,14 @@ declaration (Alternatives ds) = do
     string " "
     spaced ds
 
+
 kind :: DeploymentKind -> SparkFormatter ()
 kind LinkDeployment = string linkKindSymbol
 kind CopyDeployment = string copyKindSymbol
-kind UnspecifiedDeployment = string $ ' ':unspecifiedKindSymbol
+
+mkind :: Maybe DeploymentKind -> SparkFormatter ()
+mkind (Just k) = kind k
+mkind Nothing = string $ ' ':unspecifiedKindSymbol
 
 cardReference :: CardReference -> SparkFormatter ()
 cardReference (CardRepo repo mb mfpmcn) = do
@@ -165,14 +172,24 @@ cardReference (CardName name) = do
 
 
 
+srcLen :: Deployment -> Int
+srcLen (Put srcs _ _) = 3*(length srcs - 1) + sum (map length srcs)
 
 formatDeployments :: [Deployment] -> String
-formatDeployments ds = unlines $ map (formatDeployment (maximum $ map srcLen ds)) ds
+formatDeployments ds = unlines $ map (formatDeployment len) ds
   where
-    srcLen (Link src _) = length src
-    srcLen (Copy src _) = length src
+    len = maximum $ map srcLen ds
 
 formatDeployment :: Int -> Deployment -> String
-formatDeployment n (Link src dst) = unwords [src, replicate (n-length src) ' ', "l->", dst]
-formatDeployment n (Copy src dst) = unwords [src, replicate (n-length src) ' ', "c->", dst]
+formatDeployment n d@(Put srcs dst k) = unwords $
+    [
+        concat $ intersperse " | " srcs
+    ,   replicate (n - srcLen d) ' '
+    ,   kindSymbol k
+    ,   dst
+    ]
+  where
+    kindSymbol LinkDeployment = linkKindSymbol
+    kindSymbol CopyDeployment = copyKindSymbol
+
 

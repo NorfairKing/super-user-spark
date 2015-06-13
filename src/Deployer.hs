@@ -41,19 +41,19 @@ oneDeployment :: SparkDeployer ()
 oneDeployment = do
     dp <- pop
     case dp of
-        (Link src dst) -> link src dst
-        (Copy src dst) -> copy src dst
+        (Put src dst LinkDeployment) -> link src dst
+        (Put src dst CopyDeployment) -> copy src dst
 
 
 
 
-copy :: FilePath -> FilePath -> SparkDeployer ()
-copy src dst = do
-    liftIO $ copyFile src dst
+copy :: [FilePath] -> FilePath -> SparkDeployer ()
+copy srcs dst = do
+    liftIO $ copyFile (head srcs) dst
 
-link :: FilePath -> FilePath -> SparkDeployer ()
-link src dst = do
-    liftIO $ createSymbolicLink src dst
+link :: [FilePath] -> FilePath -> SparkDeployer ()
+link srcs dst = do
+    liftIO $ createSymbolicLink (head srcs) dst
 
 
 

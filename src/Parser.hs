@@ -155,13 +155,13 @@ deployment = do
     return $ Deploy source dest kind
     <?> "deployment"
 
-deploymentKind :: Parser DeploymentKind
+deploymentKind :: Parser (Maybe DeploymentKind)
 deploymentKind = try link <|> try copy <|> def
     <?> "deployment kind"
     where
-        link = string linkKindSymbol >> return LinkDeployment
-        copy = string copyKindSymbol >> return CopyDeployment
-        def  = string unspecifiedKindSymbol >> return UnspecifiedDeployment
+        link = string linkKindSymbol >> return (Just LinkDeployment)
+        copy = string copyKindSymbol >> return (Just CopyDeployment)
+        def  = string unspecifiedKindSymbol >> return Nothing
 
 alternatives :: Parser Declaration
 alternatives = do

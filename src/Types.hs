@@ -57,11 +57,10 @@ data Card = Card CardName FilePath [Declaration]
 
 data DeploymentKind = LinkDeployment
                     | CopyDeployment
-                    | UnspecifiedDeployment
     deriving (Show, Eq)
 
 data Declaration = SparkOff CardReference
-                 | Deploy Source Destination DeploymentKind
+                 | Deploy Source Destination (Maybe DeploymentKind)
                  | IntoDir Directory
                  | OutofDir Directory
                  | DeployKindOverride DeploymentKind
@@ -71,8 +70,7 @@ data Declaration = SparkOff CardReference
 
 
 ---[ Compiling Types ]---
-data Deployment = Copy FilePath FilePath
-                | Link FilePath FilePath
+data Deployment = Put [FilePath] FilePath DeploymentKind
     deriving (Show, Eq)
 
 type CompileError = String
@@ -88,7 +86,7 @@ data CompilerState = CompilerState {
     ,   state_current_directory        :: FilePath
     ,   state_all_cards                :: [Card]
     ,   state_declarations_left        :: [Declaration]
-    ,   state_deployment_kind_override :: DeploymentKind
+    ,   state_deployment_kind_override :: Maybe DeploymentKind
     ,   state_into_prefix              :: FilePath
     ,   state_outof_prefix             :: FilePath
     ,   state_alternatives             :: [Directory]
