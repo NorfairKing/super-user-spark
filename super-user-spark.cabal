@@ -10,7 +10,7 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 
-executable super-user-spark
+executable spark
   main-is:          Main.hs
   hs-source-dirs:   src
   build-depends:    base >=4.8 && <4.9
