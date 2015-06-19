@@ -12,6 +12,7 @@ What are the possible situations:
 - The destination doesn't exist.
 - The destination parent directory has execute permissions.
 - The destination parent directory has write permissions.
+
 #### Bad
 - The source has no read permissions.
 - The source is a directory.
@@ -21,13 +22,16 @@ What are the possible situations:
 - The destination already exists and is a symbolic link.
 - The destination parent directory has no execute permissions.
 - The destination parent directory has no write permissions.
+
 ### During
 #### Bad
 - Any error
+
 ### After
 #### Good
 - The source and destination are both files.
 - The source and destination have equal contents.
+
 #### Bad
 - The destination is not a file.
 
@@ -39,6 +43,7 @@ What are the possible situations:
 - The destination doesn't exist.
 - The destination parent directory has execute permissions.
 - The destination parent directory has write permissions.
+
 #### Bad
 - The source is a file
 - The source has no execute permissions.
@@ -51,12 +56,16 @@ Automatic fix: make the parent directories.
 - The destination already exists and is a symbolic link.
 - The destination parent directory has no execute permissions.
 - The destination parent directory has no write permissions.
+
 ### During
 #### Bad
 - Any error
+
 ### After
 #### Good
 - The source and destination are both directories.
 - The source and destination have equal contents.
+
 #### Bad
 - The destination is not a directory
+
