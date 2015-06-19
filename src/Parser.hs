@@ -3,10 +3,19 @@ module Parser where
 import           Text.Parsec
 import           Text.Parsec.String
 
-import           Data.List          (isSuffixOf)
+import           Data.List          (find, isSuffixOf)
 
 import           Constants
 import           Types
+
+parseStartingCardReference :: StartingSparkReference -> Sparker [Card]
+parseStartingCardReference (FileRef fp mcn) = do
+    css <- parseFile fp
+    case mcn of
+        Nothing -> return css
+        Just cn -> case find (\s -> card_name s == cn) css of
+                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", cn, "in fp."]
+                        Just c  -> return [c]
 
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
@@ -16,8 +25,9 @@ parseFile file = do
         Right cs -> return cs
 
 
-parseCardReference :: String -> Either ParseError CardReference
-parseCardReference = parse cardReference "Raw String"
+parseCardReference :: String -> Either ParseError StartingSparkReference
+parseCardReference = parse startingCardReference "Argument String"
+
 
 
 ---[ Parsing ]---
@@ -84,6 +94,13 @@ sparkOff = do
     ref <- cardReference
     return $ SparkOff ref
     <?> "sparkoff"
+
+startingCardReference :: Parser StartingSparkReference
+startingCardReference = do
+    r <- try cardFileReference <|> cardRepoReference
+    return $ case r of
+        CardFile fp mn -> FileRef fp mn
+        CardRepo rp mb mf -> RepoRef rp mb mf
 
 cardReference :: Parser CardReference
 cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference

@@ -21,6 +21,10 @@ import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 import           Text.Parsec            (ParseError)
 
 
+data StartingSparkReference = FileRef FilePath (Maybe CardName)
+                            | RepoRef GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
+    deriving (Show, Eq)
+
 type Branch = String
 data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
                    | CardFile FilePath (Maybe CardName)
@@ -45,6 +49,7 @@ runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
 
 
+
 ---[ Parsing Types ]---
 
 type CardName = String
@@ -54,6 +59,9 @@ type Directory = FilePath
 
 data Card = Card CardName FilePath [Declaration]
     deriving (Show, Eq)
+
+card_name :: Card -> CardName
+card_name (Card n _ _) = n
 
 data DeploymentKind = LinkDeployment
                     | CopyDeployment
