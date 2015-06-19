@@ -1,5 +1,6 @@
 module Main where
 
+import           Data.List          (isPrefixOf)
 import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
 
@@ -13,29 +14,29 @@ import           Types
 main :: IO ()
 main = do
     checkSystemConsistency
-    args <- getArgs
-    case args of
-     (file:_) -> do
-        config <- loadConfig
-        er <- runSparker config $ do
-            scr <- loadStartingCardReference
-            liftIO $ print scr
-            spark scr
-        case er of
-            Left err -> putStrLn $ showError err
-            _ -> return ()
-     _ -> putStrLn "error parsing arguments"
+
+    config <- loadConfig
+    print config
+    er <- runSparker config $ do
+        scr <- loadStartingCardReference
+        liftIO $ print scr
+        spark scr
+    case er of
+        Left err -> putStrLn $ showError err
+        _ -> return ()
 
 loadConfig :: IO SparkConfig
 loadConfig = do
-    args <- getArgs
+    as <- getArgs
+    let args = filter ("-" `isPrefixOf`) as
     return $ Config {
             conf_dry = not $ "--no-dry" `elem` args
         }
 
 loadStartingCardReference :: Sparker StartingSparkReference
 loadStartingCardReference = do
-    args <- liftIO getArgs
+    as <- liftIO getArgs
+    let args = filter (\a -> not $ "-" `isPrefixOf`a) as
     let escr = parseCardReference $ unwords args
     case escr of
         Left pe -> error $ show pe -- TODO better error handling here
