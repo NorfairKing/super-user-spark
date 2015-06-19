@@ -55,6 +55,7 @@ showError (ParseError err) = show err
 showError (CompileError err) = err
 showError (DeployError err) = show err
 showError (UnpredictedError err) = "Panic: " ++ err
+showError (GitError err) = show err
 
 
 checkSystemConsistency :: IO ()

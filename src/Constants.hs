@@ -65,3 +65,6 @@ lineCommentStr = "#"
 
 blockCommentStrs :: (String, String)
 blockCommentStrs = ("[[", "]]")
+
+sparkExtension :: String
+sparkExtension = "sus"

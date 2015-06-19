@@ -43,6 +43,7 @@ data SparkError = ParseError ParseError
                 | CompileError CompileError
                 | DeployError DeployError
                 | UnpredictedError String
+                | GitError GitError
     deriving (Show, Eq)
 
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
@@ -148,3 +149,7 @@ instance Show GitRepo where
 
 data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
+
+data GitError = GitRepoError GitRepo String
+    deriving (Show, Eq)
+

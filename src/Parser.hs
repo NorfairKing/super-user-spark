@@ -1,21 +1,39 @@
 module Parser where
-
+import           System.FilePath.Posix (takeExtension)
 import           Text.Parsec
 import           Text.Parsec.String
 
-import           Data.List          (find, isSuffixOf)
+import           Data.List             (find, isSuffixOf)
 
 import           Constants
+import           Git
 import           Types
 
 parseStartingCardReference :: StartingSparkReference -> Sparker [Card]
+parseStartingCardReference (RepoRef repo mb mfpmcn) = do
+    case mb of
+        Nothing -> return ()
+        Just gb -> runGitRepoController repo $ checkout gb
+    case mfpmcn of
+        Nothing -> do
+            fps <- runGitRepoController repo $ listRepoDir "."
+            case filter (\f -> takeExtension f == '.':sparkExtension) fps of
+                [] -> throwError $ UnpredictedError $ unwords ["Didn't find any", "\"" ++ sparkExtension ++ "\"", "files in", show repo]
+                (h:_) -> parseStartingCardReference $ FileRef h Nothing
+        Just (fp, mcn) -> do
+            gfp <- runGitRepoController repo $ repoFilePath fp
+            parseStartingCardReference $ FileRef gfp mcn
+
+
 parseStartingCardReference (FileRef fp mcn) = do
     css <- parseFile fp
     case mcn of
         Nothing -> return css
         Just cn -> case find (\s -> card_name s == cn) css of
-                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", "\"" ++ cn "\"", "in", fp]
+                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", "\"" ++ cn ++ "\"", "in", fp]
                         Just c  -> return [c]
+
+
 
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
