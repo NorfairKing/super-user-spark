@@ -14,7 +14,7 @@ parseStartingCardReference (FileRef fp mcn) = do
     case mcn of
         Nothing -> return css
         Just cn -> case find (\s -> card_name s == cn) css of
-                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", cn, "in fp."]
+                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", "\"" ++ cn "\"", "in", fp]
                         Just c  -> return [c]
 
 parseFile :: FilePath -> Sparker [Card]
