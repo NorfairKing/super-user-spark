@@ -172,24 +172,42 @@ cardReference (CardName name) = do
 
 
 
-srcLen :: Deployment -> Int
-srcLen (Put srcs _ _) = 3*(length srcs - 1) + sum (map length srcs)
+srcLen :: Deployment -> [Int]
+srcLen (Put srcs _ _) = map length srcs
+
+maximums :: [[Int]] -> [Int]
+maximums [[]] = []
+maximums lss = if all null lss
+    then []
+    else (maximum $ map ahead lss):(maximums $ map atail lss)
+  where
+    ahead [] = 0
+    ahead (l:_) = l
+
+    atail [] = []
+    atail (_:ls) = ls
 
 formatDeployments :: [Deployment] -> String
-formatDeployments ds = unlines $ map (formatDeployment len) ds
+formatDeployments ds = unlines $ map (formatDeployment lens) ds
   where
-    len = maximum $ map srcLen ds
+    lens = maximums $ map srcLen ds
 
-formatDeployment :: Int -> Deployment -> String
-formatDeployment n d@(Put srcs dst k) = unwords $
+formatDeployment :: [Int] -> Deployment -> String
+formatDeployment ms d@(Put srcs dst k) = unwords $
     [
-        concat $ intersperse " | " srcs
-    ,   replicate (n - srcLen d) ' '
+        padded ms srcs
     ,   kindSymbol k
     ,   dst
     ]
   where
     kindSymbol LinkDeployment = linkKindSymbol
     kindSymbol CopyDeployment = copyKindSymbol
+
+    padded :: [Int] -> [FilePath] -> String
+    padded [] [] = []
+    padded (m:r) [] = replicate m ' ' ++ padded r []
+    padded [] _ = []
+    padded (m:r) (s:ss) = s ++ replicate (m - length s) ' ' ++ " " ++ padded r ss
+
 
 

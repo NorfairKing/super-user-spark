@@ -74,8 +74,7 @@ processDeclaration = do
             outof <- gets state_outof_prefix
             into <- gets state_into_prefix
 
-            let source = dir </> outof </> src
-            let alts = map (++ source) alternates
+            let alts = map (\alt -> dir </> alt </> outof </> src) alternates
             destination <- replaceHome $ into </> dst
 
             add $ Put alts destination resultKind
