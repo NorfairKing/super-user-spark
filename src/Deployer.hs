@@ -6,8 +6,9 @@ import           Data.Either        (lefts, rights)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
 import           Shelly             (cp_r, fromText, shelly)
-import           System.Directory   (copyFile, getDirectoryContents,
-                                     getPermissions)
+import           System.Directory   (copyFile, createDirectoryIfMissing,
+                                     getDirectoryContents, getPermissions)
+import           System.FilePath    (dropFileName)
 import           System.Posix.Files (createSymbolicLink, fileExist,
                                      getFileStatus, isBlockDevice,
                                      isCharacterDevice, isDirectory,
@@ -42,7 +43,7 @@ deployAll deps = do
                 deployments pdps
                 postdeployments deps pdps
 
-        ss -> throwError $ DeployError $ PostDeployError ss
+        ss -> throwError $ DeployError $ PreDeployError ss
 
 catErrors :: [PreDeployment] -> [String]
 catErrors [] = []
@@ -59,7 +60,7 @@ predeployments dps = do
     return pdps
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
-preDeployment d@(Put [] dst _) = return $ Error $ unwords ["No existing source for deployment with destination", dst]
+preDeployment d@(Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
 preDeployment d@(Put (s:ss) dst kind) = do
     sd <- diagnose s
     dd <- diagnose dst
@@ -72,10 +73,10 @@ preDeployment d@(Put (s:ss) dst kind) = do
                     equal <- compareFiles s dst
                     if equal
                     then done
-                    else error ["Destination", dst, "already exists and is a file."]
+                    else error ["Destination", dst, "already exists and is a file, different from the source:", s, "."]
                 IsDirectory _   -> error ["Destination", dst, "already exists and is a directory."]
-                IsLink      _   -> error ["destination", dst, "already exists and is a symbolic link."]
-                _               -> error ["destination", dst, "already exists and is something weird."]
+                IsLink      _   -> error ["Destination", dst, "already exists and is a symbolic link."]
+                _               -> error ["Destination", dst, "already exists and is something weird."]
         IsDirectory p   -> do
             case dd of
                 NonExistent     -> ready
@@ -93,8 +94,10 @@ preDeployment d@(Put (s:ss) dst kind) = do
   where
     done :: SparkDeployer PreDeployment
     done = return $ AlreadyDone
+
     ready :: SparkDeployer PreDeployment
     ready = return $ Ready s dst kind
+
     error :: [String] -> SparkDeployer PreDeployment
     error strs = return $ Error $ unwords strs
 
@@ -168,11 +171,15 @@ deployment (Ready src dst kind) = do
 
 copy :: FilePath -> FilePath -> SparkDeployer ()
 copy src dst = do
+    liftIO $ createDirectoryIfMissing True upperDir
     liftIO $ shelly $ cp_r (fromText $ pack src) (fromText $ pack dst)
+  where upperDir = dropFileName dst
 
 link :: FilePath -> FilePath -> SparkDeployer ()
 link src dst = do
+    liftIO $ createDirectoryIfMissing True upperDir
     liftIO $ createSymbolicLink src dst
+  where upperDir = dropFileName dst
 
 
 postdeployments :: [Deployment] -> [PreDeployment] -> SparkDeployer ()

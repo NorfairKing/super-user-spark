@@ -57,7 +57,12 @@ spark ssr = do
 showError :: SparkError -> String
 showError (ParseError err) = show err
 showError (CompileError err) = err
-showError (DeployError err) = show err
+showError (DeployError err) =
+    case err of
+        PreDeployError ss -> unlines ss
+        DuringDeployError ss -> unlines ss
+        PostDeployError ss -> unlines ss
+
 showError (UnpredictedError err) = "Panic: " ++ err
 showError (GitError err) = show err
 
