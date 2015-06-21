@@ -7,13 +7,15 @@ import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
 import           Shelly             (cp_r, fromText, shelly)
 import           System.Directory   (copyFile, createDirectoryIfMissing,
-                                     getDirectoryContents, getPermissions)
+                                     getDirectoryContents, getPermissions,
+                                     removeDirectoryRecursive, removeFile)
 import           System.FilePath    (dropFileName)
 import           System.Posix.Files (createSymbolicLink, fileExist,
-                                     getFileStatus, isBlockDevice,
+                                     getSymbolicLinkStatus, isBlockDevice,
                                      isCharacterDevice, isDirectory,
                                      isNamedPipe, isRegularFile, isSocket,
-                                     isSymbolicLink)
+                                     isSymbolicLink, readSymbolicLink)
+import           System.Process     (system)
 
 import           Formatter          (formatPostDeployments,
                                      formatPreDeployments)
@@ -70,24 +72,72 @@ preDeployment d@(Put (s:ss) dst kind) = do
             case dd of
                 NonExistent     -> ready
                 IsFile      _   -> do
-                    equal <- compareFiles s dst
-                    if equal
-                    then done
-                    else error ["Destination", dst, "already exists and is a file, different from the source:", s, "."]
-                IsDirectory _   -> error ["Destination", dst, "already exists and is a directory."]
-                IsLink      _   -> error ["Destination", dst, "already exists and is a symbolic link."]
+                    case kind of
+                        LinkDeployment -> do
+                            incaseElse conf_replace
+                                (rmFile dst >> preDeployment d)
+                                (error ["Destination", dst, "already exists and is file (for a link deployment):", s, "."])
+                        CopyDeployment -> do
+                            equal <- compareFiles s dst
+                            if equal
+                            then done
+                            else do
+                                incaseElse conf_replace
+                                    (rmFile dst >> preDeployment d)
+                                    (error ["Destination", dst, "already exists and is a file, different from the source:", s, "."])
+                IsDirectory _   -> do
+                    incaseElse conf_replace
+                        (rmDir dst >> preDeployment d)
+                        (error ["Destination", dst, "already exists and is a directory."])
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> do
+                            incaseElse conf_replace
+                                (unlink dst >> preDeployment d)
+                                (error ["Destination", dst, "already exists and is a symbolic link (for a copy deployment):", s, "."])
+                        LinkDeployment -> do
+                            point <- liftIO $ readSymbolicLink s
+                            if point == dst-- TODO comparison could be more fuzzy
+                            then done
+                            else incaseElse conf_replace
+                                    (unlink dst >> preDeployment d)
+                                    (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", dst, "already exists and is something weird."]
         IsDirectory p   -> do
             case dd of
                 NonExistent     -> ready
-                IsFile      _   -> error ["Destination", dst, "already exists and is a directory."]
+                IsFile      _   -> do
+                    incaseElse conf_replace
+                        (rmDir dst >> preDeployment d)
+                        (error ["Destination", dst, "already exists and is a directory."])
                 IsDirectory _   -> do
-                    equal <- compareDirectories s dst
-                    if equal
-                    then done
-                    else error ["Destination", dst, "already exists and is a directory."]
-                IsLink      _   -> error ["destination", dst, "already exists and is a symbolic link."]
-                _               -> error ["destination", dst, "already exists and is something weird."]
+                    case kind of
+                        LinkDeployment -> do
+                            incaseElse conf_replace
+                                (rmDir dst >> preDeployment d)
+                                (error ["Destination", dst, "already exists and is directory (for a link deployment):", s, "."])
+                        CopyDeployment -> do
+                            equal <- compareDirectories s dst
+                            if equal
+                            then done
+                            else do
+                                incaseElse conf_replace
+                                    (rmDir dst >> preDeployment d)
+                                    (error ["Destination", dst, "already exists and is a directory, different from the source."])
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> do
+                            incaseElse conf_replace
+                                (unlink dst >> preDeployment d)
+                                (error ["Destination", dst, "already exists and is a symbolic link."])
+                        LinkDeployment -> do
+                            point <- liftIO $ readSymbolicLink s
+                            if point == dst-- TODO comparison could be more fuzzy
+                            then done
+                            else incaseElse conf_replace
+                                (unlink dst >> preDeployment d)
+                                (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
+                _               -> error ["Destination", dst, "already exists and is something weird."]
         IsLink p        -> error ["Source", s, "is a symbolic link."]
         _               -> error ["Source", s, "is not a valid file type."]
 
@@ -136,7 +186,7 @@ diagnose fp = do
     if not e
     then return NonExistent
     else do
-        s <- liftIO $ getFileStatus fp
+        s <- liftIO $ getSymbolicLinkStatus fp
         if isBlockDevice s
         then return IsBlockDevice
         else if isCharacterDevice s
@@ -182,6 +232,23 @@ link src dst = do
   where upperDir = dropFileName dst
 
 
+-- TODO these dont catch errors
+unlink :: FilePath -> SparkDeployer ()
+unlink fp = do
+    _ <- liftIO $ system $ unwords $ ["unlink", fp]
+    verbose $ unwords ["unlinked", fp]
+
+rmFile :: FilePath -> SparkDeployer ()
+rmFile fp = do
+    liftIO $ removeFile fp
+    verbose $ unwords ["removed", fp]
+
+rmDir :: FilePath -> SparkDeployer ()
+rmDir fp = do
+    liftIO $ removeDirectoryRecursive fp
+    verbose $ unwords ["removed", fp]
+
+
 postdeployments :: [Deployment] -> [PreDeployment] -> SparkDeployer ()
 postdeployments deps predeps = do
     pdps <- mapM postdeployment predeps
@@ -202,22 +269,42 @@ postdeployment (Ready src dst kind) = do
             case dd of
                 NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
                 IsFile      _   -> do
-                    equal <- compareFiles src dst
-                    if equal
-                    then fine
-                    else error ["The source and destination files are somehow still not equal"]
+                    case kind of
+                        LinkDeployment -> error ["The destination", dst, "is somehow a file while it was a link deployment."]
+                        CopyDeployment -> do
+                            equal <- compareFiles src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination files are somehow still not equal"]
                 IsDirectory _   -> error ["The destination", dst, "is somehow a directory after the deployment of the file", src, "."]
-                IsLink      _   -> error ["The destination", dst, "is somehow a link after deployment"]
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> error ["The destination", dst, "is somehow a link while it was a copy deployment."]
+                        LinkDeployment -> do
+                            point <- liftIO $ readSymbolicLink src
+                            if filePathEqual point dst
+                            then fine
+                            else error ["The destination is a symbolic link, but it doesn't point to the source."]
         IsDirectory _   -> do
             case dd of
                 NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
                 IsFile      _   -> error ["The destination", dst, "is somehow a file after the deployment of the directory", src, "."]
                 IsDirectory _   -> do
-                    equal <- compareDirectories src dst
-                    if equal
-                    then fine
-                    else error ["The source and destination directories are somehow still not equal"]
-                IsLink      _   -> error ["The destination", dst, "is somehow a link after deployment"]
+                    case kind of
+                        LinkDeployment -> error ["The destination", dst, "is somehow a directory while it was a link deployment."]
+                        CopyDeployment -> do
+                            equal <- compareDirectories src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination directories are somehow still not equal"]
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> error ["The destination", dst, "is somehow a link while it was a copy deployment."]
+                        LinkDeployment -> do
+                            point <- liftIO $ readSymbolicLink src
+                            if filePathEqual point dst
+                            then fine
+                            else error ["The destination is a symbolic link, but it doesn't point to the source."]
 
         IsLink      _   -> error ["The source", src, "is a symbolic link"]
         _               -> error ["The destination is now something weird"]
@@ -228,3 +315,5 @@ postdeployment (Ready src dst kind) = do
     error :: [String] -> SparkDeployer (Maybe String)
     error err = return $ Just $ unwords err
 
+filePathEqual :: FilePath -> FilePath -> Bool -- TODO comparison could be more fuzzy
+filePathEqual = (==)

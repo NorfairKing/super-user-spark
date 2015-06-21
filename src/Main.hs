@@ -34,6 +34,7 @@ loadConfig = do
     return $ Config {
             conf_dry = not $ "--no-dry" `elem` args
         ,   conf_verbose = "--verbose" `elem` args || "-v" `elem` args
+        ,   conf_replace = "--replace" `elem` args || "-r" `elem` args
         }
 
 loadStartingCardReference :: Sparker StartingSparkReference
