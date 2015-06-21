@@ -130,11 +130,10 @@ data Diagnostics = NonExistent
                  | IsCharDevice
                  | IsBlockDevice
 
-data PreDeployment = PreDeployment {
-        pred_src  :: FilePath
-    ,   pred_dst  :: FilePath
-    ,   pred_kind :: DeploymentKind
-    }
+data PreDeployment = Ready FilePath FilePath DeploymentKind
+                   | AlreadyDone
+                   | Warning String
+                   | Error String
     deriving (Show, Eq)
 
 ---[ Pretty Types ]---

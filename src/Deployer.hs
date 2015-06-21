@@ -9,6 +9,7 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
                                      isNamedPipe, isRegularFile, isSocket,
                                      isSymbolicLink)
 
+import           Formatter          (formatPreDeployments)
 import           Types
 
 
@@ -43,21 +44,59 @@ predeployments :: SparkDeployer ()
 predeployments = do
     dps  <- gets state_deployments
     pdps <- mapM preDeployment dps
-    case lefts pdps of
+    liftIO $ putStrLn $ formatPreDeployments $ zip dps pdps
+    {-case lefts pdps of
         [] -> modify (\s -> s { state_predeployments = rights pdps } )
-        ss -> throwError $ DeployError $ PreDeployError ss
+        ss -> throwError $ DeployError $ PreDeployError ss-}
 
-preDeployment :: Deployment -> SparkDeployer (Either String PreDeployment)
-preDeployment d@(Put [] dst _) = return $ Left $ unwords ["No existing source for deployment with destination", dst]
+preDeployment :: Deployment -> SparkDeployer PreDeployment
+preDeployment d@(Put [] dst _) = return $ Error $ unwords ["No existing source for deployment with destination", dst]
 preDeployment d@(Put (s:ss) dst kind) = do
     sd <- diagnose s
     dd <- diagnose dst
     case sd of
         NonExistent     -> preDeployment (Put ss dst kind)
-        IsFile p        -> undefined
-        IsDirectory p   -> undefined
-        IsLink p        -> undefined
-        _               -> return $ Left $ unwords ["Source", s, "is not a valid file type."]
+        IsFile p        -> do
+            case dd of
+                NonExistent     -> ready
+                IsFile      _   -> do
+                    equal <- compareFiles s dst
+                    if equal
+                    then done
+                    else error ["Destination", dst, "already exists and is a file."]
+                IsDirectory _   -> error ["Destination", dst, "already exists and is a directory."]
+                IsLink      _   -> error ["destination", dst, "already exists and is a symbolic link."]
+                _               -> error ["destination", dst, "already exists and is something weird."]
+        IsDirectory p   -> do
+            case dd of
+                NonExistent     -> ready
+                IsFile      _   -> error ["Destination", dst, "already exists and is a directory."]
+                IsDirectory _   -> do
+                    equal <- compareDirectories s dst
+                    if equal
+                    then done
+                    else error ["Destination", dst, "already exists and is a directory."]
+                IsLink      _   -> error ["destination", dst, "already exists and is a symbolic link."]
+                _               -> error ["destination", dst, "already exists and is something weird."]
+        IsLink p        -> error ["Source", s, "is a symbolic link."]
+        _               -> error ["Source", s, "is not a valid file type."]
+
+  where
+    done :: SparkDeployer PreDeployment
+    done = return $ AlreadyDone
+    ready :: SparkDeployer PreDeployment
+    ready = return $ Ready s dst kind
+    warning :: [String] -> SparkDeployer PreDeployment
+    warning strs = return $ Warning $ unwords strs
+    error :: [String] -> SparkDeployer PreDeployment
+    error strs = return $ Error $ unwords strs
+
+compareFiles :: FilePath -> FilePath -> SparkDeployer Bool
+compareFiles f1 f2 = return False
+
+compareDirectories :: FilePath -> FilePath -> SparkDeployer Bool
+compareDirectories f1 f2 = return False
+
 
 diagnose :: FilePath -> SparkDeployer Diagnostics
 diagnose fp = do

@@ -189,8 +189,7 @@ maximums lss = if all null lss
 
 formatDeployments :: [Deployment] -> String
 formatDeployments ds = unlines $ map (formatDeployment lens) ds
-  where
-    lens = maximums $ map srcLen ds
+  where lens = maximums $ map srcLen ds
 
 formatDeployment :: [Int] -> Deployment -> String
 formatDeployment ms d@(Put srcs dst k) = unwords $
@@ -208,6 +207,32 @@ formatDeployment ms d@(Put srcs dst k) = unwords $
     padded (m:r) [] = replicate m ' ' ++ padded r []
     padded [] _ = []
     padded (m:r) (s:ss) = s ++ replicate (m - length s) ' ' ++ " " ++ padded r ss
+
+
+formatPreDeployments :: [(Deployment, PreDeployment)] -> String
+formatPreDeployments ds = unlines $ zipStrs ls $ map (": " ++) ms
+  where
+    lens = maximums $ map srcLen deps
+    ls = map (formatDeployment lens) deps
+    ms = map formatPreDeployment predeps
+
+    deps = map fst ds
+    predeps = map snd ds
+
+formatPreDeployment :: PreDeployment -> String
+formatPreDeployment (Ready _ _ _) = "ready"
+formatPreDeployment AlreadyDone = "done"
+formatPreDeployment (Warning str) = unwords ["Warning:", str]
+formatPreDeployment (Error str) = unwords ["Error:", str]
+
+
+zipStrs :: [String] -> [String] -> [String]
+zipStrs [] [] = []
+zipStrs [] ss = ss
+zipStrs ss [] = ss
+zipStrs (s:ss) (t:ts) = (s++t):(zipStrs ss ts)
+
+
 
 
 

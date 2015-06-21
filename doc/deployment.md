@@ -7,7 +7,6 @@ What are the possible situations:
 ## The deployment is a file
 ### Before
 #### Good
-- The source is a file
 - The source has read permissions
 - The destination doesn't exist.
 - The destination parent directory has execute permissions.
