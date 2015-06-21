@@ -18,6 +18,8 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 
+import           System.Directory       (Permissions (..))
+import           System.Posix.Files     (FileStatus)
 import           Text.Parsec            (ParseError)
 
 
@@ -106,16 +108,34 @@ data CompilerState = CompilerState {
 
 type SparkDeployer = StateT DeployerState Sparker
 data DeployerState = DeployerState {
-        state_deployments_left :: [Deployment]
+        state_deployments    :: [Deployment]
+    ,   state_predeployments :: [PreDeployment]
     }
-data DeployError = PreDeployError String
-                 | DuringDeployError String
-                 | PostDeployError String
+data DeployError = PreDeployError [String]
+                 | DuringDeployError [String]
+                 | PostDeployError [String]
     deriving (Show, Eq)
 
 
 runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
 runSparkDeployer state func = runStateT func state
+
+
+data Diagnostics = NonExistent
+                 | IsFile Permissions
+                 | IsDirectory Permissions
+                 | IsLink Permissions
+                 | IsPipe
+                 | IsSocket
+                 | IsCharDevice
+                 | IsBlockDevice
+
+data PreDeployment = PreDeployment {
+        pred_src  :: FilePath
+    ,   pred_dst  :: FilePath
+    ,   pred_kind :: DeploymentKind
+    }
+    deriving (Show, Eq)
 
 ---[ Pretty Types ]---
 
@@ -125,6 +145,7 @@ data FormatterState = FormatterState {
     ,   state_longest_src           :: Int
     ,   state_newline_before_deploy :: Bool
     }
+    deriving (Show, Eq)
 
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
