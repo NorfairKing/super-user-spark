@@ -84,6 +84,9 @@ data Declaration = SparkOff CardReference
 data Deployment = Put [FilePath] FilePath DeploymentKind
     deriving (Show, Eq)
 
+dst :: Deployment -> FilePath
+dst (Put _ dst _) = dst
+
 type CompileError = String
 
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
@@ -107,10 +110,7 @@ data CompilerState = CompilerState {
 ---[ Deploying Types ]---
 
 type SparkDeployer = StateT DeployerState Sparker
-data DeployerState = DeployerState {
-        state_deployments    :: [Deployment]
-    ,   state_predeployments :: [PreDeployment]
-    }
+data DeployerState = DeployerState
 data DeployError = PreDeployError [String]
                  | DuringDeployError [String]
                  | PostDeployError [String]
@@ -132,7 +132,6 @@ data Diagnostics = NonExistent
 
 data PreDeployment = Ready FilePath FilePath DeploymentKind
                    | AlreadyDone
-                   | Warning String
                    | Error String
     deriving (Show, Eq)
 

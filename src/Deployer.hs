@@ -14,40 +14,31 @@ import           Types
 
 
 deploy :: [Deployment] -> Sparker ()
-deploy dp = do
-    state <- initialState dp
-    _ <- runSparkDeployer state deployAll
+deploy dps = do
+    state <- initialState dps
+    _ <- runSparkDeployer state $ deployAll dps
     return ()
 
 initialState :: [Deployment] -> Sparker DeployerState
-initialState dp = return $ DeployerState {
-        state_deployments = dp
-    ,   state_predeployments = []
-    }
+initialState dp = return DeployerState
 
-deployAll :: SparkDeployer ()
-deployAll = do
+deployAll :: [Deployment] -> SparkDeployer ()
+deployAll deps = do
+    pdps <- predeployments deps
+
     dry <- asks conf_dry
-
-    predeployments
-    pdps <- gets state_predeployments
-    liftIO $ print pdps
-
     if dry
     then return ()
     else do
-        deployments
-        postdeployments
+        deployments pdps
+        postdeployments pdps
 
 
-predeployments :: SparkDeployer ()
-predeployments = do
-    dps  <- gets state_deployments
+predeployments :: [Deployment] -> SparkDeployer [PreDeployment]
+predeployments dps = do
     pdps <- mapM preDeployment dps
     liftIO $ putStrLn $ formatPreDeployments $ zip dps pdps
-    {-case lefts pdps of
-        [] -> modify (\s -> s { state_predeployments = rights pdps } )
-        ss -> throwError $ DeployError $ PreDeployError ss-}
+    return pdps
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
 preDeployment d@(Put [] dst _) = return $ Error $ unwords ["No existing source for deployment with destination", dst]
@@ -86,13 +77,14 @@ preDeployment d@(Put (s:ss) dst kind) = do
     done = return $ AlreadyDone
     ready :: SparkDeployer PreDeployment
     ready = return $ Ready s dst kind
-    warning :: [String] -> SparkDeployer PreDeployment
-    warning strs = return $ Warning $ unwords strs
     error :: [String] -> SparkDeployer PreDeployment
     error strs = return $ Error $ unwords strs
 
 compareFiles :: FilePath -> FilePath -> SparkDeployer Bool
-compareFiles f1 f2 = return False
+compareFiles f1 f2 = do
+    s1 <- liftIO $ readFile f1
+    s2 <- liftIO $ readFile f2
+    return $ s1 == s2
 
 compareDirectories :: FilePath -> FilePath -> SparkDeployer Bool
 compareDirectories f1 f2 = return False
@@ -125,35 +117,95 @@ diagnose fp = do
 
 
 
-deployments :: SparkDeployer ()
-deployments =  mapM_ deployment =<< gets state_deployments
+deployments :: [PreDeployment] -> SparkDeployer [Maybe String]
+deployments = mapM deployment
 
-deployment :: Deployment -> SparkDeployer ()
-deployment (Put src dst kind) = do
+deployment :: PreDeployment -> SparkDeployer (Maybe String)
+deployment AlreadyDone = return Nothing
+deployment (Error str) = return $ Just str
+deployment (Ready src dst kind) = do
     case kind of
         LinkDeployment -> link src dst
         CopyDeployment -> copy src dst
+    return Nothing
 
-copy :: [FilePath] -> FilePath -> SparkDeployer ()
-copy srcs dst = do
-    liftIO $ copyFile (head srcs) dst
+copy :: FilePath -> FilePath -> SparkDeployer ()
+copy src dst = do
+    liftIO $ copyFile src dst
 
-link :: [FilePath] -> FilePath -> SparkDeployer ()
-link srcs dst = do
-    liftIO $ createSymbolicLink (head srcs) dst
+link :: FilePath -> FilePath -> SparkDeployer ()
+link src dst = do
+    liftIO $ createSymbolicLink src dst
 
 
-postdeployments :: SparkDeployer ()
-postdeployments = do
-    dps  <- gets state_predeployments
-    pdps <- mapM postdeployment dps
+postdeployments :: [PreDeployment] -> SparkDeployer ()
+postdeployments predeps = do
+    pdps <- mapM postdeployment predeps
     case catMaybes pdps of
         [] -> return ()
         es -> throwError $ DeployError $ PostDeployError es
 
 
 postdeployment :: PreDeployment -> SparkDeployer (Maybe String)
-postdeployment pd = return Nothing
+postdeployment AlreadyDone = return Nothing
+postdeployment (Error str) = throwError $ UnpredictedError "Contact the author if you see this."
+postdeployment (Ready src dst kind) = do
+    sd <- diagnose src
+    dd <- diagnose dst
+    case sd of
+        NonExistent     -> error ["The source", src, "is somehow missing after deployment"]
+        IsFile      _   -> do
+            case dd of
+                NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
+                IsFile      _   -> do
+                    case kind of
+                        LinkDeployment -> error ["The destination", dst, "is somehow a file after a link deployment."]
+                        CopyDeployment -> do
+                            equal <- compareFiles src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination files are somehow still not equal"]
+                IsDirectory _   -> error ["The destination", dst, "is somehow a directory after the deployment of the file", src, "."]
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> error ["The destination", dst, "is somehow a link after a copy deployment"]
+                        LinkDeployment -> do
+                            equal <- compareFiles src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination files are somehow still not equal"]
+
+        IsDirectory _   -> do
+            case dd of
+                NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
+                IsFile      _   -> error ["The destination", dst, "is somehow a file after the deployment of the directory", src, "."]
+                IsDirectory _   -> do
+                    case kind of
+                        LinkDeployment -> error ["The destination", dst, "is somehow a directory after a link deployment."]
+                        CopyDeployment -> do
+                            equal <- compareDirectories src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination directories are somehow still not equal"]
+                IsLink      _   -> do
+                    case kind of
+                        CopyDeployment -> error ["The destination", dst, "is somehow a link after a copy deployment"]
+                        LinkDeployment -> do
+                            equal <- compareDirectories src dst
+                            if equal
+                            then fine
+                            else error ["The source and destination directories are somehow still not equal"]
+
+        IsLink      _   -> error ["The source", src, "is a symbolic link"]
+        _               -> error ["The destination is now something weird"]
+
+  where
+    fine :: SparkDeployer (Maybe String)
+    fine = return Nothing
+    error :: [String] -> SparkDeployer (Maybe String)
+    error err = return $ Just $ unwords err
+
+
 {-
     srcd <- diagnose src
     dstd <- diagnose dst

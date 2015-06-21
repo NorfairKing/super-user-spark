@@ -210,19 +210,16 @@ formatDeployment ms d@(Put srcs dst k) = unwords $
 
 
 formatPreDeployments :: [(Deployment, PreDeployment)] -> String
-formatPreDeployments ds = unlines $ zipStrs ls $ map (": " ++) ms
+formatPreDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
   where
-    lens = maximums $ map srcLen deps
-    ls = map (formatDeployment lens) deps
     ms = map formatPreDeployment predeps
 
-    deps = map fst ds
+    dests = map (dst.fst) ds
     predeps = map snd ds
 
 formatPreDeployment :: PreDeployment -> String
-formatPreDeployment (Ready _ _ _) = "ready"
-formatPreDeployment AlreadyDone = "done"
-formatPreDeployment (Warning str) = unwords ["Warning:", str]
+formatPreDeployment (Ready _ _ _) = "ready to deploy"
+formatPreDeployment AlreadyDone = "done already"
 formatPreDeployment (Error str) = unwords ["Error:", str]
 
 
