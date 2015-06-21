@@ -5,10 +5,12 @@ module Deployer where
 import           Data.Either        (lefts, rights)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
-import           Shelly             (cp_r, fromText, shelly)
+import           Shelly             (cp_r, fromText, shelly, test_s)
 import           System.Directory   (copyFile, createDirectoryIfMissing,
-                                     getDirectoryContents, getPermissions,
-                                     removeDirectoryRecursive, removeFile)
+                                     emptyPermissions, getDirectoryContents,
+                                     getPermissions, removeDirectoryRecursive,
+                                     removeFile)
+import           System.Exit        (ExitCode (..))
 import           System.FilePath    (dropFileName)
 import           System.Posix.Files (createSymbolicLink, fileExist,
                                      getSymbolicLinkStatus, isBlockDevice,
@@ -96,10 +98,12 @@ preDeployment d@(Put (s:ss) dst kind) = do
                                 (unlink dst >> preDeployment d)
                                 (error ["Destination", dst, "already exists and is a symbolic link (for a copy deployment):", s, "."])
                         LinkDeployment -> do
-                            point <- liftIO $ readSymbolicLink s
-                            if point == dst-- TODO comparison could be more fuzzy
+                            point <- liftIO $ readSymbolicLink dst
+                            if point `filePathEqual` s
                             then done
-                            else incaseElse conf_replace
+                            else do
+                                liftIO $ putStrLn $ point ++ " is not equal to " ++ dst
+                                incaseElse conf_replace
                                     (unlink dst >> preDeployment d)
                                     (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", dst, "already exists and is something weird."]
@@ -131,8 +135,8 @@ preDeployment d@(Put (s:ss) dst kind) = do
                                 (unlink dst >> preDeployment d)
                                 (error ["Destination", dst, "already exists and is a symbolic link."])
                         LinkDeployment -> do
-                            point <- liftIO $ readSymbolicLink s
-                            if point == dst-- TODO comparison could be more fuzzy
+                            point <- liftIO $ readSymbolicLink dst
+                            if point `filePathEqual` s
                             then done
                             else incaseElse conf_replace
                                 (unlink dst >> preDeployment d)
@@ -183,9 +187,8 @@ compareDirectories d1 d2 = do
 diagnose :: FilePath -> SparkDeployer Diagnostics
 diagnose fp = do
     e <- liftIO $ fileExist fp
-    if not e
-    then return NonExistent
-    else do
+    if e
+    then do
         s <- liftIO $ getSymbolicLinkStatus fp
         if isBlockDevice s
         then return IsBlockDevice
@@ -204,6 +207,12 @@ diagnose fp = do
                             else if isRegularFile s
                                 then return $ IsFile p
                                 else throwError $ UnpredictedError "Contact the author if you see this"
+    else do
+        -- Because if a link exists, but it points to something that doesn't exist, it is considered as non-existent by `fileExist`
+        es <- liftIO $ system $ unwords ["test", "-L", fp]
+        case es of
+            ExitSuccess -> return $ IsLink emptyPermissions
+            ExitFailure _ -> return NonExistent
 
 
 
@@ -235,8 +244,10 @@ link src dst = do
 -- TODO these dont catch errors
 unlink :: FilePath -> SparkDeployer ()
 unlink fp = do
-    _ <- liftIO $ system $ unwords $ ["unlink", fp]
-    verbose $ unwords ["unlinked", fp]
+    es <- liftIO $ system $ unwords $ ["/usr/bin/unlink", fp]
+    case es of
+        ExitSuccess -> verbose $ unwords ["unlinked", fp]
+        ExitFailure _ -> throwError $ DeployError $ PreDeployError ["Something went wrong while unlinking " ++ fp ++ "."]
 
 rmFile :: FilePath -> SparkDeployer ()
 rmFile fp = do
@@ -281,8 +292,8 @@ postdeployment (Ready src dst kind) = do
                     case kind of
                         CopyDeployment -> error ["The destination", dst, "is somehow a link while it was a copy deployment."]
                         LinkDeployment -> do
-                            point <- liftIO $ readSymbolicLink src
-                            if filePathEqual point dst
+                            point <- liftIO $ readSymbolicLink dst
+                            if point `filePathEqual` src
                             then fine
                             else error ["The destination is a symbolic link, but it doesn't point to the source."]
         IsDirectory _   -> do
@@ -301,8 +312,8 @@ postdeployment (Ready src dst kind) = do
                     case kind of
                         CopyDeployment -> error ["The destination", dst, "is somehow a link while it was a copy deployment."]
                         LinkDeployment -> do
-                            point <- liftIO $ readSymbolicLink src
-                            if filePathEqual point dst
+                            point <- liftIO $ readSymbolicLink dst
+                            if point `filePathEqual` src
                             then fine
                             else error ["The destination is a symbolic link, but it doesn't point to the source."]
 
