@@ -217,10 +217,22 @@ formatPreDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
     dests = map (dst.fst) ds
     predeps = map snd ds
 
+formatPostDeployments :: [(Deployment, Maybe String)] -> String
+formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
+  where
+    ms = map mstr predeps
+
+    mstr Nothing = "done"
+    mstr (Just err) = err
+
+    dests = map (dst.fst) ds
+    predeps = map snd ds
+
 formatPreDeployment :: PreDeployment -> String
 formatPreDeployment (Ready _ _ _) = "ready to deploy"
 formatPreDeployment AlreadyDone = "done already"
 formatPreDeployment (Error str) = unwords ["Error:", str]
+
 
 
 zipStrs :: [String] -> [String] -> [String]

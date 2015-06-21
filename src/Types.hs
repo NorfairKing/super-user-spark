@@ -129,6 +129,7 @@ data Diagnostics = NonExistent
                  | IsSocket
                  | IsCharDevice
                  | IsBlockDevice
+    deriving (Show, Eq)
 
 data PreDeployment = Ready FilePath FilePath DeploymentKind
                    | AlreadyDone

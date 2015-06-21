@@ -23,6 +23,8 @@ executable spark
                   , xdg-basedir >= 0.2 && <0.3
                   , unix >= 2.7 && <2.8
                   , process >= 1.2 && <1.3
+                  , shelly >= 1.6 && <1.7
+                  , text >= 1.2 && <1.3
   default-language: Haskell2010
   
 
@@ -41,5 +43,7 @@ test-suite spark-tests
                   , xdg-basedir >= 0.2 && <0.3
                   , unix >= 2.7 && <2.8
                   , process >= 1.2 && <1.3
+                  , shelly >= 1.6 && <1.7
+                  , text >= 1.2 && <1.3
   default-language:  Haskell2010
   

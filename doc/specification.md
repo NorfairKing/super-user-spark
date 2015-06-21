@@ -37,10 +37,6 @@ By default, all unspecified deployments are links.
 - A deployment with an unspecified deployment kind (`->`) can be configured to be a link `--link`, or a copy `--copy`.
 - All deployment kind can be overridden as well: `--override-link` or `--override-copy`.
 
-#### Permissions
-By default, all files are copied with `rw-r--r--` permissions.
-This can be changed: `--permissions=775`.
-
 
 ## The language
 ### Cards
