@@ -17,6 +17,7 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
 import           Formatter          (formatPostDeployments,
                                      formatPreDeployments)
 import           Types
+import           Utils
 
 
 deploy :: [Deployment] -> Sparker ()
@@ -54,7 +55,7 @@ catErrors (s:ss) = case s of
 predeployments :: [Deployment] -> SparkDeployer [PreDeployment]
 predeployments dps = do
     pdps <- mapM preDeployment dps
-    liftIO $ putStrLn $ formatPreDeployments $ zip dps pdps
+    lift $ verboseOrDry $ formatPreDeployments $ zip dps pdps
     return pdps
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
@@ -97,6 +98,7 @@ preDeployment d@(Put (s:ss) dst kind) = do
     error :: [String] -> SparkDeployer PreDeployment
     error strs = return $ Error $ unwords strs
 
+
 cmpare :: FilePath -> FilePath -> SparkDeployer Bool
 cmpare f1 f2 = do
     d1 <- diagnose f1
@@ -124,7 +126,6 @@ compareDirectories d1 d2 = do
     contents d = do
         cs <- liftIO $ getDirectoryContents d
         return $ filter (\f -> not $ f == "." || f == "..") cs
-
 
 diagnose :: FilePath -> SparkDeployer Diagnostics
 diagnose fp = do
@@ -177,7 +178,7 @@ link src dst = do
 postdeployments :: [Deployment] -> [PreDeployment] -> SparkDeployer ()
 postdeployments deps predeps = do
     pdps <- mapM postdeployment predeps
-    liftIO $ putStrLn $ formatPostDeployments $ zip deps pdps
+    lift $ verbose $ formatPostDeployments $ zip deps pdps
     case catMaybes pdps of
         [] -> return ()
         es -> throwError $ DeployError $ PostDeployError es

@@ -38,7 +38,8 @@ data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe Car
 
 type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
-        conf_dry :: Bool
+        conf_dry     :: Bool
+    ,   conf_verbose :: Bool
     } deriving (Show, Eq)
 
 data SparkError = ParseError ParseError

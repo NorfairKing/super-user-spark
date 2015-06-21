@@ -10,16 +10,18 @@ import           Formatter
 import           Parser
 import           Paths
 import           Types
+import           Utils
 
 main :: IO ()
 main = do
     checkSystemConsistency
 
     config <- loadConfig
-    print config
     er <- runSparker config $ do
+        verbose $ show config
+
         scr <- loadStartingCardReference
-        liftIO $ print scr
+        verbose $ show scr
         spark scr
     case er of
         Left err -> putStrLn $ showError err
@@ -31,6 +33,7 @@ loadConfig = do
     let args = filter ("-" `isPrefixOf`) as
     return $ Config {
             conf_dry = not $ "--no-dry" `elem` args
+        ,   conf_verbose = "--verbose" `elem` args || "-v" `elem` args
         }
 
 loadStartingCardReference :: Sparker StartingSparkReference
@@ -45,10 +48,10 @@ loadStartingCardReference = do
 spark :: StartingSparkReference -> Sparker ()
 spark ssr = do
     cs <- parseStartingCardReference ssr
-    css <- formatCards cs
-    liftIO $ putStrLn css
+    fcs <- formatCards cs
+    verbose fcs
     dp <- compile (head cs) cs
-    liftIO $ putStrLn $ formatDeployments dp
+    verboseOrDry $ formatDeployments dp
     deploy dp
 
 showError :: SparkError -> String
