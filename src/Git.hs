@@ -3,7 +3,8 @@ module Git where
 import           System.Directory (doesDirectoryExist, getCurrentDirectory,
                                    getDirectoryContents, setCurrentDirectory)
 import           System.Exit      (ExitCode (..))
-import           System.FilePath  (takeDirectory, takeFileName, (</>))
+import           System.FilePath  (dropExtension, takeDirectory, takeFileName,
+                                   (</>))
 import           System.Process   (createProcess, shell, waitForProcess)
 
 import           Types
@@ -55,6 +56,8 @@ clone = do
 checkout :: Branch -> GitRepoController ()
 checkout branch = do
     cd <- liftIO $ getCurrentDirectory
+    root <- repoRoot
+    liftIO $ setCurrentDirectory root
     let proc = shell $ "git checkout " ++ branch
     (_,_,_,ph) <- liftIO $ createProcess proc
     ec <- liftIO $ waitForProcess ph
@@ -85,7 +88,8 @@ repoFilePath fp = do
 repoRoot :: GitRepoController FilePath
 repoRoot = do
     repo <- gets state_repo
-    return $ takeFileName $ repo_path repo
+    let root = dropExtension $ takeFileName $ repo_path repo
+    return root
 
 listRepoDir :: FilePath -> GitRepoController [FilePath]
 listRepoDir fp = do

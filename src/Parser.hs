@@ -315,13 +315,13 @@ gitRepo = do
     prot <- gitProtocol
     case prot of
         HTTPS -> do
-            host <- manyTill anyToken (string "/")
-            path <- many anyToken
+            host <- manyTill (noneOf "/") (string "/")
+            path <- many (noneOf " :")
             return $ GitRepo {
                     repo_protocol = HTTPS, repo_host = host, repo_path = path
                 }
         Git   -> do
-            host <- manyTill anyToken (string ":")
+            host <- manyTill (noneOf ":") (string ":")
             path <- manyTill anyToken (string ".git")
             return $ GitRepo {
                     repo_protocol = Git, repo_host = host, repo_path = path
