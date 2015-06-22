@@ -8,7 +8,8 @@ GHC_FLAGS = 	-fwarn-unused-imports \
 				-fforce-recomp \
 				-fwarn-incomplete-patterns \
 				-Wall \
-				-fno-warn-unused-do-bind
+				-fno-warn-unused-do-bind \
+				-fno-warn-name-shadowing
 GHC_SRC_DIRS = 	-i$(SRC_DIR) \
 			   	-ibenchmarks \
 			   	-itests

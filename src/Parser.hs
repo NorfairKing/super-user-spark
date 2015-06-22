@@ -119,6 +119,7 @@ startingCardReference = do
     return $ case r of
         CardFile fp mn -> FileRef fp mn
         CardRepo rp mb mf -> RepoRef rp mb mf
+        _ -> error "Contact the author if you see this"
 
 cardReference :: Parser CardReference
 cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference

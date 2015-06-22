@@ -3,8 +3,7 @@ module Git where
 import           System.Directory (doesDirectoryExist, getCurrentDirectory,
                                    getDirectoryContents, setCurrentDirectory)
 import           System.Exit      (ExitCode (..))
-import           System.FilePath  (dropExtension, takeDirectory, takeFileName,
-                                   (</>))
+import           System.FilePath  (dropExtension, takeFileName, (</>))
 import           System.Process   (createProcess, shell, waitForProcess)
 
 import           Types

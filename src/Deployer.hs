@@ -2,14 +2,13 @@
 
 module Deployer where
 
-import           Data.Either        (lefts, rights)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
-import           Shelly             (cp_r, fromText, shelly, test_s)
-import           System.Directory   (copyFile, createDirectoryIfMissing,
-                                     emptyPermissions, getDirectoryContents,
-                                     getPermissions, removeDirectoryRecursive,
-                                     removeFile)
+import           Prelude            hiding (error)
+import           Shelly             (cp_r, fromText, shelly)
+import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
+                                     getDirectoryContents, getPermissions,
+                                     removeDirectoryRecursive, removeFile)
 import           System.Exit        (ExitCode (..))
 import           System.FilePath    (dropFileName)
 import           System.Posix.Files (createSymbolicLink, fileExist,
@@ -32,7 +31,7 @@ deploy dps = do
     return ()
 
 initialState :: [Deployment] -> Sparker DeployerState
-initialState dp = return DeployerState
+initialState _ = return DeployerState
 
 deployAll :: [Deployment] -> SparkDeployer ()
 deployAll deps = do
@@ -64,13 +63,13 @@ predeployments dps = do
     return pdps
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
-preDeployment d@(Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
+preDeployment (Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
 preDeployment d@(Put (s:ss) dst kind) = do
     sd <- diagnose s
     dd <- diagnose dst
     case sd of
         NonExistent     -> preDeployment (Put ss dst kind)
-        IsFile p        -> do
+        IsFile _        -> do
             case dd of
                 NonExistent     -> ready
                 IsFile      _   -> do
@@ -107,7 +106,7 @@ preDeployment d@(Put (s:ss) dst kind) = do
                                     (unlink dst >> preDeployment d)
                                     (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", dst, "already exists and is something weird."]
-        IsDirectory p   -> do
+        IsDirectory _   -> do
             case dd of
                 NonExistent     -> ready
                 IsFile      _   -> do
@@ -142,7 +141,7 @@ preDeployment d@(Put (s:ss) dst kind) = do
                                 (unlink dst >> preDeployment d)
                                 (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", dst, "already exists and is something weird."]
-        IsLink p        -> error ["Source", s, "is a symbolic link."]
+        IsLink _        -> error ["Source", s, "is a symbolic link."]
         _               -> error ["Source", s, "is not a valid file type."]
 
   where
@@ -270,12 +269,12 @@ postdeployments deps predeps = do
 
 postdeployment :: PreDeployment -> SparkDeployer (Maybe String)
 postdeployment AlreadyDone = return Nothing
-postdeployment (Error str) = throwError $ UnpredictedError "Contact the author if you see this."
+postdeployment (Error _) = throwError $ UnpredictedError "Contact the author if you see this. (postdeployment)"
 postdeployment (Ready src dst kind) = do
     sd <- diagnose src
     dd <- diagnose dst
     case sd of
-        NonExistent     -> error ["The source", src, "is somehow missing after deployment"]
+        NonExistent     -> error ["The source", src, "is somehow missing after deployment."]
         IsFile      _   -> do
             case dd of
                 NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
@@ -286,7 +285,7 @@ postdeployment (Ready src dst kind) = do
                             equal <- compareFiles src dst
                             if equal
                             then fine
-                            else error ["The source and destination files are somehow still not equal"]
+                            else error ["The source and destination files are somehow still not equal."]
                 IsDirectory _   -> error ["The destination", dst, "is somehow a directory after the deployment of the file", src, "."]
                 IsLink      _   -> do
                     case kind of
@@ -295,7 +294,8 @@ postdeployment (Ready src dst kind) = do
                             point <- liftIO $ readSymbolicLink dst
                             if point `filePathEqual` src
                             then fine
-                            else error ["The destination is a symbolic link, but it doesn't point to the source."]
+                            else error ["The destination", dst, "is a symbolic link, but it doesn't point to the source."]
+                _               -> error ["The destination", dst, "is something weird after deployment."]
         IsDirectory _   -> do
             case dd of
                 NonExistent     -> error ["The destination", dst, "is somehow non-existent after deployment."]
@@ -307,7 +307,7 @@ postdeployment (Ready src dst kind) = do
                             equal <- compareDirectories src dst
                             if equal
                             then fine
-                            else error ["The source and destination directories are somehow still not equal"]
+                            else error ["The source and destination directories are somehow still not equal."]
                 IsLink      _   -> do
                     case kind of
                         CopyDeployment -> error ["The destination", dst, "is somehow a link while it was a copy deployment."]
@@ -316,9 +316,10 @@ postdeployment (Ready src dst kind) = do
                             if point `filePathEqual` src
                             then fine
                             else error ["The destination is a symbolic link, but it doesn't point to the source."]
+                _               -> error ["The destination", dst, "is something weird after deployment."]
 
-        IsLink      _   -> error ["The source", src, "is a symbolic link"]
-        _               -> error ["The destination is now something weird"]
+        IsLink      _   -> error ["The source", src, "is a symbolic link."]
+        _               -> error ["The source", src, "is something weird."]
 
   where
     fine :: SparkDeployer (Maybe String)

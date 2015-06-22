@@ -19,7 +19,6 @@ import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 
 import           System.Directory       (Permissions (..))
-import           System.Posix.Files     (FileStatus)
 import           Text.Parsec            (ParseError)
 
 

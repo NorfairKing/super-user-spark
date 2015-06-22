@@ -82,7 +82,7 @@ processDeclaration = do
         SparkOff st -> do
             case st of
                 CardRepo _ _ _ -> throwError $ UnpredictedError "not yet implemented"
-                CardFile file mn -> do
+                CardFile file _ -> do
                     dir <- gets state_current_directory
                     newCards <- liftSparker $ P.parseFile $ dir </> file -- Fixme, use mn
                     newDeclarations <- liftSparker $ compile (head newCards) newCards

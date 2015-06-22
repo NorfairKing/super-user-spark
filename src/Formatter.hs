@@ -192,7 +192,7 @@ formatDeployments ds = unlines $ map (formatDeployment lens) ds
   where lens = maximums $ map srcLen ds
 
 formatDeployment :: [Int] -> Deployment -> String
-formatDeployment ms d@(Put srcs dst k) = unwords $
+formatDeployment ms (Put srcs dst k) = unwords $
     [
         padded ms srcs
     ,   kindSymbol k
