@@ -117,10 +117,8 @@ data DeployError = PreDeployError [String]
                  | PostDeployError [String]
     deriving (Show, Eq)
 
-
 runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
 runSparkDeployer state func = runStateT func state
-
 
 data Diagnostics = NonExistent
                  | IsFile Permissions
@@ -136,6 +134,11 @@ data PreDeployment = Ready FilePath FilePath DeploymentKind
                    | AlreadyDone
                    | Error String
     deriving (Show, Eq)
+
+data ID = Plain String
+        | Var String
+    deriving (Show, Eq)
+
 
 ---[ Pretty Types ]---
 

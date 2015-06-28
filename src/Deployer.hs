@@ -9,6 +9,8 @@ import           Shelly             (cp_r, fromText, shelly)
 import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
                                      getDirectoryContents, getPermissions,
                                      removeDirectoryRecursive, removeFile)
+import           System.Posix.Env   (getEnv)
+
 import           System.Exit        (ExitCode (..))
 import           System.FilePath    (dropFileName)
 import           System.Posix.Files (createSymbolicLink, fileExist,
@@ -64,11 +66,16 @@ predeployments dps = do
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
 preDeployment (Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
-preDeployment d@(Put (s:ss) dst kind) = do
+preDeployment dep@(Put (src:ss) dst kind) = do
+    s  <- complete src
+    d  <- complete dst
     sd <- diagnose s
     dd <- diagnose dst
+
+    let ready = return (Ready s d kind) :: SparkDeployer PreDeployment
+
     case sd of
-        NonExistent     -> preDeployment (Put ss dst kind)
+        NonExistent     -> preDeployment (Put ss d kind)
         IsFile _        -> do
             case dd of
                 NonExistent     -> ready
@@ -76,71 +83,71 @@ preDeployment d@(Put (s:ss) dst kind) = do
                     case kind of
                         LinkDeployment -> do
                             incaseElse conf_replace
-                                (rmFile dst >> preDeployment d)
-                                (error ["Destination", dst, "already exists and is file (for a link deployment):", s, "."])
+                                (rmFile d >> preDeployment dep)
+                                (error ["Destination", d, "already exists and is file (for a link deployment):", s, "."])
                         CopyDeployment -> do
-                            equal <- compareFiles s dst
+                            equal <- compareFiles s d
                             if equal
                             then done
                             else do
                                 incaseElse conf_replace
-                                    (rmFile dst >> preDeployment d)
-                                    (error ["Destination", dst, "already exists and is a file, different from the source:", s, "."])
+                                    (rmFile d >> preDeployment dep)
+                                    (error ["Destination", d, "already exists and is a file, different from the source:", s, "."])
                 IsDirectory _   -> do
                     incaseElse conf_replace
-                        (rmDir dst >> preDeployment d)
-                        (error ["Destination", dst, "already exists and is a directory."])
+                        (rmDir d >> preDeployment dep)
+                        (error ["Destination", d, "already exists and is a directory."])
                 IsLink      _   -> do
                     case kind of
                         CopyDeployment -> do
                             incaseElse conf_replace
-                                (unlink dst >> preDeployment d)
-                                (error ["Destination", dst, "already exists and is a symbolic link (for a copy deployment):", s, "."])
+                                (unlink d >> preDeployment dep)
+                                (error ["Destination", d, "already exists and is a symbolic link (for a copy deployment):", s, "."])
                         LinkDeployment -> do
-                            point <- liftIO $ readSymbolicLink dst
+                            point <- liftIO $ readSymbolicLink d
                             if point `filePathEqual` s
                             then done
                             else do
-                                liftIO $ putStrLn $ point ++ " is not equal to " ++ dst
+                                liftIO $ putStrLn $ point ++ " is not equal to " ++ d
                                 incaseElse conf_replace
-                                    (unlink dst >> preDeployment d)
-                                    (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
-                _               -> error ["Destination", dst, "already exists and is something weird."]
+                                    (unlink d >> preDeployment dep)
+                                    (error ["Destination", d, "already exists and is a symbolic link but not to the source."])
+                _               -> error ["Destination", d, "already exists and is something weird."]
         IsDirectory _   -> do
             case dd of
                 NonExistent     -> ready
                 IsFile      _   -> do
                     incaseElse conf_replace
-                        (rmDir dst >> preDeployment d)
-                        (error ["Destination", dst, "already exists and is a directory."])
+                        (rmDir d >> preDeployment dep)
+                        (error ["Destination", d, "already exists and is a directory."])
                 IsDirectory _   -> do
                     case kind of
                         LinkDeployment -> do
                             incaseElse conf_replace
-                                (rmDir dst >> preDeployment d)
-                                (error ["Destination", dst, "already exists and is directory (for a link deployment):", s, "."])
+                                (rmDir d >> preDeployment dep)
+                                (error ["Destination", d, "already exists and is directory (for a link deployment):", s, "."])
                         CopyDeployment -> do
-                            equal <- compareDirectories s dst
+                            equal <- compareDirectories s d
                             if equal
                             then done
                             else do
                                 incaseElse conf_replace
-                                    (rmDir dst >> preDeployment d)
-                                    (error ["Destination", dst, "already exists and is a directory, different from the source."])
+                                    (rmDir d >> preDeployment dep)
+                                    (error ["Destination", d, "already exists and is a directory, different from the source."])
                 IsLink      _   -> do
                     case kind of
                         CopyDeployment -> do
                             incaseElse conf_replace
-                                (unlink dst >> preDeployment d)
-                                (error ["Destination", dst, "already exists and is a symbolic link."])
+                                (unlink d >> preDeployment dep)
+                                (error ["Destination", d, "already exists and is a symbolic link."])
                         LinkDeployment -> do
                             point <- liftIO $ readSymbolicLink dst
                             if point `filePathEqual` s
                             then done
                             else incaseElse conf_replace
-                                (unlink dst >> preDeployment d)
-                                (error ["Destination", dst, "already exists and is a symbolic link but not to the source."])
-                _               -> error ["Destination", dst, "already exists and is something weird."]
+                                (unlink d >> preDeployment dep)
+                                (error ["Destination", d, "already exists and is a symbolic link but not to the source."])
+                _               -> error ["Destination", d, "already exists and is something weird."]
         IsLink _        -> error ["Source", s, "is a symbolic link."]
         _               -> error ["Source", s, "is not a valid file type."]
 
@@ -148,8 +155,6 @@ preDeployment d@(Put (s:ss) dst kind) = do
     done :: SparkDeployer PreDeployment
     done = return $ AlreadyDone
 
-    ready :: SparkDeployer PreDeployment
-    ready = return $ Ready s dst kind
 
     error :: [String] -> SparkDeployer PreDeployment
     error strs = return $ Error $ unwords strs
@@ -329,3 +334,31 @@ postdeployment (Ready src dst kind) = do
 
 filePathEqual :: FilePath -> FilePath -> Bool -- TODO comparison could be more fuzzy
 filePathEqual = (==)
+
+complete :: FilePath -> SparkDeployer FilePath
+complete fp = liftIO $ completeI fp
+
+completeI :: FilePath -> IO FilePath
+completeI fp = do
+    let ids = parseId fp
+    strs <- mapM replaceId ids
+    return $ concat strs
+
+
+parseId :: FilePath -> [ID]
+parseId [] = [Plain ""]
+parseId ('$':'(':rest) = (Var id):(parseId next)
+  where (id, (')':next)) = break (\c -> c == ')') rest
+parseId (s:ss) = case parseId ss of
+                    (Plain str):r   -> (Plain (s:str)):r
+                    r               -> (Plain [s]):r
+
+
+replaceId :: ID -> IO FilePath
+replaceId (Plain str) = return str
+replaceId (Var str) = do
+    e <- getEnv str
+    return $ case e of
+        Nothing -> ""
+        Just fp -> fp
+
