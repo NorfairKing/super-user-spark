@@ -55,7 +55,7 @@ sparkFile = do
     clean <- eatComments
     setInput clean
     resetPosition
-    sepEndBy1 card whitespace
+    card `sepEndBy1` whitespace
 
 resetPosition :: Parser ()
 resetPosition = do
