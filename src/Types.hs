@@ -47,7 +47,7 @@ data SparkError = ParseError ParseError
                 | DeployError DeployError
                 | UnpredictedError String
                 | GitError GitError
-    deriving (Show, Eq)
+    deriving Show
 
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
