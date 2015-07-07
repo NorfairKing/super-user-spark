@@ -1,42 +1,6 @@
 ---
-title: Specification
+title: Language Specification
 ---
-# Super user spark
-## The general idea.
-Configuring a system is hard work.
-You don't want to do it all over again when you reinstall a system.
-Moreover, you want to synchronise config files accross systems.
-
-
-## Design ideas
-### Spark cards
-Spark is configured using spark cards.
-These cards are written using a declarative language that describe the entire deployment.
-
-### Configuration
-Everything about Spark is configurable.
-Every option can be controlled directly on the command-line *and* in the cards.
-
-### Grammar
-The grammar should be simple to use when you don't need many options, but clear when you do.
-
-
-## Usage
-### Options
-#### Agressiveness
-If spark encounters existing files at deploy destinations:
-
-- Should it replace existing files? `--replace-files`
-- Should it replace existing directories? `--replace-directories`
-- Should it replace existing symbolic links? `--replace-links`
-- Should it replace all of these? `--replace-all`
-
-#### Copy or link.
-By default, all unspecified deployments are links.
-
-- A deployment with an unspecified deployment kind (`->`) can be configured to be a link `--link`, or a copy `--copy`.
-- All deployment kind can be overridden as well: `--override-link` or `--override-copy`.
-
 
 ## The language
 ### Cards
@@ -51,12 +15,12 @@ A card can be referenced:
 ```
 card <card-name>
 ```
-- By file.
+- By file.<a name="file-reference"></a>
 ```
 file <file-path> <card-name>
 ```
 The `<card-name>` argument is optional, if it is not given the reference will lead to the first card in the file.
-- By repository.
+- By repository.<a name="git-reference"></a>
 ```
 git <git-repository>:<branch-name> <file-path> <card-name>
 ```
