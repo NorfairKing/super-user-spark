@@ -47,7 +47,6 @@ parseCardReference :: String -> Either ParseError StartingSparkReference
 parseCardReference = parse startingCardReference "Argument String"
 
 
-
 ---[ Parsing ]---
 
 sparkFile :: Parser [Card]

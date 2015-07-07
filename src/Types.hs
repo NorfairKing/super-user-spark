@@ -42,6 +42,13 @@ data SparkConfig = Config {
     ,   conf_replace :: Bool
     } deriving (Show, Eq)
 
+data FormatOptions = FormatOptions {
+        conf_format_lineUp          :: Bool
+    ,   conf_format_indent          :: Int
+    ,   conf_format_trailingNewline :: Bool
+    ,   conf_always_quote           :: Bool
+    } deriving (Show, Eq)
+
 data SparkError = ParseError ParseError
                 | CompileError CompileError
                 | DeployError DeployError
