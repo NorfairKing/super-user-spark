@@ -3,29 +3,20 @@ title: Usage
 ---
 
 ## Commands
-### Deployment
-Deployment doesn't require any special commands, just a card reference.
-
-You can reference a starting card either [by file](#file-reference) or [by git repository](#git-reference):
-```
-$ spark file path/to/card.sus card-name # By file
-$ spark git git@github.com:NorfairKing/sus-depot.git spark.sus "sus depot" # By git reference
-```
-
-#### Deployment options
-TODO
 
 ### Syntax checking
-A card's syntax can be checked by entering the following commands:
+A `.sus` file's syntax can be checked by entering the following command:
 
 ```
-$ spark check-syntax /path/to/card.sus
+$ spark parse /path/to/card.sus
 ```
 
 `spark` will exit...
 
 - ... with exit code 0 to show that the file is syntactically correct
 - ... with a non 0 exit code to show that the file contains a syntax error and give some indication as to where the error is.
+
+`spark` will try its best to present you with a good indication of what went wrong but as with all parsers, errors can still seem cryptic.
 
 
 ### Formatting
@@ -57,7 +48,7 @@ Instead of this (default):
 
 - `--indent n`: Indent each new block with `n` extra spaces. (default `n = 4`)
 - `--no-trailing-newline`: Don't add a trailing newline to the file. `spark format` does so by default.
-- `--always-quote`: adds quotation marks around every path.
+- `--always-quote`: adds quotation marks around every path and every name.
 
 ```
 "abc"      -> "ghi jkl"
@@ -69,6 +60,28 @@ Instead of this (default):
 ```
  abc       -> "ghi jkl"
 "abc def"  ->  def
+```
+
+- `--compress`: Compress the card as much as possible. This will put the entire card on one line with the least amount of characters possible.
+
+This option will convert this card:
+
+```
+card card-name {
+    into ~
+    outof directory
+    kind copy
+    alternatives one two
+
+    "file-one"   ->  file-two
+     something  c-> "copied"
+}
+```
+
+into this:
+
+```
+cardcard-name{into~;outofdirectory;kindcopy;alternatives one two;"file-one"-> file-two;something c->"copied"}
 ```
 
 ### Compiling 
@@ -97,17 +110,32 @@ Look at what is done already and what needs to be done.
 
 #### Check options
 
-- `--depth OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name-only`, `checksum` `content`(default))
+- `--thoroughness OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name-only`, `checksum` `content`(default))
+
+### Deployment
+Deployment doesn't require any special commands, just a card reference.
+
+You can reference a starting card either [by file](#file-reference) or [by git repository](#git-reference):
+```
+$ spark file path/to/card.sus card-name # By file
+$ spark git git@github.com:NorfairKing/sus-depot.git spark.sus "sus depot" # By git reference
+```
+
+#### Deployment options
+
+- `--link`: Specify any unspecified deployments (`->`) to be link deployments (`l->`). (default)
+- `--copy`: Specify any unspecified deployments (`->`) to be copy deployments (`c->`).
+- `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
+
+- `--replace-files`: replace existing files at deploy destinations
+- `--replace-directories`: replace existing directories at deploy destinations
+- `--replace-links`: replace links at deploy destinations
+- `--replace`: equivaltent to `--replace-files --replace-directories --replace-links`
+
 
 
 ### Options
 #### Agressiveness
-If spark encounters existing files at deploy destinations:
-
-- Should it replace existing files? `--replace-files`
-- Should it replace existing directories? `--replace-directories`
-- Should it replace existing symbolic links? `--replace-links`
-- Should it replace all of these? `--replace-all`
 
 #### Copy or link.
 By default, all unspecified deployments are links.
