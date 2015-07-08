@@ -65,6 +65,11 @@ data DeploymentKind = LinkDeployment
                     | CopyDeployment
     deriving (Show, Eq)
 
+instance Read DeploymentKind where
+    readsPrec _ "link" = [(LinkDeployment,"")]
+    readsPrec _ "copy" = [(CopyDeployment,"")]
+    readsPrec _ _ = []
+
 data Declaration = SparkOff CardReference
                  | Deploy Source Destination (Maybe DeploymentKind)
                  | IntoDir Directory
@@ -93,6 +98,14 @@ data StartingSparkReference = StartFile CardFileReference
                             | StartRepo CardRepoReference
     deriving (Show, Eq)
 
+type CompiledCardReference = FilePath
+
+data CheckerCardReference = CheckerCardCompiled CompiledCardReference
+                          | CheckerCardUncompiled CardFileReference
+
+data DeployerCardReference = DeployerCardCompiled CompiledCardReference
+                           | DeployerCardUncompiled StartingSparkReference
+
 data CardReference = CardRepo CardRepoReference
                    | CardFile CardFileReference
                    | CardName CardNameReference
@@ -102,9 +115,10 @@ data CardReference = CardRepo CardRepoReference
 
 type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
-        conf_dry     :: Bool
-    ,   conf_verbose :: Bool
-    ,   conf_replace :: Bool
+        conf_format  :: FormatOptions
+    ,   conf_compile :: CompileOptions
+    ,   conf_check   :: CheckOptions
+    ,   conf_deploy  :: DeployOptions
     } deriving (Show, Eq)
 
 data FormatOptions = FormatOptions {
@@ -113,6 +127,48 @@ data FormatOptions = FormatOptions {
     ,   conf_format_trailingNewline :: Bool
     ,   conf_format_alwaysQuote     :: Bool
     } deriving (Show, Eq)
+
+data CompileOptions = CompileOptions {
+        conf_compile_output :: Maybe FilePath
+    ,   conf_compile_format :: CompileFormat
+    } deriving (Show, Eq)
+
+data CompileFormat = FormatBinary
+                   | FormatText
+                   | FormatJson
+                   | FormatStandalone
+    deriving (Show, Eq)
+
+instance Read CompileFormat where
+    readsPrec _ "binary"     = [(FormatBinary,"")]
+    readsPrec _ "text"       = [(FormatText,"")]
+    readsPrec _ "json"       = [(FormatJson,"")]
+    readsPrec _ "standalone" = [(FormatStandalone,"")]
+    readsPrec _ _ = []
+
+data CheckOptions = CheckOptions {
+        conf_check_thoroughness :: CheckThoroughness
+    } deriving (Show, Eq)
+
+data CheckThoroughness = ThoroughnessName
+                       | ThoroughnessChecksum
+                       | ThoroughnessContent
+    deriving (Show, Eq)
+
+instance Read CheckThoroughness where
+    readsPrec _ "name"       = [(ThoroughnessName,"")]
+    readsPrec _ "checksum"   = [(ThoroughnessChecksum,"")]
+    readsPrec _ "content"    = [(ThoroughnessContent,"")]
+    readsPrec _ _ = []
+
+data DeployOptions = DeployOptions {
+        conf_deploy_kind         :: DeploymentKind
+    ,   conf_deploy_override     :: Maybe DeploymentKind
+    ,   conf_replace_links       :: Bool
+    ,   conf_replace_files       :: Bool
+    ,   conf_replace_directories :: Bool
+    } deriving (Show, Eq)
+
 
 data SparkError = ParseError ParseError
                 | CompileError CompileError
@@ -129,8 +185,8 @@ runSparker conf func = runReaderT (runExceptT func) conf
 data Dispatch = DispatchParse FilePath
               | DispatchFormat FilePath
               | DispatchCompile StartingSparkReference
-              | DispatchCheck StartingSparkReference
-              | DispatchDeploy StartingSparkReference
+              | DispatchCheck CheckerCardReference
+              | DispatchDeploy DeployerCardReference
 
 
 
