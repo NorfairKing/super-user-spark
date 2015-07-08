@@ -135,7 +135,12 @@ mkind (Just k) = kind k
 mkind Nothing = string $ ' ':unspecifiedKindSymbol
 
 cardReference :: CardReference -> SparkFormatter ()
-cardReference (CardRepo repo mb mfpmcn) = do
+cardReference (CardRepo crr) = cardRepoReference crr
+cardReference (CardFile cfr) = cardFileReference cfr
+cardReference (CardName cnr) = cardNameReference cnr
+
+cardRepoReference :: CardRepoReference -> SparkFormatter ()
+cardRepoReference (CardRepoReference repo mb mfr) = do
     string keywordGit
     string " "
     string $ show repo
@@ -144,32 +149,33 @@ cardReference (CardRepo repo mb mfpmcn) = do
         Just b -> do
             string branchDelimiter
             string b
-    case mfpmcn of
+    case mfr of
         Nothing -> return ()
-        Just (fp, mcn) -> do
+        Just (CardFileReference fp mnr) -> do
             string " "
             string fp
-            case mcn of
+            case mnr of
                 Nothing -> return ()
-                Just cn -> do
+                Just (CardNameReference cn) -> do
                     string " "
                     string cn
 
-cardReference (CardFile fp mcn) = do
+cardFileReference :: CardFileReference -> SparkFormatter ()
+cardFileReference (CardFileReference fp mnr) = do
     string keywordFile
     string " "
     string fp
-    case mcn of
+    case mnr of
         Nothing -> return ()
-        Just cn -> do
+        Just (CardNameReference cn) -> do
             string " "
             string cn
 
-cardReference (CardName name) = do
+cardNameReference :: CardNameReference -> SparkFormatter ()
+cardNameReference (CardNameReference name) = do
     string keywordCard
     string " "
     string name
-
 
 
 srcLen :: Deployment -> [Int]
@@ -214,7 +220,7 @@ formatPreDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
   where
     ms = map formatPreDeployment predeps
 
-    dests = map (dst.fst) ds
+    dests = map (deployment_dst . fst) ds
     predeps = map snd ds
 
 formatPostDeployments :: [(Deployment, Maybe String)] -> String
@@ -225,7 +231,7 @@ formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
     mstr Nothing = "done"
     mstr (Just err) = err
 
-    dests = map (dst.fst) ds
+    dests = map (deployment_dst . fst) ds
     predeps = map snd ds
 
 formatPreDeployment :: PreDeployment -> String

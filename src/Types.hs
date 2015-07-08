@@ -21,15 +21,80 @@ import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 import           System.Directory       (Permissions (..))
 import           Text.Parsec            (ParseError)
 
+---[ Repositories ]---
 
-data StartingSparkReference = FileRef FilePath (Maybe CardName)
-                            | RepoRef GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
+type Host = String
+type Branch = String
+
+data GitRepo = GitRepo {
+        repo_protocol :: GitProtocol
+    ,   repo_host     :: Host
+    ,   repo_path     :: FilePath
+    } deriving (Eq)
+
+instance Show GitRepo where
+    show repo = case repo_protocol repo of
+        HTTPS -> "https://" ++ h ++ "/" ++ p
+        Git -> "git@" ++ h ++ ":" ++ p ++ ".git"
+      where
+        p = repo_path repo
+        h = repo_host repo
+
+data GitProtocol = HTTPS | Git
     deriving (Show, Eq)
 
-type Branch = String
-data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe CardName))
-                   | CardFile FilePath (Maybe CardName)
-                   | CardName CardName
+data GitError = GitRepoError GitRepo String
+    deriving (Show, Eq)
+
+
+---[ Cards ]---
+type CardName = String
+type Source = FilePath
+type Destination = FilePath
+type Directory = FilePath
+
+data Card = Card {
+        card_name    :: CardName
+    ,   card_path    :: FilePath
+    ,   card_content :: [Declaration]
+    } deriving (Show, Eq)
+
+---[ Declarations ]---
+data DeploymentKind = LinkDeployment
+                    | CopyDeployment
+    deriving (Show, Eq)
+
+data Declaration = SparkOff CardReference
+                 | Deploy Source Destination (Maybe DeploymentKind)
+                 | IntoDir Directory
+                 | OutofDir Directory
+                 | DeployKindOverride DeploymentKind
+                 | Alternatives [Directory]
+                 | Block [Declaration]
+    deriving (Show, Eq)
+
+---[ Card References ]--
+
+-- Reference a card by name.
+data CardNameReference = CardNameReference CardName
+    deriving (Show, Eq)
+
+-- Reference a card by the file it's in and therein potentially by a name reference
+data CardFileReference = CardFileReference FilePath (Maybe CardNameReference)
+    deriving (Show, Eq)
+
+-- Reference a card by the git repository it's in, therein potentially by a file reference
+data CardRepoReference = CardRepoReference GitRepo (Maybe Branch) (Maybe CardFileReference)
+    deriving (Show, Eq)
+
+-- To start, a card can't be referenced by its name.
+data StartingSparkReference = StartFile CardFileReference
+                            | StartRepo CardRepoReference
+    deriving (Show, Eq)
+
+data CardReference = CardRepo CardRepoReference
+                   | CardFile CardFileReference
+                   | CardName CardNameReference
     deriving (Show, Eq)
 
 ---[ Base monad ]---
@@ -59,40 +124,13 @@ runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
 
 
-
----[ Parsing Types ]---
-
-type CardName = String
-type Source = FilePath
-type Destination = FilePath
-type Directory = FilePath
-
-data Card = Card CardName FilePath [Declaration]
-    deriving (Show, Eq)
-
-card_name :: Card -> CardName
-card_name (Card n _ _) = n
-
-data DeploymentKind = LinkDeployment
-                    | CopyDeployment
-    deriving (Show, Eq)
-
-data Declaration = SparkOff CardReference
-                 | Deploy Source Destination (Maybe DeploymentKind)
-                 | IntoDir Directory
-                 | OutofDir Directory
-                 | DeployKindOverride DeploymentKind
-                 | Alternatives [Directory]
-                 | Block [Declaration]
-    deriving (Show, Eq)
-
-
 ---[ Compiling Types ]---
-data Deployment = Put [FilePath] FilePath DeploymentKind
+data Deployment = Put {
+        deployment_srcs :: [FilePath]
+    ,   deployment_dst  ::FilePath
+    ,   deployment_kind ::DeploymentKind
+    }
     deriving (Show, Eq)
-
-dst :: Deployment -> FilePath
-dst (Put _ dst _) = dst
 
 type CompileError = String
 
@@ -159,27 +197,4 @@ data FormatterState = FormatterState {
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
 
----[ Repositories ]---
-
-type Host = String
-
-data GitRepo = GitRepo {
-        repo_protocol :: GitProtocol
-    ,   repo_host     :: Host
-    ,   repo_path     :: FilePath
-    } deriving (Eq)
-
-instance Show GitRepo where
-    show repo = case repo_protocol repo of
-        HTTPS -> "https://" ++ h ++ "/" ++ p
-        Git -> "git@" ++ h ++ ":" ++ p ++ ".git"
-      where
-        p = repo_path repo
-        h = repo_host repo
-
-data GitProtocol = HTTPS | Git
-    deriving (Show, Eq)
-
-data GitError = GitRepoError GitRepo String
-    deriving (Show, Eq)
 

@@ -10,28 +10,29 @@ import           Git
 import           Types
 
 parseStartingCardReference :: StartingSparkReference -> Sparker [Card]
-parseStartingCardReference (RepoRef repo mb mfpmcn) = do
+parseStartingCardReference (StartRepo (CardRepoReference repo mb mfr)) = do
     case mb of
         Nothing -> return ()
         Just gb -> runGitRepoController repo $ checkout gb
-    case mfpmcn of
+    case mfr of
         Nothing -> do
             fps <- runGitRepoController repo $ listRepoDir "."
             case filter (\f -> takeExtension f == '.':sparkExtension) fps of
                 [] -> throwError $ UnpredictedError $ unwords ["Didn't find any", "\"" ++ sparkExtension ++ "\"", "files in", show repo]
-                (h:_) -> parseStartingCardReference $ FileRef h Nothing
-        Just (fp, mcn) -> do
+                (h:_) -> parseStartingCardReference $ StartFile $ CardFileReference h Nothing
+        Just (CardFileReference fp mnr) -> do
             gfp <- runGitRepoController repo $ repoFilePath fp
-            parseStartingCardReference $ FileRef gfp mcn
+            parseStartingCardReference $ StartFile $ CardFileReference gfp mnr
 
 
-parseStartingCardReference (FileRef fp mcn) = do
+parseStartingCardReference (StartFile (CardFileReference fp mnr)) = do
     css <- parseFile fp
-    case mcn of
+    case mnr of
         Nothing -> return css
-        Just cn -> case find (\s -> card_name s == cn) css of
-                        Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", "\"" ++ cn ++ "\"", "in", fp]
-                        Just c  -> return [c]
+        Just (CardNameReference cn) ->
+            case find (\s -> card_name s == cn) css of
+                Nothing -> throwError $ UnpredictedError $ unwords ["Did't find card", "\"" ++ cn ++ "\"", "in", fp]
+                Just c  -> return [c]
 
 
 
@@ -113,36 +114,40 @@ sparkOff = do
     <?> "sparkoff"
 
 startingCardReference :: Parser StartingSparkReference
-startingCardReference = do
-    r <- try cardFileReference <|> cardRepoReference
-    return $ case r of
-        CardFile fp mn -> FileRef fp mn
-        CardRepo rp mb mf -> RepoRef rp mb mf
-        _ -> error "Contact the author if you see this"
+startingCardReference = try goFile <|> try goRepo <?> "starting card reference"
+  where
+    goFile = cardFileReference >>= return . StartFile
+    goRepo = cardRepoReference >>= return . StartRepo
 
 cardReference :: Parser CardReference
-cardReference = try cardNameReference <|> try cardFileReference <|> try cardRepoReference
+cardReference = try goName <|> try goFile <|> try goRepo
     <?> "card reference"
+  where
+    goName = cardNameReference >>= return . CardName
+    goFile = cardFileReference >>= return . CardFile
+    goRepo = cardRepoReference >>= return . CardRepo
 
-cardNameReference :: Parser CardReference
+cardNameReference :: Parser CardNameReference
 cardNameReference = do
     string keywordCard
     linespace
     name <- cardName
-    return $ CardName name
+    return $ CardNameReference name
     <?> "card name reference"
 
-cardFileReference :: Parser CardReference
+cardFileReference :: Parser CardFileReference
 cardFileReference = do
     string keywordFile
     linespace
     fp <- filepath
     linespace
     mn <- optionMaybe $ try cardName
-    return $ CardFile fp mn
+    return $ case mn of
+        Nothing -> CardFileReference fp Nothing
+        Just cn  -> CardFileReference fp (Just $ CardNameReference cn)
     <?> "card file reference"
 
-cardRepoReference :: Parser CardReference
+cardRepoReference :: Parser CardRepoReference
 cardRepoReference = do
     string keywordGit
     linespace
@@ -156,7 +161,11 @@ cardRepoReference = do
         linespace
         mcn <- optionMaybe $ try cardName
         return (fp, mcn)
-    return $ CardRepo repo mb mfpcn
+    return $ case mfpcn of
+        Nothing -> CardRepoReference repo mb Nothing
+        Just (fp, mcn) -> case mcn of
+            Nothing -> CardRepoReference repo mb (Just $ CardFileReference fp Nothing)
+            Just cn -> CardRepoReference repo mb (Just $ CardFileReference fp $ Just $ CardNameReference cn)
     <?> "card git reference"
   where
     branch :: Parser Branch
