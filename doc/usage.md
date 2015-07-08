@@ -20,7 +20,7 @@ $ spark parse /path/to/card.sus
 
 
 ### Formatting
-Formatting is used to format a card into a pretty representation.
+Formatting is used to format a `.sus` file into a pretty representation.
 This mostly includes nice whitespace.
 
 ```
@@ -105,7 +105,12 @@ This will compile the spark card to a set of deployments.
 ### Check
 
 Assess the current state of the system.
-Look at what is done already and what needs to be done.
+Look at what is done already and what needs to be done for a given card to be deployed
+
+```
+$ spark check path/to/card.sus
+$ spark check path/to/card.sus card-name
+```
 
 
 #### Check options

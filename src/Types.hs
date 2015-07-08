@@ -32,7 +32,6 @@ data CardReference = CardRepo GitRepo (Maybe Branch) (Maybe (FilePath, Maybe Car
                    | CardName CardName
     deriving (Show, Eq)
 
-
 ---[ Base monad ]---
 
 type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
