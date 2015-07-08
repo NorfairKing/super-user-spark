@@ -81,17 +81,24 @@ processDeclaration = do
 
         SparkOff st -> do
             case st of
-                CardRepo _ _ _ -> throwError $ UnpredictedError "not yet implemented"
-                CardFile file _ -> do
+                CardRepo _ -> throwError $ UnpredictedError "not yet implemented"
+                CardFile (CardFileReference file mn) -> do
                     dir <- gets state_current_directory
-                    newCards <- liftSparker $ P.parseFile $ dir </> file -- Fixme, use mn
-                    newDeclarations <- liftSparker $ compile (head newCards) newCards
+                    newCards <- liftSparker $ P.parseFile $ dir </> file
                     oldCards <- gets state_all_cards
-                    modify (\s -> s {state_all_cards = oldCards ++ newCards})
+                    let allCards = oldCards ++ newCards
+                    nextCard <- case mn of
+                                    Nothing -> return $ head newCards
+                                    Just (CardNameReference name) ->
+                                        case find (\c -> card_name c == name) allCards of
+                                            Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
+                                            Just c -> return c
+                    newDeclarations <- liftSparker $ compile nextCard newCards
+                    modify (\s -> s {state_all_cards = allCards})
                     addAll newDeclarations
-                CardName name -> do
+                CardName (CardNameReference name) -> do
                     allCards <- gets state_all_cards
-                    case find (\(Card n _ _) -> n == name) allCards of
+                    case find (\c -> card_name c == name) allCards of
                         Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
                         Just c@(Card _ _ dcs) -> do
                             before <- get
