@@ -47,6 +47,7 @@ data GitError = GitRepoError GitRepo String
     deriving (Show, Eq)
 
 
+
 ---[ Cards ]---
 type CardName = String
 type Source = FilePath
@@ -110,7 +111,7 @@ data FormatOptions = FormatOptions {
         conf_format_lineUp          :: Bool
     ,   conf_format_indent          :: Int
     ,   conf_format_trailingNewline :: Bool
-    ,   conf_always_quote           :: Bool
+    ,   conf_format_alwaysQuote     :: Bool
     } deriving (Show, Eq)
 
 data SparkError = ParseError ParseError
@@ -123,12 +124,21 @@ data SparkError = ParseError ParseError
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
 
+---[ Dispatching ]---
+
+data Dispatch = DispatchParse FilePath
+              | DispatchFormat FilePath
+              | DispatchCompile StartingSparkReference
+              | DispatchCheck StartingSparkReference
+              | DispatchDeploy StartingSparkReference
+
+
 
 ---[ Compiling Types ]---
 data Deployment = Put {
         deployment_srcs :: [FilePath]
-    ,   deployment_dst  ::FilePath
-    ,   deployment_kind ::DeploymentKind
+    ,   deployment_dst  :: FilePath
+    ,   deployment_kind :: DeploymentKind
     }
     deriving (Show, Eq)
 
