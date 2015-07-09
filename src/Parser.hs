@@ -245,17 +245,15 @@ comment = lineComment <|> blockComment
 lineComment :: Parser String
 lineComment = do
     skip $ string lineCommentStr
-    anyChar `manyTill` try (lookAhead eol)
+    anyChar `manyTill` try eol
 
 blockComment :: Parser String
 blockComment = do
     skip $ string start
-    anyChar `manyTill` try (lookAhead $ string stop)
+    anyChar `manyTill` try (string stop)
   where (start, stop) = blockCommentStrs
 
 
-skip :: Parser a -> Parser ()
-skip f = f >> return ()
 
 notComment :: Parser String
 notComment = manyTill anyChar (lookAhead ((skip comment) <|> eof))
@@ -269,7 +267,7 @@ eatComments = do
   return withoutComments
 
 
--- Identifiers
+--[ Identifiers ]--
 
 plainIdentifier :: Parser String
 plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
@@ -341,3 +339,8 @@ gitProtocol = https <|> git
   where
     https = string "https://" >> return HTTPS
     git   = string "git@"     >> return Git
+
+--[ Utils ]--
+
+skip :: Parser a -> Parser ()
+skip p = p >> return ()
