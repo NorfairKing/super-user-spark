@@ -2,12 +2,57 @@ module Dispatch where
 
 import           Data.List          (isPrefixOf)
 import           System.Environment (getArgs)
+import           Text.Parsec
+import           Text.Parsec.String
 
+import           Parser
 import           Types
 
+dispatch :: [String] -> Maybe Dispatch
+dispatch strs = case parse parser "Arguments" (unwords strs) of
+                    Left pe -> Nothing
+                    Right d -> Just d
+  where
+    parser = try parseParse
+         <|> try parseFormat
+         <|> try parseCompile
+         <|> try parseCheck
+         <|> try parseDeploy
 
-loadConfig :: [String] -> SparkConfig
-loadConfig args = Config {
+parseParse :: Parser Dispatch
+parseParse = do
+    string "parse"
+    fp <- filepath
+    return $ DispatchParse fp
+
+parseFormat :: Parser Dispatch
+parseFormat = do
+    string "format"
+    fp <- filepath
+    return $ DispatchFormat fp
+
+parseCompile :: Parser Dispatch
+parseCompile = do
+    string "compile"
+    scr <- startingCardReference
+    return $ DispatchCompile $ scr
+
+parseCheck :: Parser Dispatch
+parseCheck = do
+    string "check"
+    cfr <- cardFileReference
+    return $ DispatchCheck $ CheckerCardUncompiled cfr
+
+parseDeploy :: Parser Dispatch
+parseDeploy = do
+    string "deploy"
+    scr <- startingCardReference
+    return $ DispatchDeploy $ DeployerCardUncompiled scr
+
+
+
+config :: [String] -> SparkConfig
+config args = Config {
         conf_format  = loadFormatOptions
     ,   conf_compile = loadCompileOptions
     ,   conf_check   = loadCheckOptions

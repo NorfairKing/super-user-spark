@@ -102,9 +102,11 @@ type CompiledCardReference = FilePath
 
 data CheckerCardReference = CheckerCardCompiled CompiledCardReference
                           | CheckerCardUncompiled CardFileReference
+    deriving (Show, Eq)
 
 data DeployerCardReference = DeployerCardCompiled CompiledCardReference
                            | DeployerCardUncompiled StartingSparkReference
+    deriving (Show, Eq)
 
 data CardReference = CardRepo CardRepoReference
                    | CardFile CardFileReference
@@ -187,7 +189,7 @@ data Dispatch = DispatchParse FilePath
               | DispatchCompile StartingSparkReference
               | DispatchCheck CheckerCardReference
               | DispatchDeploy DeployerCardReference
-
+    deriving (Show, Eq)
 
 
 ---[ Compiling Types ]---
