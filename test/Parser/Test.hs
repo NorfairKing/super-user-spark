@@ -9,7 +9,7 @@ import           Parser
 import           Types
 
 
-testFileName = "testFileName.txt"
+testFileName = "parser testinput"
 
 --[ Parser helper functions ]---
 
@@ -44,9 +44,52 @@ parseFails p strs = sequence_ $ map (parseFail p) strs
 
 ---[ Tests ]---
 
+--[ Dispatch ]--
+
+test_parseParse = parserTests parseParse $
+    [
+    (DispatchParse "test.sus",
+            [
+                "parsetest.sus"
+            ,   "parse test.sus"
+            ,   "parse   test.sus"
+            ,   "parse\ttest.sus"
+            ,   "parse\t \t test.sus"
+            ]
+        )
+    ]
+
+test_parseFormat = parserTests parseFormat $
+    [
+    (DispatchFormat "test.sus",
+            [
+                "formattest.sus"
+            ,   "format test.sus"
+            ,   "format   test.sus"
+            ,   "format\ttest.sus"
+            ,   "format\t \t test.sus"
+            ]
+        )
+    ]
+
+test_parseCompile = parserTests parseCompile $
+    [
+    (DispatchCompile (StartFile $ CardFileReference "test.sus" Nothing),
+            [
+                "compiletest.sus"
+            ,   "compile test.sus"
+            ,   "compile   test.sus"
+            ,   "compile\ttest.sus"
+            ,   "compile\t \t test.sus"
+            ]
+        )
+    ]
+
+--[ Language ]--
+
 test_card_empty = parserTests card $
     [
-    (Card "" testFileName[], [
+    (Card "" testFileName [], [
               "card \"\" {}"
             ]
         )

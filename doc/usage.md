@@ -4,6 +4,10 @@ title: Usage
 
 ## Commands
 
+A note on optional flags: 
+Flags need to be specified *after* a command.
+Trying to put them before or inbetween may not work.
+
 ### Syntax checking
 A `.sus` file's syntax can be checked by entering the following command:
 
@@ -24,7 +28,7 @@ Formatting is used to format a `.sus` file into a pretty representation.
 This mostly includes nice whitespace.
 
 ```
-$ spark format /path/to/card
+$ spark format /path/to/card.sus
 ```
 
 #### Formatting options

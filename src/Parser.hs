@@ -48,7 +48,59 @@ parseCardReference :: String -> Either ParseError StartingSparkReference
 parseCardReference = parse startingCardReference "Argument String"
 
 
+
+
 ---[ Parsing ]---
+
+--[ Dispatch ]--
+
+dispatch = try parseParse
+       <|> try parseFormat
+       <|> try parseCompile
+       <|> try parseCheck
+       <|> try parseDeploy
+
+parseParse :: Parser Dispatch
+parseParse = do
+    string "parse"
+    skip linespace
+    fp <- filepath
+    return $ DispatchParse fp
+
+parseFormat :: Parser Dispatch
+parseFormat = do
+    string "format"
+    skip linespace
+    fp <- filepath
+    return $ DispatchFormat fp
+
+parseCompile :: Parser Dispatch
+parseCompile = do
+    string "compile"
+    skip linespace
+    scr <- startingCardReference
+    return $ DispatchCompile $ scr
+
+parseCheck :: Parser Dispatch
+parseCheck = do
+    string "check"
+    skip linespace
+    cfr <- cardFileReference
+    return $ DispatchCheck $ CheckerCardUncompiled cfr
+
+parseDeploy :: Parser Dispatch
+parseDeploy = do
+    string "deploy"
+    skip linespace
+    scr <- startingCardReference
+    return $ DispatchDeploy $ DeployerCardUncompiled scr
+
+
+
+
+
+
+--[ Language ]--
 
 sparkFile :: Parser [Card]
 sparkFile = do
