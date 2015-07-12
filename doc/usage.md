@@ -148,7 +148,7 @@ $ spark compiled path/to/compiled/card
 
 #### Deployment options
 
-- `--kind KIND`: Specify any unspecified deployments (`->`) to be `KIND` deployments (`l->`). (Options for `KIND`: `copy`, `link`)
+- `--kind KIND`: Specify any unspecified deployments (`->`) to be `KIND` deployments (`c->` or `l->`). (Options for `KIND`: `copy`, `link`)
 - `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
 
 - `--replace-files`: replace existing files at deploy destinations
