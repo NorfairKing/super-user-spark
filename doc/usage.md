@@ -97,7 +97,7 @@ $ spark compile path/to/card.sus
 $ spark compile path/to/card.sus card-name
 ```
 
-This will compile the spark card to a set of deployments.
+This will compile the spark card to a list of deployments.
 
 #### Compiling options
 
@@ -120,11 +120,8 @@ $ spark check path/to/card.sus card-name
 You can also supply a compiled card:
 
 ```
-$ spark check path/to/compiled/card
+$ spark check compiled path/to/compiled/card
 ```
-
-In this case it's important that the file does _not_ have the `.sus` extension or `spark` will interpret it as a `spark` source file.
-
 
 #### Check options
 
@@ -145,9 +142,9 @@ You can also supply a compiled card:
 
 ```
 $ spark compiled path/to/compiled/card
+
 ```
 
-In this case the extension of the compiled card does not matter.
 
 #### Deployment options
 

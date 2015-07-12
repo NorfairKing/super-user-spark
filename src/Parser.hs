@@ -78,22 +78,22 @@ parseCompile :: Parser Dispatch
 parseCompile = do
     string "compile"
     skip linespace
-    scr <- startingCardReference
-    return $ DispatchCompile $ scr
+    ccr <- compilerCardReference
+    return $ DispatchCompile ccr
 
 parseCheck :: Parser Dispatch
 parseCheck = do
     string "check"
     skip linespace
-    cfr <- cardFileReference
-    return $ DispatchCheck $ CheckerCardUncompiled cfr
+    ccr <- checkerCardReference
+    return $ DispatchCheck ccr
 
 parseDeploy :: Parser Dispatch
 parseDeploy = do
     string "deploy"
     skip linespace
-    scr <- startingCardReference
-    return $ DispatchDeploy $ DeployerCardUncompiled scr
+    dcr <- deployerCardReference
+    return $ DispatchDeploy dcr
 
 
 
@@ -171,6 +171,28 @@ startingCardReference = try goFile <|> try goRepo <?> "starting card reference"
     goFile = cardFileReference >>= return . StartFile
     goRepo = cardRepoReference >>= return . StartRepo
 
+compilerCardReference :: Parser CompilerCardReference
+compilerCardReference = unprefixedCardFileReference
+
+checkerCardReference :: Parser CheckerCardReference
+checkerCardReference = goComp <|> goUncomp
+  where
+    goComp = compiledCardReference >>= return . CheckerCardCompiled
+    goUncomp = unprefixedCardFileReference >>= return . CheckerCardUncompiled
+
+deployerCardReference :: Parser DeployerCardReference
+deployerCardReference = goComp <|> goUncomp
+  where
+    goComp = compiledCardReference >>= return . DeployerCardCompiled
+    goUncomp = startingCardReference >>= return . DeployerCardUncompiled
+
+compiledCardReference :: Parser CompiledCardReference
+compiledCardReference = do
+    string "compiled"
+    skip linespace
+    fp <- filepath
+    return fp
+
 cardReference :: Parser CardReference
 cardReference = try goName <|> try goFile <|> try goRepo
     <?> "card reference"
@@ -187,10 +209,15 @@ cardNameReference = do
     return $ CardNameReference name
     <?> "card name reference"
 
+
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
     string keywordFile
-    linespace
+    skip linespace
+    unprefixedCardFileReference
+
+unprefixedCardFileReference :: Parser CardFileReference
+unprefixedCardFileReference = do
     fp <- filepath
     linespace
     mn <- optionMaybe $ try cardName

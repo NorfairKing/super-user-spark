@@ -58,8 +58,6 @@ loadConfig args = Config {
         ,   conf_replace_directories = present "--replace-directories" || present "--replace"
         }
 
-
-
     present :: String -> Bool
     present = (`elem` args)
 
@@ -83,3 +81,4 @@ loadConfig args = Config {
                     | otherwise = go (v:fs)
 
 
+defaultConfig = loadConfig []

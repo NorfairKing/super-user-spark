@@ -98,6 +98,8 @@ data StartingSparkReference = StartFile CardFileReference
                             | StartRepo CardRepoReference
     deriving (Show, Eq)
 
+type CompilerCardReference = CardFileReference
+
 type CompiledCardReference = FilePath
 
 data CheckerCardReference = CheckerCardCompiled CompiledCardReference
@@ -186,7 +188,7 @@ runSparker conf func = runReaderT (runExceptT func) conf
 
 data Dispatch = DispatchParse FilePath
               | DispatchFormat FilePath
-              | DispatchCompile StartingSparkReference
+              | DispatchCompile CompilerCardReference
               | DispatchCheck CheckerCardReference
               | DispatchDeploy DeployerCardReference
     deriving (Show, Eq)

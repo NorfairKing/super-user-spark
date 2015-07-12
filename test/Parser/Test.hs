@@ -74,7 +74,7 @@ test_parseFormat = parserTests parseFormat $
 
 test_parseCompile = parserTests parseCompile $
     [
-    (DispatchCompile (StartFile $ CardFileReference "test.sus" Nothing),
+        (DispatchCompile (CardFileReference "test.sus" Nothing),
             [
                 "compiletest.sus"
             ,   "compile test.sus"
@@ -83,7 +83,64 @@ test_parseCompile = parserTests parseCompile $
             ,   "compile\t \t test.sus"
             ]
         )
+    ,   (DispatchCompile (CardFileReference "test.sus" $ Just $ CardNameReference "card"),
+            [
+                "compiletest.sus card"
+            ,   "compile test.sus card"
+            ,   "compile   test.sus card"
+            ,   "compile\ttest.sus card"
+            ,   "compile\t \t test.sus card"
+            ]
+        )
     ]
+
+test_parseCheck = parserTests parseCheck $
+    [
+        (DispatchCheck (CheckerCardCompiled "test.cd"),
+            [
+                "check compiled test.cd"
+            ,   "checkcompiled test.cd"
+            ,   "check compiledtest.cd"
+            ,   "checkcompiledtest.cd"
+            ]
+        )
+    ,   (DispatchCheck (CheckerCardUncompiled $ CardFileReference "test.sus" Nothing),
+            [
+                "check test.sus"
+            ,   "checktest.sus"
+            ]
+        )
+    ]
+
+test_parseDeploy = parserTests parseDeploy $
+    [
+        (DispatchDeploy (DeployerCardCompiled "test.cd"),
+            [
+                "deploycompiledtest.cd"
+            ,   "deploy compiledtest.cd"
+            ,   "deploycompiled test.cd"
+            ,   "deploy compiled test.cd"
+            ]
+        )
+    ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" Nothing),
+            [
+                "deployfiletest.sus"
+            ,   "deploy filetest.sus"
+            ,   "deployfile test.sus"
+            ,   "deploy file test.sus"
+            ]
+        )
+    ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" $ Just $ CardNameReference "card"),
+            [
+                "deployfiletest.sus card"
+            ,   "deployfile test.sus card"
+            ,   "deploy filetest.sus card"
+            ,   "deploy file test.sus card"
+            ]
+        )
+    ]
+-- TODO tests with StartRepo"
+
 
 --[ Language ]--
 
