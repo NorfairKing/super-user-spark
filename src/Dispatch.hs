@@ -26,11 +26,15 @@ dispatch (DispatchCheck ccr) = do
             compileRef cards mcnr
     pdps <- check deps
     liftIO $ putStrLn $ unlines $ map show pdps
-
 dispatch (DispatchDeploy dcr) = do
-    return ()
+    deps <- case dcr of
+        DeployerCardCompiled fp -> inputCompiled fp
+        DeployerCardUncompiled scr -> do
+            cards <- parseStartingCardReference scr
+            compile (head cards) cards -- filtering is already done at parse
+    deploy deps
 
--- Loading config
+---[ Loading config ]---
 
 loadDispatcher :: [String] -> Either ParseError Dispatch
 loadDispatcher strs = parse parseDispatch "Arguments" (unwords strs)
