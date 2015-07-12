@@ -116,26 +116,20 @@ test_parseDeploy = parserTests parseDeploy $
     [
         (DispatchDeploy (DeployerCardCompiled "test.cd"),
             [
-                "deploycompiledtest.cd"
-            ,   "deploy compiledtest.cd"
-            ,   "deploycompiled test.cd"
-            ,   "deploy compiled test.cd"
+                "compiledtest.cd"
+            ,   "compiled test.cd"
             ]
         )
     ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" Nothing),
             [
-                "deployfiletest.sus"
-            ,   "deploy filetest.sus"
-            ,   "deployfile test.sus"
-            ,   "deploy file test.sus"
+                "filetest.sus"
+            ,   "file test.sus"
             ]
         )
     ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" $ Just $ CardNameReference "card"),
             [
-                "deployfiletest.sus card"
-            ,   "deployfile test.sus card"
-            ,   "deploy filetest.sus card"
-            ,   "deploy file test.sus card"
+                "filetest.sus card"
+            ,   "file test.sus card"
             ]
         )
     ]
