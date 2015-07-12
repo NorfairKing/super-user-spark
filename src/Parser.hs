@@ -35,7 +35,6 @@ parseStartingCardReference (StartFile (CardFileReference fp mnr)) = do
                 Just c  -> return [c]
 
 
-
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
     str <- liftIO $ readFile file

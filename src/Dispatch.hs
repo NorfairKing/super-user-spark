@@ -1,9 +1,9 @@
 module Dispatch where
 
-import           Data.List   (find)
 import           Text.Parsec
 
 import           Compiler
+import           Deployer
 import           Formatter
 import           Parser
 import           Types
@@ -16,18 +16,17 @@ dispatch (DispatchFormat fp) = do
     liftIO $ putStrLn str
 dispatch (DispatchCompile (CardFileReference fp mcnr)) = do
     cards <- parseFile fp
-    firstCard <- case mcnr of
-            Nothing -> if null cards
-                        then throwError $ CompileError "No cards found for compilation."
-                        else return $ head cards
-            Just (CardNameReference name) -> do
-                case find (\c -> card_name c == name) cards of
-                        Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found in file", fp, "for compilation."]
-                        Just card -> return card
-    deployments <- compile firstCard cards
+    deployments <- compileRef cards mcnr
     outputCompiled deployments
 dispatch (DispatchCheck ccr) = do
-    return ()
+    deps <- case ccr of
+        CheckerCardCompiled fp -> inputCompiled fp
+        CheckerCardUncompiled (CardFileReference fp mcnr) -> do
+            cards <- parseFile fp
+            compileRef cards mcnr
+    pdps <- check deps
+    liftIO $ putStrLn $ unlines $ map show pdps
+
 dispatch (DispatchDeploy dcr) = do
     return ()
 

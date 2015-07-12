@@ -261,15 +261,15 @@ instance Show Deployment where
 
 instance FromJSON Deployment where
     parseJSON (Object o) = Put <$> o .: "sources"
-                               <*> o .: "deployment kind"
                                <*> o .: "destination"
+                               <*> o .: "deployment kind"
     parseJSON _ = mzero
 
 instance ToJSON Deployment where
     toJSON depl = object [
                            "sources" .= deployment_srcs depl
-                         , "deployment kind" .= deployment_kind depl
                          , "destination" .= deployment_dst depl
+                         , "deployment kind" .= deployment_kind depl
                          ]
 
 

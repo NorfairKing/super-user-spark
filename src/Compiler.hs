@@ -15,6 +15,19 @@ import qualified Parser                     as P
 import           Types
 import           Utils
 
+compileRef :: [Card] -> Maybe CardNameReference -> Sparker [Deployment]
+compileRef cs mcnr = do
+    firstCard <- case mcnr of
+            Nothing -> if null cs
+                        then throwError $ CompileError "No cards found for compilation."
+                        else return $ head cs
+            Just (CardNameReference name) -> do
+                case find (\c -> card_name c == name) cs of
+                        Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
+                        Just card -> return card
+    compile firstCard cs
+
+
 compile :: Card -> [Card] -> Sparker [Deployment]
 compile card allCards = do
     initial <- initialState card allCards
@@ -50,15 +63,16 @@ inputCompiled fp = do
         FormatBinary -> do
             o <- liftIO $ decodeFileOrFail fp
             case o of
-                Left (_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data:" ++ err
+                Left (_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data: " ++ err
                 Right deps      -> return deps
         FormatText -> do
             str <- liftIO $ readFile fp
-            return $ read str
+            liftIO $ print str
+            return $ map read $ init $ lines str
         FormatJson -> do
             bs <- liftIO $ BS.readFile fp
             case eitherDecode bs of
-                Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data" ++ err
+                Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data: " ++ err
                 Right ds        -> return ds
 
         FormatStandalone -> throwError $ CompileError "You're not supposed to use standalone compiled deployments in any other way than by executing it."

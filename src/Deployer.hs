@@ -32,6 +32,13 @@ deploy dps = do
     _ <- runSparkDeployer state $ deployAll dps
     return ()
 
+check :: [Deployment] -> Sparker [PreDeployment]
+check dps = do
+    state <- initialState dps
+    (pdps, _) <- runSparkDeployer state $ predeployments dps
+    return pdps
+
+
 initialState :: [Deployment] -> Sparker DeployerState
 initialState _ = return DeployerState
 
