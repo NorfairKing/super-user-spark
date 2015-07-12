@@ -6,6 +6,7 @@ import           Control.Monad.IO.Class (MonadIO)
 import           Control.Monad.Reader   (MonadReader)
 import           Types
 
+{-
 verbose :: (MonadReader SparkConfig m, MonadIO m) => String -> m ()
 verbose str = do
     v <- asks conf_verbose
@@ -20,6 +21,15 @@ verboseOrDry str = do
     if v || d
     then liftIO $ putStrLn str
     else return ()
+-}
+
+debug :: (MonadReader SparkConfig m, MonadIO m) => String -> m ()
+debug str = do
+    v <- asks conf_debug
+    if v
+    then liftIO $ putStrLn str
+    else return ()
+
 
 incase :: MonadReader SparkConfig m => (SparkConfig -> Bool) -> m () -> m ()
 incase bf func = do

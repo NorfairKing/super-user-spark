@@ -41,12 +41,8 @@ deployAll deps = do
 
     case catErrors pdps of
         [] -> do
-            dry <- asks conf_dry
-            if dry
-            then return ()
-            else do
-                deployments pdps
-                postdeployments deps pdps
+            deployments pdps
+            postdeployments deps pdps
 
         ss -> throwError $ DeployError $ PreDeployError ss
 
@@ -61,7 +57,7 @@ catErrors (s:ss) = case s of
 predeployments :: [Deployment] -> SparkDeployer [PreDeployment]
 predeployments dps = do
     pdps <- mapM preDeployment dps
-    lift $ verboseOrDry $ formatPreDeployments $ zip dps pdps
+    lift $ debug $ formatPreDeployments $ zip dps pdps
     return pdps
 
 preDeployment :: Deployment -> SparkDeployer PreDeployment
@@ -82,7 +78,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                 IsFile      _   -> do
                     case kind of
                         LinkDeployment -> do
-                            incaseElse conf_replace
+                            incaseElse conf_deploy_replace_files
                                 (rmFile d >> preDeployment dep)
                                 (error ["Destination", d, "already exists and is file (for a link deployment):", s, "."])
                         CopyDeployment -> do
@@ -90,17 +86,17 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                             if equal
                             then done
                             else do
-                                incaseElse conf_replace
+                                incaseElse conf_deploy_replace_files
                                     (rmFile d >> preDeployment dep)
                                     (error ["Destination", d, "already exists and is a file, different from the source:", s, "."])
                 IsDirectory _   -> do
-                    incaseElse conf_replace
+                    incaseElse conf_deploy_replace_directories
                         (rmDir d >> preDeployment dep)
                         (error ["Destination", d, "already exists and is a directory."])
                 IsLink      _   -> do
                     case kind of
                         CopyDeployment -> do
-                            incaseElse conf_replace
+                            incaseElse conf_deploy_replace_links
                                 (unlink d >> preDeployment dep)
                                 (error ["Destination", d, "already exists and is a symbolic link (for a copy deployment):", s, "."])
                         LinkDeployment -> do
@@ -109,7 +105,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                             then done
                             else do
                                 liftIO $ putStrLn $ point ++ " is not equal to " ++ d
-                                incaseElse conf_replace
+                                incaseElse conf_deploy_replace_links
                                     (unlink d >> preDeployment dep)
                                     (error ["Destination", d, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", d, "already exists and is something weird."]
@@ -117,13 +113,13 @@ preDeployment dep@(Put (src:ss) dst kind) = do
             case dd of
                 NonExistent     -> ready
                 IsFile      _   -> do
-                    incaseElse conf_replace
-                        (rmDir d >> preDeployment dep)
-                        (error ["Destination", d, "already exists and is a directory."])
+                    incaseElse conf_deploy_replace_files
+                        (rmFile d >> preDeployment dep)
+                        (error ["Destination", d, "already exists and is a file."])
                 IsDirectory _   -> do
                     case kind of
                         LinkDeployment -> do
-                            incaseElse conf_replace
+                            incaseElse conf_deploy_replace_directories
                                 (rmDir d >> preDeployment dep)
                                 (error ["Destination", d, "already exists and is directory (for a link deployment):", s, "."])
                         CopyDeployment -> do
@@ -131,20 +127,20 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                             if equal
                             then done
                             else do
-                                incaseElse conf_replace
+                                incaseElse conf_deploy_replace_directories
                                     (rmDir d >> preDeployment dep)
                                     (error ["Destination", d, "already exists and is a directory, different from the source."])
                 IsLink      _   -> do
                     case kind of
                         CopyDeployment -> do
-                            incaseElse conf_replace
+                            incaseElse conf_deploy_replace_links
                                 (unlink d >> preDeployment dep)
                                 (error ["Destination", d, "already exists and is a symbolic link."])
                         LinkDeployment -> do
                             point <- liftIO $ readSymbolicLink dst
                             if point `filePathEqual` s
                             then done
-                            else incaseElse conf_replace
+                            else incaseElse conf_deploy_replace_links
                                 (unlink d >> preDeployment dep)
                                 (error ["Destination", d, "already exists and is a symbolic link but not to the source."])
                 _               -> error ["Destination", d, "already exists and is something weird."]
@@ -250,24 +246,24 @@ unlink :: FilePath -> SparkDeployer ()
 unlink fp = do
     es <- liftIO $ system $ unwords $ ["/usr/bin/unlink", fp]
     case es of
-        ExitSuccess -> verbose $ unwords ["unlinked", fp]
+        ExitSuccess -> debug $ unwords ["unlinked", fp]
         ExitFailure _ -> throwError $ DeployError $ PreDeployError ["Something went wrong while unlinking " ++ fp ++ "."]
 
 rmFile :: FilePath -> SparkDeployer ()
 rmFile fp = do
     liftIO $ removeFile fp
-    verbose $ unwords ["removed", fp]
+    debug $ unwords ["removed", fp]
 
 rmDir :: FilePath -> SparkDeployer ()
 rmDir fp = do
     liftIO $ removeDirectoryRecursive fp
-    verbose $ unwords ["removed", fp]
+    debug $ unwords ["removed", fp]
 
 
 postdeployments :: [Deployment] -> [PreDeployment] -> SparkDeployer ()
 postdeployments deps predeps = do
     pdps <- mapM postdeployment predeps
-    lift $ verbose $ formatPostDeployments $ zip deps pdps
+    lift $ debug $ formatPostDeployments $ zip deps pdps
     case catMaybes pdps of
         [] -> return ()
         es -> throwError $ DeployError $ PostDeployError es

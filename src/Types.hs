@@ -119,22 +119,19 @@ data CardReference = CardRepo CardRepoReference
 
 type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 data SparkConfig = Config {
-        conf_format  :: FormatOptions
-    ,   conf_compile :: CompileOptions
-    ,   conf_check   :: CheckOptions
-    ,   conf_deploy  :: DeployOptions
-    } deriving (Show, Eq)
-
-data FormatOptions = FormatOptions {
-        conf_format_lineUp          :: Bool
-    ,   conf_format_indent          :: Int
-    ,   conf_format_trailingNewline :: Bool
-    ,   conf_format_alwaysQuote     :: Bool
-    } deriving (Show, Eq)
-
-data CompileOptions = CompileOptions {
-        conf_compile_output :: Maybe FilePath
-    ,   conf_compile_format :: CompileFormat
+        conf_format_lineUp              :: Bool
+    ,   conf_format_indent              :: Int
+    ,   conf_format_trailingNewline     :: Bool
+    ,   conf_format_alwaysQuote         :: Bool
+    ,   conf_compile_output             :: Maybe FilePath
+    ,   conf_compile_format             :: CompileFormat
+    ,   conf_check_thoroughness         :: CheckThoroughness
+    ,   conf_deploy_kind                :: DeploymentKind
+    ,   conf_deploy_override            :: Maybe DeploymentKind
+    ,   conf_deploy_replace_links       :: Bool
+    ,   conf_deploy_replace_files       :: Bool
+    ,   conf_deploy_replace_directories :: Bool
+    ,   conf_debug                      :: Bool
     } deriving (Show, Eq)
 
 data CompileFormat = FormatBinary
@@ -150,10 +147,6 @@ instance Read CompileFormat where
     readsPrec _ "standalone" = [(FormatStandalone,"")]
     readsPrec _ _ = []
 
-data CheckOptions = CheckOptions {
-        conf_check_thoroughness :: CheckThoroughness
-    } deriving (Show, Eq)
-
 data CheckThoroughness = ThoroughnessName
                        | ThoroughnessChecksum
                        | ThoroughnessContent
@@ -164,14 +157,6 @@ instance Read CheckThoroughness where
     readsPrec _ "checksum"   = [(ThoroughnessChecksum,"")]
     readsPrec _ "content"    = [(ThoroughnessContent,"")]
     readsPrec _ _ = []
-
-data DeployOptions = DeployOptions {
-        conf_deploy_kind         :: DeploymentKind
-    ,   conf_deploy_override     :: Maybe DeploymentKind
-    ,   conf_replace_links       :: Bool
-    ,   conf_replace_files       :: Bool
-    ,   conf_replace_directories :: Bool
-    } deriving (Show, Eq)
 
 
 data SparkError = ParseError ParseError

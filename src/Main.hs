@@ -1,11 +1,10 @@
 module Main where
-
-import           Data.List          (isPrefixOf)
 import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
 
 import           Compiler
 import           Deployer
+import           Dispatch
 import           Formatter
 import           Parser
 import           Paths
@@ -16,43 +15,28 @@ main :: IO ()
 main = do
     checkSystemConsistency
 
-    config <- loadConfig
-    er <- runSparker config $ do
-        verbose $ show config
-
-        scr <- loadStartingCardReference
-        verbose $ show scr
-        spark scr
-    case er of
-        Left err -> putStrLn $ showError err
-        _ -> return ()
-
-loadConfig :: IO SparkConfig
-loadConfig = do
-    as <- getArgs
-    let args = filter ("-" `isPrefixOf`) as
-    return $ Config {
-            conf_dry = not $ "--no-dry" `elem` args
-        ,   conf_verbose = "--verbose" `elem` args || "-v" `elem` args
-        ,   conf_replace = "--replace" `elem` args || "-r" `elem` args
-        }
-
-loadStartingCardReference :: Sparker StartingSparkReference
-loadStartingCardReference = do
     as <- liftIO getArgs
-    let args = filter (\a -> not $ "-" `isPrefixOf`a) as
-    let escr = parseCardReference $ unwords args
-    case escr of
-        Left pe -> error $ show pe -- TODO better error handling here
-        Right scr -> return scr
+
+    let config = loadConfig as
+    let disp   = loadDispatcher as
+
+    case disp of
+        Left err -> putStrLn $ show err
+        Right di -> do
+            er <- runSparker config $ dispatch di
+
+            case er of
+                Left err -> putStrLn $ showError err
+                _ -> return ()
+
 
 spark :: StartingSparkReference -> Sparker ()
 spark ssr = do
     cs <- parseStartingCardReference ssr
     fcs <- formatCards cs
-    verbose fcs
+    debug fcs
     dp <- compile (head cs) cs
-    verboseOrDry $ formatDeployments dp
+    debug $ formatDeployments dp
     deploy dp
 
 showError :: SparkError -> String

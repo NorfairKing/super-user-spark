@@ -54,11 +54,12 @@ parseCardReference = parse startingCardReference "Argument String"
 
 --[ Dispatch ]--
 
-dispatch = try parseParse
-       <|> try parseFormat
-       <|> try parseCompile
-       <|> try parseCheck
-       <|> try parseDeploy
+parseDispatch :: Parser Dispatch
+parseDispatch = try parseParse
+            <|> try parseFormat
+            <|> try parseCompile
+            <|> try parseCheck
+            <|> try parseDeploy
 
 parseParse :: Parser Dispatch
 parseParse = do
@@ -66,6 +67,7 @@ parseParse = do
     skip linespace
     fp <- filepath
     return $ DispatchParse fp
+    <?> "Parse Instructions"
 
 parseFormat :: Parser Dispatch
 parseFormat = do
@@ -73,6 +75,7 @@ parseFormat = do
     skip linespace
     fp <- filepath
     return $ DispatchFormat fp
+    <?> "Format Instructions"
 
 parseCompile :: Parser Dispatch
 parseCompile = do
@@ -80,6 +83,7 @@ parseCompile = do
     skip linespace
     ccr <- compilerCardReference
     return $ DispatchCompile ccr
+    <?> "Compile Instructions"
 
 parseCheck :: Parser Dispatch
 parseCheck = do
@@ -87,13 +91,13 @@ parseCheck = do
     skip linespace
     ccr <- checkerCardReference
     return $ DispatchCheck ccr
+    <?> "Check Instructions"
 
 parseDeploy :: Parser Dispatch
 parseDeploy = do
-    string "deploy"
-    skip linespace
     dcr <- deployerCardReference
     return $ DispatchDeploy dcr
+    <?> "Deploy Instructions"
 
 
 
