@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Types
     (
       module Types
@@ -10,6 +11,7 @@ module Types
     , module Text.Parsec
     ) where
 
+import           Control.Monad          (mzero)
 import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
@@ -18,8 +20,17 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 
+import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..),
+                                         object, (.:), (.=))
+
+import           Data.Binary            (Binary (..), Get)
+import qualified Data.Binary            as B
+import           Data.ByteString        (ByteString)
+import           Data.ByteString.Char8  (pack, unpack)
 import           System.Directory       (Permissions (..))
 import           Text.Parsec            (ParseError)
+
+import           Constants
 
 ---[ Repositories ]---
 
@@ -65,10 +76,30 @@ data DeploymentKind = LinkDeployment
                     | CopyDeployment
     deriving (Show, Eq)
 
+instance Binary DeploymentKind where
+    put LinkDeployment = B.put True
+    put CopyDeployment = B.put False
+    get = do
+        b <- B.get :: Get Bool
+        return $ if b
+        then LinkDeployment
+        else CopyDeployment
+
 instance Read DeploymentKind where
     readsPrec _ "link" = [(LinkDeployment,"")]
     readsPrec _ "copy" = [(CopyDeployment,"")]
     readsPrec _ _ = []
+
+instance FromJSON DeploymentKind where
+    parseJSON (String "link") = return LinkDeployment
+    parseJSON (String "copy") = return CopyDeployment
+    parseJSON _ = mzero
+
+instance ToJSON DeploymentKind where
+    toJSON LinkDeployment = String "link"
+    toJSON CopyDeployment = String "copy"
+
+
 
 data Declaration = SparkOff CardReference
                  | Deploy Source Destination (Maybe DeploymentKind)
@@ -126,9 +157,9 @@ data SparkConfig = Config {
     ,   conf_format_oneLine             :: Bool
     ,   conf_compile_output             :: Maybe FilePath
     ,   conf_compile_format             :: CompileFormat
+    ,   conf_compile_kind               :: Maybe DeploymentKind
+    ,   conf_compile_override           :: Maybe DeploymentKind
     ,   conf_check_thoroughness         :: CheckThoroughness
-    ,   conf_deploy_kind                :: DeploymentKind
-    ,   conf_deploy_override            :: Maybe DeploymentKind
     ,   conf_deploy_replace_links       :: Bool
     ,   conf_deploy_replace_files       :: Bool
     ,   conf_deploy_replace_directories :: Bool
@@ -186,7 +217,62 @@ data Deployment = Put {
     ,   deployment_dst  :: FilePath
     ,   deployment_kind :: DeploymentKind
     }
-    deriving (Show, Eq)
+    deriving Eq
+
+instance Binary Deployment where
+    put depl = do
+        B.put $ map pack $ deployment_srcs depl
+        B.put $ deployment_kind depl
+        B.put $ pack $ deployment_dst depl
+    get = do
+        bsrcs <- B.get :: Get [ByteString]
+        kind <- B.get :: Get DeploymentKind
+        dst <- B.get :: Get ByteString
+        return $ Put {
+                deployment_srcs = map unpack bsrcs
+            ,   deployment_kind = kind
+            ,   deployment_dst = unpack dst
+            }
+
+instance Read Deployment where
+    readsPrec _ str = [(Put {
+                deployment_srcs = srcs
+            ,   deployment_dst = dst
+            ,   deployment_kind = kind
+            }, "")]
+      where
+          srcs = (map unquote . reverse . drop 2 . reverse) ws
+          kind = case lookup (last $ init ws) [(linkKindSymbol, LinkDeployment), (copyKindSymbol, CopyDeployment)] of
+                    Nothing -> error "unrecognised deployment kind symbol"
+                    Just k  -> k
+          dst = last ws
+          ws = words str
+          unquote = tail . init
+
+instance Show Deployment where
+    show dep = unwords $ srcs ++ [k,dst]
+      where
+        srcs = map quote $ deployment_srcs dep
+        k = case deployment_kind dep of
+                LinkDeployment -> linkKindSymbol
+                CopyDeployment -> copyKindSymbol
+        dst = quote $ deployment_dst dep
+        quote = (\s -> "\"" ++ s ++ "\"")
+
+instance FromJSON Deployment where
+    parseJSON (Object o) = Put <$> o .: "sources"
+                               <*> o .: "deployment kind"
+                               <*> o .: "destination"
+    parseJSON _ = mzero
+
+instance ToJSON Deployment where
+    toJSON depl = object [
+                           "sources" .= deployment_srcs depl
+                         , "deployment kind" .= deployment_kind depl
+                         , "destination" .= deployment_dst depl
+                         ]
+
+
 
 type CompileError = String
 

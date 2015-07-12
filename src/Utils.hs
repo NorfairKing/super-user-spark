@@ -44,3 +44,6 @@ incaseElse bf funcif funcelse = do
     if b
     then funcif
     else funcelse
+
+notImplementedYet :: Sparker ()
+notImplementedYet = throwError $ UnpredictedError "This feature is not implemented yet, it will be in the future, so be sure to check back in a newer version."

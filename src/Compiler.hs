@@ -1,12 +1,17 @@
 module Compiler where
 
-import           Data.List        (find, isPrefixOf)
-import           System.Directory (getCurrentDirectory, getHomeDirectory)
-import           System.FilePath  (takeDirectory, (</>))
+import           Data.Aeson.Encode.Pretty   (encodePretty)
+import           Data.Binary                (encode, encodeFile)
+import           Data.ByteString.Lazy.Char8 (pack, unpack)
+import qualified Data.ByteString.Lazy.Char8 as BS
+import           Data.List                  (find, isPrefixOf)
+import           System.Directory           (getCurrentDirectory,
+                                             getHomeDirectory)
+import           System.FilePath            (takeDirectory, (</>))
 
-
-import qualified Parser           as P
+import qualified Parser                     as P
 import           Types
+import           Utils
 
 compile :: Card -> [Card] -> Sparker [Deployment]
 compile card allCards = do
@@ -14,19 +19,47 @@ compile card allCards = do
     ((_,_),dps) <- runSparkCompiler initial compileDeployments
     return dps
 
+outputCompiled :: [Deployment] -> Sparker ()
+outputCompiled deps = do
+    form <- asks conf_compile_format
+    out <- asks conf_compile_output
+    case form of
+        FormatBinary -> do
+            case out of
+                Nothing -> liftIO $ putStrLn $ unpack $ encode deps
+                Just fp -> liftIO $ encodeFile fp deps
+        FormatText -> do
+            let str = unlines $ map show deps
+            case out of
+                Nothing -> liftIO $ putStrLn str
+                Just fp -> liftIO $ writeFile fp str
+        FormatJson -> do
+            let bs = encodePretty deps
+            case out of
+                Nothing -> liftIO $ BS.putStrLn bs
+                Just fp -> liftIO $ BS.writeFile fp bs
+
+        FormatStandalone -> notImplementedYet
+
+inputCompiled :: FilePath -> Sparker [Deployment]
+inputCompiled fp = undefined
+
 initialState :: Card -> [Card] -> Sparker CompilerState
 initialState c@(Card _ fp ds) cds = do
     currentDir <- liftIO getCurrentDirectory
+    override <- asks conf_compile_kind
     return $ CompilerState {
         state_current_card = c
     ,   state_current_directory = currentDir </> takeDirectory fp
     ,   state_all_cards = cds
     ,   state_declarations_left = ds
-    ,   state_deployment_kind_override = Nothing
+    ,   state_deployment_kind_override = override
     ,   state_into_prefix = ""
     ,   state_outof_prefix = ""
     ,   state_alternatives = [""]
     }
+
+-- Compiler
 
 pop :: SparkCompiler Declaration
 pop = do
@@ -63,10 +96,12 @@ processDeclaration = do
     case dec of
         Deploy src dst kind -> do
             override <- gets state_deployment_kind_override
-            let resultKind = case (override, kind) of
-                    (Nothing, Nothing) -> LinkDeployment
-                    (Just o, Nothing) -> o
-                    (_, Just k) -> k
+            superOverride <- asks conf_compile_override
+            let resultKind = case (superOverride, override, kind) of
+                    (Nothing, Nothing, Nothing) -> LinkDeployment
+                    (Nothing, Nothing, Just k ) -> k
+                    (Nothing, Just o , _      ) -> o
+                    (Just o , _      , _      ) -> o
 
             alternates <- gets state_alternatives
             dir <- gets state_current_directory
@@ -81,7 +116,8 @@ processDeclaration = do
 
         SparkOff st -> do
             case st of
-                CardRepo _ -> throwError $ UnpredictedError "not yet implemented"
+                CardRepo _ -> lift $ lift notImplementedYet
+
                 CardFile (CardFileReference file mn) -> do
                     dir <- gets state_current_directory
                     newCards <- liftSparker $ P.parseFile $ dir </> file
@@ -96,6 +132,7 @@ processDeclaration = do
                     newDeclarations <- liftSparker $ compile nextCard newCards
                     modify (\s -> s {state_all_cards = allCards})
                     addAll newDeclarations
+
                 CardName (CardNameReference name) -> do
                     allCards <- gets state_all_cards
                     case find (\c -> card_name c == name) allCards of

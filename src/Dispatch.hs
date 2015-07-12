@@ -1,7 +1,9 @@
 module Dispatch where
 
+import           Data.List   (find)
 import           Text.Parsec
 
+import           Compiler
 import           Formatter
 import           Parser
 import           Types
@@ -12,8 +14,18 @@ dispatch (DispatchFormat fp) = do
     cards <- parseFile fp
     str <- formatCards cards
     liftIO $ putStrLn str
-dispatch (DispatchCompile ccr) = do
-    return ()
+dispatch (DispatchCompile (CardFileReference fp mcnr)) = do
+    cards <- parseFile fp
+    firstCard <- case mcnr of
+            Nothing -> if null cards
+                        then throwError $ CompileError "No cards found for compilation."
+                        else return $ head cards
+            Just (CardNameReference name) -> do
+                case find (\c -> card_name c == name) cards of
+                        Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found in file", fp, "for compilation."]
+                        Just card -> return card
+    deployments <- compile firstCard cards
+    outputCompiled deployments
 dispatch (DispatchCheck ccr) = do
     return ()
 dispatch (DispatchDeploy dcr) = do
@@ -33,13 +45,13 @@ loadConfig args = Config {
     ,   conf_format_oneLine             = present "--compress"
     ,   conf_compile_output             = maybeValue "--output"
     ,   conf_compile_format             = "--format"        `withDefault` FormatText
+    ,   conf_compile_kind                = maybeValue "--kind"
+    ,   conf_compile_override            = maybeValue "--override"
     ,   conf_check_thoroughness         = "--thoroughness"  `withDefault` ThoroughnessContent
-    ,   conf_debug                      = present "--debug"
-    ,   conf_deploy_kind                = "--kind"          `withDefault` LinkDeployment
-    ,   conf_deploy_override            = maybeValue "--override"
     ,   conf_deploy_replace_links       = present "--replace-links"       || present "--replace"
     ,   conf_deploy_replace_files       = present "--replace-files"       || present "--replace"
     ,   conf_deploy_replace_directories = present "--replace-directories" || present "--replace"
+    ,   conf_debug                      = present "--debug"
     }
   where
 

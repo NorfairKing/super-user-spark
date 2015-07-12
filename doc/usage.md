@@ -102,8 +102,10 @@ This will compile the spark card to a list of deployments.
 
 #### Compiling options
 
-- `-o FILE` or `--output FILE` output to a `FILE` instead of stdout.
-- `--format FORMAT`: Compile to a specific format. (Options for `FORMAT`: `binary`, `text`(default), `json` or `standalone`) When set to `standalone`, compile to a standalone binary to be run seperately instead of a set of deployments.
+- `--output FILE` output to a `FILE` instead of stdout.
+- `--format FORMAT`: Compile to a specific format. (Options for `FORMAT`: `binary`, `text`(Default), `json` or `standalone`) When set to `standalone`, compile to a standalone binary to be run seperately instead of a set of deployments.
+- `--kind KIND`: Specify any unspecified deployments (`->`) to be `KIND` deployments (`c->` or `l->`). (Options for `KIND`: `copy`, `link`)
+- `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
 
 
 ### Check
@@ -147,9 +149,6 @@ $ spark compiled path/to/compiled/card
 
 
 #### Deployment options
-
-- `--kind KIND`: Specify any unspecified deployments (`->`) to be `KIND` deployments (`c->` or `l->`). (Options for `KIND`: `copy`, `link`)
-- `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
 
 - `--replace-files`: replace existing files at deploy destinations
 - `--replace-directories`: replace existing directories at deploy destinations
