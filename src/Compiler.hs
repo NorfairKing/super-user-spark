@@ -1,8 +1,10 @@
 module Compiler where
 
+import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
-import           Data.Binary                (encode, encodeFile)
-import           Data.ByteString.Lazy.Char8 (pack, unpack)
+import           Data.Binary                (decodeFileOrFail, encode,
+                                             encodeFile)
+import           Data.ByteString.Lazy.Char8 (unpack)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, isPrefixOf)
 import           System.Directory           (getCurrentDirectory,
@@ -42,7 +44,25 @@ outputCompiled deps = do
         FormatStandalone -> notImplementedYet
 
 inputCompiled :: FilePath -> Sparker [Deployment]
-inputCompiled fp = undefined
+inputCompiled fp = do
+    form <- asks conf_compile_format
+    case form of
+        FormatBinary -> do
+            o <- liftIO $ decodeFileOrFail fp
+            case o of
+                Left (_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data:" ++ err
+                Right deps      -> return deps
+        FormatText -> do
+            str <- liftIO $ readFile fp
+            return $ read str
+        FormatJson -> do
+            bs <- liftIO $ BS.readFile fp
+            case eitherDecode bs of
+                Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data" ++ err
+                Right ds        -> return ds
+
+        FormatStandalone -> throwError $ CompileError "You're not supposed to use standalone compiled deployments in any other way than by executing it."
+
 
 initialState :: Card -> [Card] -> Sparker CompilerState
 initialState c@(Card _ fp ds) cds = do

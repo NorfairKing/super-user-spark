@@ -126,6 +126,8 @@ You can also supply a compiled card:
 $ spark check compiled path/to/compiled/card
 ```
 
+Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
+
 #### Check options
 
 - `--thoroughness OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name`, `checksum` `content`(default))
@@ -147,6 +149,7 @@ You can also supply a compiled card:
 $ spark compiled path/to/compiled/card
 ```
 
+Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
 
 #### Deployment options
 
