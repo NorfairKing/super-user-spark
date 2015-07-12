@@ -2,16 +2,27 @@ module Dispatch where
 
 import           Text.Parsec
 
+import           Formatter
 import           Parser
 import           Types
 
 dispatch :: Dispatch -> Sparker ()
-dispatch dp = do
+dispatch (DispatchParse fp) = parseFile fp >> return () -- Just parse, throw away the results.
+dispatch (DispatchFormat fp) = do
+    cards <- parseFile fp
+    str <- formatCards cards
+    liftIO $ putStrLn str
+dispatch (DispatchCompile ccr) = do
     return ()
+dispatch (DispatchCheck ccr) = do
+    return ()
+dispatch (DispatchDeploy dcr) = do
+    return ()
+
+-- Loading config
 
 loadDispatcher :: [String] -> Either ParseError Dispatch
 loadDispatcher strs = parse parseDispatch "Arguments" (unwords strs)
-
 
 loadConfig :: [String] -> SparkConfig
 loadConfig args = Config {
@@ -19,6 +30,7 @@ loadConfig args = Config {
     ,   conf_format_indent              = if present "--compress" then 0     else "--indent" `withDefault` 4
     ,   conf_format_trailingNewline     = if present "--compress" then False else notPresent "--no-trailing-newline"
     ,   conf_format_alwaysQuote         = if present "--compress" then False else present "--always-quote"
+    ,   conf_format_oneLine             = present "--compress"
     ,   conf_compile_output             = maybeValue "--output"
     ,   conf_compile_format             = "--format"        `withDefault` FormatText
     ,   conf_check_thoroughness         = "--thoroughness"  `withDefault` ThoroughnessContent

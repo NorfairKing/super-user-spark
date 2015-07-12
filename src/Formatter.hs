@@ -18,12 +18,14 @@ initialState = return $ FormatterState {
     ,   state_newline_before_deploy = True
     }
 
-indentation :: Int
-indentation = 4
 
 cards :: [Card] -> SparkFormatter ()
-cards cs = do
-    onLines card cs
+cards cs = onLines card cs
+
+delimited :: (a -> SparkFormatter ()) -> [a] -> SparkFormatter ()
+delimited thingFormatter things = do
+    let allThings = map thingFormatter things
+    sequence_ $ intersperse delimiter allThings
 
 onLines :: (a -> SparkFormatter ()) -> [a] -> SparkFormatter ()
 onLines thingFormatter things = do
@@ -34,21 +36,21 @@ onLines thingFormatter things = do
 card :: Card -> SparkFormatter ()
 card (Card name _ ds) = do
     string keywordCard
-    string " "
+    space
     string name
-    string " "
+    space
     declaration $ Block ds
 
 braces :: SparkFormatter () -> SparkFormatter ()
 braces f = do
     modify (\s -> s {state_newline_before_deploy = True})
+
     string "{"
     newline
-    indent 4
-    newline
-    f
-    newline
-    indent (-4)
+    indented $ do
+        newline
+        f
+        newline
     newline
     string "}"
 
@@ -63,14 +65,33 @@ interspersed (s:ss) i = do
     string i
     spaced ss
 
+
 spaced :: [String] -> SparkFormatter ()
 spaced strs = interspersed strs " "
 
+space :: SparkFormatter ()
+space = onlyIf (not . conf_format_oneLine) $ string " "
+
+
 newline :: SparkFormatter ()
 newline = do
-    string "\n"
+    onlyIf (not . conf_format_oneLine) $ string "\n"
     ci <- gets state_current_indent
     string $ replicate ci ' '
+
+delimiter :: SparkFormatter ()
+delimiter = do
+    oneLine <- asks conf_format_oneLine
+    if oneLine
+    then string ";"
+    else newline
+
+indented :: SparkFormatter () -> SparkFormatter ()
+indented func = do
+    ind <- asks conf_format_indent
+    indent ind
+    func
+    indent (-ind)
 
 indent :: Int -> SparkFormatter ()
 indent c = do
@@ -78,61 +99,85 @@ indent c = do
     modify (\s -> s {state_current_indent = ci + c})
 
 declarations :: [Declaration] -> SparkFormatter ()
-declarations = onLines declaration
+declarations = delimited declaration
 
 declaration :: Declaration -> SparkFormatter ()
 declaration (SparkOff cr) = do
     string keywordSpark
-    string " "
+    space
     cardReference cr
 declaration (Deploy src dst k) = do
     nbf <- gets state_newline_before_deploy
     if nbf
     then newline
     else return ()
-    string src
+    quoted src
     ls <- gets state_longest_src
-    string $ replicate (ls - length src) ' '
+    onlyIf conf_format_lineUp $ string $ replicate (ls - length src) ' '
     string " "
     mkind k
     string " "
-    string dst
+    quoted dst
     modify (\s -> s {state_newline_before_deploy = False})
 declaration (IntoDir dir) = do
     string keywordInto
-    string " "
+    space
     string dir
 declaration (OutofDir dir) = do
     string keywordOutof
-    string " "
+    space
     string dir
 declaration (DeployKindOverride k) = do
     string keywordKindOverride
-    string " "
-    kind k
+    space
+    case k of
+        CopyDeployment -> string keywordCopy
+        LinkDeployment -> string keywordLink
 declaration (Block ds) = do
     ls <- gets state_longest_src
     let m = maximum $ map srcLen ds
     modify (\s -> s {state_longest_src = m} )
     braces $ declarations ds
     modify (\s -> s {state_longest_src = ls} )
-    newline
+    onlyIf conf_format_trailingNewline newline
   where
     srcLen (Deploy src _ _) = length src
     srcLen _ = 0
 declaration (Alternatives ds) = do
     string keywordAlternatives
-    string " "
+    space
     spaced ds
 
+quoted :: String -> SparkFormatter ()
+quoted str = do
+    alwaysQuote <- asks conf_format_alwaysQuote
+    if needsQuoting str || alwaysQuote
+    then do
+        string "\""
+        string str
+        string "\""
+    else do
+        string str
+
+needsQuoting :: String -> Bool
+needsQuoting str = any (`elem` lineDelimiter ++ whitespaceChars ++ bracesChars) str
+
+onlyIf :: (SparkConfig -> Bool) -> SparkFormatter () -> SparkFormatter ()
+onlyIf conf func = do
+    b <- asks conf
+    if b
+    then func
+    else return ()
 
 kind :: DeploymentKind -> SparkFormatter ()
-kind LinkDeployment = string keywordCopy
-kind CopyDeployment = string keywordLink
+kind LinkDeployment = string linkKindSymbol
+kind CopyDeployment = string copyKindSymbol
 
 mkind :: Maybe DeploymentKind -> SparkFormatter ()
 mkind (Just k) = kind k
-mkind Nothing = string $ ' ':unspecifiedKindSymbol
+mkind Nothing = do
+    onlyIf conf_format_lineUp space
+    string unspecifiedKindSymbol
 
 cardReference :: CardReference -> SparkFormatter ()
 cardReference (CardRepo crr) = cardRepoReference crr

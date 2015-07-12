@@ -95,6 +95,8 @@ parseCheck = do
 
 parseDeploy :: Parser Dispatch
 parseDeploy = do
+    string "deploy"
+    skip linespace
     dcr <- deployerCardReference
     return $ DispatchDeploy dcr
     <?> "Deploy Instructions"
@@ -323,7 +325,7 @@ directory = do
 --[ Comments ]--
 
 comment :: Parser String
-comment = lineComment <|> blockComment
+comment = lineComment <|> blockComment <?> "Comments"
 
 lineComment :: Parser String
 lineComment = do

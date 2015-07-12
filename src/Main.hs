@@ -1,6 +1,9 @@
 module Main where
+
 import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
+import           System.Exit        (exitFailure)
+import           System.Exit        (exitSuccess)
 
 import           Compiler
 import           Deployer
@@ -24,10 +27,11 @@ main = do
         Left err -> putStrLn $ show err
         Right di -> do
             er <- runSparker config $ dispatch di
-
             case er of
-                Left err -> putStrLn $ showError err
-                _ -> return ()
+                Right _ -> exitSuccess
+                Left err -> do
+                    putStrLn $ showError err
+                    exitFailure
 
 
 spark :: StartingSparkReference -> Sparker ()

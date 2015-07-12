@@ -22,6 +22,7 @@ $ spark parse /path/to/card.sus
 
 `spark` will try its best to present you with a good indication of what went wrong but as with all parsers, errors can still seem cryptic.
 
+Note that the parser will not follow `spark` declarations in the file. It's just a parser.
 
 ### Formatting
 Formatting is used to format a `.sus` file into a pretty representation.

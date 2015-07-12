@@ -35,7 +35,7 @@ card scripts {
             into bin
             kind copy
 
-            clean -> clean
+            "cle an" -> clean
         }
     }
 

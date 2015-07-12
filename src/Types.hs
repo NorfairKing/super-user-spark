@@ -123,6 +123,7 @@ data SparkConfig = Config {
     ,   conf_format_indent              :: Int
     ,   conf_format_trailingNewline     :: Bool
     ,   conf_format_alwaysQuote         :: Bool
+    ,   conf_format_oneLine             :: Bool
     ,   conf_compile_output             :: Maybe FilePath
     ,   conf_compile_format             :: CompileFormat
     ,   conf_check_thoroughness         :: CheckThoroughness
