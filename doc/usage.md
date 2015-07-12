@@ -86,7 +86,7 @@ card card-name {
 into this:
 
 ```
-cardcard-name{into~;outofdirectory;kindcopy;alternatives one two;"file-one"-> file-two;something c->"copied"}
+cardcard-name{into~;outofdirectory;kindcopy;alternativesone two;"file-one"-> file-two;something c->"copied"}
 ```
 
 ### Compiling 
@@ -143,7 +143,6 @@ You can also supply a compiled card:
 
 ```
 $ spark compiled path/to/compiled/card
-
 ```
 
 
