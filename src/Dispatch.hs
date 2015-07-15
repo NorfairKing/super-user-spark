@@ -25,7 +25,7 @@ dispatch (DispatchCheck ccr) = do
             cards <- parseFile fp
             compileRef cards mcnr
     pdps <- check deps
-    liftIO $ putStrLn $ unlines $ map show pdps
+    liftIO $ putStrLn $ formatPreDeployments $ zip deps pdps
 dispatch (DispatchDeploy dcr) = do
     deps <- case dcr of
         DeployerCardCompiled fp -> inputCompiled fp
@@ -46,7 +46,7 @@ loadConfig args = Config {
     ,   conf_format_trailingNewline     = if present "--compress" then False else notPresent "--no-trailing-newline"
     ,   conf_format_alwaysQuote         = if present "--compress" then False else present "--always-quote"
     ,   conf_format_oneLine             = present "--compress"
-    ,   conf_compile_output             = maybeValue "--output"
+    ,   conf_compile_output             = maybeFilePath "--output"
     ,   conf_compile_format             = "--format"        `withDefault` FormatText
     ,   conf_compile_kind                = maybeValue "--kind"
     ,   conf_compile_override            = maybeValue "--override"
@@ -63,6 +63,14 @@ loadConfig args = Config {
 
     notPresent :: String -> Bool
     notPresent = not . present
+
+    maybeFilePath :: String -> Maybe FilePath
+    maybeFilePath flag = go args
+      where
+        go [] = Nothing
+        go [_] = Nothing
+        go (f:v:fs) | f == flag = Just v
+                    | otherwise = go (v:fs)
 
     maybeValue :: Read a => String -> Maybe a
     maybeValue flag = go args
