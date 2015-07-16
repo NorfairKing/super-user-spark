@@ -77,7 +77,7 @@ loadConfig args = Config {
       where
         go [] = Nothing
         go [_] = Nothing
-        go (f:v:fs) | f == flag = read v
+        go (f:v:fs) | f == flag = Just $ read v
                     | otherwise = go (v:fs)
 
     withDefault :: Read a => String -> a -> a

@@ -1,5 +1,6 @@
 ---
 title: Usage
+abbreviations: NYI="Not Yet Implemented"
 ---
 
 ## Commands
@@ -103,7 +104,7 @@ This will compile the spark card to a list of deployments.
 #### Compiling options
 
 - `--output FILE` output to a `FILE` instead of stdout.
-- `--format FORMAT`: Compile to a specific format. (Options for `FORMAT`: `binary`, `text`(Default), `json` or `standalone`) When set to `standalone`, compile to a standalone binary to be run seperately instead of a set of deployments.
+- `--format FORMAT`: Compile to a specific format. (Options for `FORMAT`: `binary`, `text`(Default), `json` or `standalone`*(NYI)*) When set to `standalone`, compile to a standalone binary to be run seperately instead of a set of deployments.
 - `--kind KIND`: Specify any unspecified deployments (`->`) to be `KIND` deployments (`c->` or `l->`). (Options for `KIND`: `copy`, `link`)
 - `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
 
@@ -130,7 +131,7 @@ Remember, when using compiled data, if you used a specific `--format`, you have 
 
 #### Check options
 
-- `--thoroughness OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name`, `checksum` `content`(default))
+- `--thoroughness OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name`, `checksum` `content`(default)) *(NYI)*
 
 ### Deployment
 Deployment doesn't require any special commands, just a card reference.

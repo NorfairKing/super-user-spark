@@ -6,7 +6,7 @@ title: Frequently Asked Questions
     ```
     "some-file" (line ..., column ...):
     unexpexted end of input
-    expecting comments
+    expecting Comments
     ```
     
     The first thing `spark` does when parsing a file, is removing all the comments.
