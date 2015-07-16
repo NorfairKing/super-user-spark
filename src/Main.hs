@@ -5,6 +5,8 @@ import           System.Environment (getArgs)
 import           System.Exit        (exitFailure)
 import           System.Exit        (exitSuccess)
 
+import           Data.List          (isPrefixOf)
+
 import           Compiler
 import           Deployer
 import           Dispatch
@@ -20,8 +22,10 @@ main = do
 
     as <- liftIO getArgs
 
-    let config = loadConfig as
-    let disp   = loadDispatcher as
+    let (args, flags) = break ("-" `isPrefixOf`) as
+
+    let config = loadConfig flags
+    let disp   = loadDispatcher args
 
     case disp of
         Left err -> putStrLn $ show err
