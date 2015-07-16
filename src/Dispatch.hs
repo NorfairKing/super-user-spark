@@ -25,7 +25,7 @@ dispatch (DispatchCheck ccr) = do
             cards <- parseFile fp
             compileRef cards mcnr
     pdps <- check deps
-    liftIO $ putStrLn $ formatPreDeployments $ zip deps pdps
+    liftIO $ putStr $ formatPreDeployments $ zip deps pdps
 dispatch (DispatchDeploy dcr) = do
     deps <- case dcr of
         DeployerCardCompiled fp -> inputCompiled fp

@@ -67,8 +67,7 @@ inputCompiled fp = do
                 Right deps      -> return deps
         FormatText -> do
             str <- liftIO $ readFile fp
-            liftIO $ print str
-            return $ map read $ init $ lines str
+            return $ map read $ lines str
         FormatJson -> do
             bs <- liftIO $ BS.readFile fp
             case eitherDecode bs of
