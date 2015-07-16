@@ -1,0 +1,9 @@
+card card-name {
+    into ~
+    outof directory
+    kind copy
+    alternatives one two
+
+    file-one   -> file-two
+    something c-> copied
+}

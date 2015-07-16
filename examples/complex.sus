@@ -1,0 +1,42 @@
+card main {
+
+    spark card configs
+    spark card scripts
+
+}
+
+card configs {
+
+    alternatives super-laptop shared
+
+    into ~
+
+    spark file bash.sus bash
+
+    {
+        outof zsh
+
+        zshrc           -> .zshrc
+        zshenv          -> .zshenv
+        zlogin          -> .zlogin
+        
+    }
+
+    vim -> .vim
+
+}
+
+card scripts {
+
+    outof scripts
+    {
+        into /usr
+        {
+            into bin
+            kind copy
+
+            "cle an" -> clean
+        }
+    }
+
+}
