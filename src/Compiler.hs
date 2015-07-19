@@ -1,9 +1,9 @@
 module Compiler where
 
+import           Codec.Compression.GZip     (compress, decompress)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
-import           Data.Binary                (decodeFileOrFail, encode,
-                                             encodeFile)
+import           Data.Binary                (decodeOrFail, encode, encodeFile)
 import           Data.ByteString.Lazy.Char8 (unpack)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, isPrefixOf)
@@ -41,8 +41,8 @@ outputCompiled deps = do
     case form of
         FormatBinary -> do
             case out of
-                Nothing -> liftIO $ putStrLn $ unpack $ encode deps
-                Just fp -> liftIO $ encodeFile fp deps
+                Nothing -> liftIO $ BS.putStrLn $ compress $ encode deps
+                Just fp -> liftIO $ BS.writeFile fp $ compress $ encode deps
         FormatText -> do
             let str = unlines $ map show deps
             case out of
@@ -61,10 +61,10 @@ inputCompiled fp = do
     form <- asks conf_compile_format
     case form of
         FormatBinary -> do
-            o <- liftIO $ decodeFileOrFail fp
-            case o of
-                Left (_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data: " ++ err
-                Right deps      -> return deps
+            content <- liftIO $ BS.readFile fp
+            case decodeOrFail $ decompress content of
+                Left (_,_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data: " ++ err
+                Right (_,_,deps)  -> return deps
         FormatText -> do
             str <- liftIO $ readFile fp
             return $ map read $ lines str
