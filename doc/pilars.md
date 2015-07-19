@@ -18,6 +18,7 @@ These cards are written using a declarative language that describe the entire de
 ### Configuration
 Everything about Spark is configurable.
 Every option can be controlled directly on the command-line *and* in the cards.
+You should be able to set up your cards once and deploy them many times.
 
 ### Grammar
 The grammar should be simple to use when you don't need many options, but clear when you do.

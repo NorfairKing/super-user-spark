@@ -42,7 +42,7 @@ If `<card-name>` is not given the reference will lead to the first card in the f
 This is the main operation.
 
 ```
-source <deployment-kind-symbol> destination
+<source> <deployment-kind-symbol> <destination>
 ```
 
 ##### Deployment Kind
@@ -52,7 +52,7 @@ There are two deployment kinds but three ways of declaring a deployment.
 - Copy: `c->`
 - Unspecified: `->`
 
-An unspecified deployment default to a link, but can be specified, both at the command line and in the card.
+An unspecified deployment defaults to a link, but can be specified otherwise both at the command line and in the card.
 
 #### Sparkoff
 A sparkoff is used to run spark on other cards from within a card.
