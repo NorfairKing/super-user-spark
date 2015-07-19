@@ -1,6 +1,8 @@
 module Compiler where
 
-import           Codec.Compression.GZip     (compress, decompress)
+import           Codec.Compression.GZip     (CompressionLevel (BestCompression),
+                                             compressLevel, compressWith,
+                                             decompress, defaultCompressParams)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode, encodeFile)
@@ -41,8 +43,8 @@ outputCompiled deps = do
     case form of
         FormatBinary -> do
             case out of
-                Nothing -> liftIO $ BS.putStrLn $ compress $ encode deps
-                Just fp -> liftIO $ BS.writeFile fp $ compress $ encode deps
+                Nothing -> liftIO $ BS.putStrLn $ compressWith compressionParams $ encode deps
+                Just fp -> liftIO $ BS.writeFile fp $ compressWith compressionParams $ encode deps
         FormatText -> do
             let str = unlines $ map show deps
             case out of
@@ -55,6 +57,8 @@ outputCompiled deps = do
                 Just fp -> liftIO $ BS.writeFile fp bs
 
         FormatStandalone -> notImplementedYet
+  where
+    compressionParams = defaultCompressParams {compressLevel = BestCompression}
 
 inputCompiled :: FilePath -> Sparker [Deployment]
 inputCompiled fp = do
