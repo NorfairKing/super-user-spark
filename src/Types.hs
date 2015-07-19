@@ -11,6 +11,7 @@ module Types
     , module Text.Parsec
     ) where
 
+import           Control.Applicative
 import           Control.Monad          (mzero)
 import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
 import           Control.Monad.IO.Class (liftIO)
