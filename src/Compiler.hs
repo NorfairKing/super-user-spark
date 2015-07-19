@@ -116,13 +116,6 @@ add dep = tell [dep]
 addAll :: [Deployment] -> SparkCompiler ()
 addAll = tell
 
-replaceHome :: FilePath -> SparkCompiler FilePath
-replaceHome path = do
-    home <- liftIO getHomeDirectory
-    return $ if "~" `isPrefixOf` path
-        then home </> drop 2 path
-        else path
-
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -143,7 +136,7 @@ processDeclaration = do
             into <- gets state_into_prefix
 
             let alts = map (\alt -> dir </> alt </> outof </> src) alternates
-            destination <- replaceHome $ into </> dst
+            let destination = into </> dst
 
             add $ Put alts destination resultKind
 

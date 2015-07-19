@@ -3,16 +3,17 @@
 module Deployer where
 
 import           Data.Maybe         (catMaybes)
+import           Data.List          (isPrefixOf)
 import           Data.Text          (pack)
 import           Prelude            hiding (error)
 import           Shelly             (cp_r, fromText, shelly)
-import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
+import           System.Directory   (createDirectoryIfMissing, emptyPermissions, getHomeDirectory,
                                      getDirectoryContents, getPermissions,
                                      removeDirectoryRecursive, removeFile)
 import           System.Posix.Env   (getEnv)
 
 import           System.Exit        (ExitCode (..))
-import           System.FilePath    (dropFileName, normalise)
+import           System.FilePath    (dropFileName, normalise, (</>))
 import           System.Posix.Files (createSymbolicLink, fileExist,
                                      getSymbolicLinkStatus, isBlockDevice,
                                      isCharacterDevice, isDirectory,
@@ -324,7 +325,8 @@ completeI :: FilePath -> IO FilePath
 completeI fp = do
     let ids = parseId fp
     strs <- mapM replaceId ids
-    return $ concat strs
+    completed <- mapM replaceHome strs
+    return $ concat completed
 
 
 parseId :: FilePath -> [ID]
@@ -343,4 +345,11 @@ replaceId (Var str) = do
     return $ case e of
         Nothing -> ""
         Just fp -> fp
+
+replaceHome :: FilePath -> IO FilePath
+replaceHome path = do
+    home <- getHomeDirectory
+    return $ if "~" `isPrefixOf` path
+        then home </> drop 2 path
+        else path
 
