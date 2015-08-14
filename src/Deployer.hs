@@ -75,7 +75,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
     s  <- complete src
     d  <- complete dst
     sd <- diagnose s
-    dd <- diagnose dst
+    dd <- diagnose d
 
     let ready = return (Ready s d kind) :: SparkDeployer PreDeployment
 
@@ -125,7 +125,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                                                                         (rmDir d >> preDeployment dep)
                                                                         (error ["Destination", d, "already exists and is a directory, different from the source."])
         (IsDirectory _  , IsLink _      , LinkDeployment)   -> do
-                                                                point <- liftIO $ readSymbolicLink dst
+                                                                point <- liftIO $ readSymbolicLink d
                                                                 if point `filePathEqual` s
                                                                 then done
                                                                 else incaseElse conf_deploy_replace_links
