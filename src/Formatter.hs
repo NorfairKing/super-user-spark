@@ -260,7 +260,9 @@ formatDeployment ms (Put srcs dst k) = unwords $
     padded (m:r) (s:ss) = s ++ replicate (m - length s) ' ' ++ " " ++ padded r ss
 
 formatPreDeployments :: [(Deployment, PreDeployment)] -> String
-formatPreDeployments pdps = unlines $ map formatPreDeployment pdps
+formatPreDeployments pdps = if all (\p -> p == AlreadyDone) $ map snd pdps
+                            then "Deployment is done already\n"
+                            else unlines $ map formatPreDeployment pdps
 
 {-
 formatPreDeployments :: [(Deployment, PreDeployment)] -> String
@@ -285,7 +287,7 @@ formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
 
 formatPreDeployment :: (Deployment, PreDeployment) -> String
 formatPreDeployment (d, (Ready _ _ _)) = deployment_dst d ++ ": " ++ "ready to deploy"
-formatPreDeployment (d, AlreadyDone) = deployment_dst d ++ ": " ++ "done already"
+formatPreDeployment (d, AlreadyDone) = ""
 formatPreDeployment (d, (Error str)) = deployment_dst d ++ ": " ++ unwords ["Error:", str]
 
 

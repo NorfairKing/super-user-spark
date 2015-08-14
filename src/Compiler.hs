@@ -1,9 +1,11 @@
 module Compiler where
 
+import           Codec.Compression.GZip     (CompressionLevel (BestCompression),
+                                             compressLevel, compressWith,
+                                             decompress, defaultCompressParams)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
-import           Data.Binary                (decodeFileOrFail, encode,
-                                             encodeFile)
+import           Data.Binary                (decodeOrFail, encode, encodeFile)
 import           Data.ByteString.Lazy.Char8 (unpack)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, isPrefixOf)
@@ -41,8 +43,8 @@ outputCompiled deps = do
     case form of
         FormatBinary -> do
             case out of
-                Nothing -> liftIO $ putStrLn $ unpack $ encode deps
-                Just fp -> liftIO $ encodeFile fp deps
+                Nothing -> liftIO $ BS.putStrLn $ compressWith compressionParams $ encode deps
+                Just fp -> liftIO $ BS.writeFile fp $ compressWith compressionParams $ encode deps
         FormatText -> do
             let str = unlines $ map show deps
             case out of
@@ -55,16 +57,18 @@ outputCompiled deps = do
                 Just fp -> liftIO $ BS.writeFile fp bs
 
         FormatStandalone -> notImplementedYet
+  where
+    compressionParams = defaultCompressParams {compressLevel = BestCompression}
 
 inputCompiled :: FilePath -> Sparker [Deployment]
 inputCompiled fp = do
     form <- asks conf_compile_format
     case form of
         FormatBinary -> do
-            o <- liftIO $ decodeFileOrFail fp
-            case o of
-                Left (_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data: " ++ err
-                Right deps      -> return deps
+            content <- liftIO $ BS.readFile fp
+            case decodeOrFail $ decompress content of
+                Left (_,_,err)    -> throwError $ CompileError $ "Something went wrong while deserialising binary data: " ++ err
+                Right (_,_,deps)  -> return deps
         FormatText -> do
             str <- liftIO $ readFile fp
             return $ map read $ lines str
@@ -116,13 +120,6 @@ add dep = tell [dep]
 addAll :: [Deployment] -> SparkCompiler ()
 addAll = tell
 
-replaceHome :: FilePath -> SparkCompiler FilePath
-replaceHome path = do
-    home <- liftIO getHomeDirectory
-    return $ if "~" `isPrefixOf` path
-        then home </> drop 2 path
-        else path
-
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -143,7 +140,7 @@ processDeclaration = do
             into <- gets state_into_prefix
 
             let alts = map (\alt -> dir </> alt </> outof </> src) alternates
-            destination <- replaceHome $ into </> dst
+            let destination = into </> dst
 
             add $ Put alts destination resultKind
 

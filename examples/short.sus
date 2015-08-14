@@ -1,0 +1,4 @@
+card short {
+    into ~
+    README.txt
+}

@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 module Parser.Test (htf_thisModulesTests) where
 
+import           Control.Applicative
 import           Test.Framework
 import           Test.HUnit                    (Assertion)
 import           Text.ParserCombinators.Parsec
@@ -314,6 +315,11 @@ test_deployment = parserTests deployment $
     ,   (Deploy "something with spaces" "/home/user/test.txt" (Just CopyDeployment), [
               "\"something with spaces\"c->/home/user/test.txt"
             , "\"something with spaces\"\tc->/home/user/test.txt"
+            ]
+        )
+    ,   (Deploy "file.txt" "file.txt" Nothing, [
+              "file.txt"
+            , "\"file.txt\""
             ]
         )
     ]
