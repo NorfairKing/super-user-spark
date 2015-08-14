@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, isPrefixOf)
 import           System.Directory           (getCurrentDirectory,
                                              getHomeDirectory)
-import           System.FilePath            (takeDirectory, (</>))
+import           System.FilePath            (takeDirectory, dropTrailingPathSeparator, joinPath, splitPath, (</>))
 
 import qualified Parser                     as P
 import           Types
@@ -120,6 +120,21 @@ add dep = tell [dep]
 addAll :: [Deployment] -> SparkCompiler ()
 addAll = tell
 
+dotfileAlternatives :: FilePath -> [FilePath]
+dotfileAlternatives path = map joinPath $ altPath $ splitPath path
+    where
+        altPath :: [String] -> [[String]]
+        altPath [] = []
+        altPath [f] = map (\x -> [x]) (alt f)
+        altPath (f:fs) = do
+            altF <- alt f
+            altFs <- altPath fs
+            return (altF : altFs)
+
+        alt :: String -> [String]
+        alt f@('.':f') | any (/= '.') $ dropTrailingPathSeparator f = [f, f']
+        alt f = [f]
+
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -139,7 +154,10 @@ processDeclaration = do
             outof <- gets state_outof_prefix
             into <- gets state_into_prefix
 
-            let alts = map (\alt -> dir </> alt </> outof </> src) alternates
+            let alts = do
+                    alt <- alternates
+                    s <- dotfileAlternatives src
+                    return $ dir </> alt </> outof </> s
             let destination = into </> dst
 
             add $ Put alts destination resultKind
