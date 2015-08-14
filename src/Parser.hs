@@ -280,14 +280,22 @@ deploymentKindOverride = do
     copy = string keywordCopy >> return CopyDeployment
     link = string keywordLink >> return LinkDeployment
 
-deployment :: Parser Declaration
-deployment = do
+shortDeployment :: Parser Declaration
+shortDeployment = do
+    source <- filepath
+    return $ Deploy source source Nothing
+
+longDeployment :: Parser Declaration
+longDeployment = do
     source <- filepath
     linespace
     kind <- deploymentKind
     linespace
     dest <- filepath
     return $ Deploy source dest kind
+
+deployment :: Parser Declaration
+deployment = try longDeployment <|> shortDeployment
     <?> "deployment"
 
 deploymentKind :: Parser (Maybe DeploymentKind)
