@@ -317,6 +317,11 @@ test_deployment = parserTests deployment $
             , "\"something with spaces\"\tc->/home/user/test.txt"
             ]
         )
+    ,   (Deploy "file.txt" "file.txt" Nothing, [
+              "file.txt"
+            , "\"file.txt\""
+            ]
+        )
     ]
 
 test_deploymentKind_link    = parserTest deploymentKind (Just LinkDeployment) "l->"
