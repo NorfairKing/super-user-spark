@@ -1,6 +1,7 @@
 module Formatter where
 
 import           Data.List (intersperse)
+import           Data.Maybe (catMaybes)
 
 import           Constants
 import           Types
@@ -260,9 +261,9 @@ formatDeployment ms (Put srcs dst k) = unwords $
     padded (m:r) (s:ss) = s ++ replicate (m - length s) ' ' ++ " " ++ padded r ss
 
 formatPreDeployments :: [(Deployment, PreDeployment)] -> String
-formatPreDeployments pdps = if all (\p -> p == AlreadyDone) $ map snd pdps
-                            then "Deployment is done already\n"
-                            else unlines $ map formatPreDeployment pdps
+formatPreDeployments pdps
+    = if null output then "Deployment is done already\n" else unlines output
+    where output = catMaybes $ map formatPreDeployment pdps
 
 {-
 formatPreDeployments :: [(Deployment, PreDeployment)] -> String
@@ -285,10 +286,10 @@ formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
     dests = map (deployment_dst . fst) ds
     predeps = map snd ds
 
-formatPreDeployment :: (Deployment, PreDeployment) -> String
-formatPreDeployment (d, (Ready _ _ _)) = deployment_dst d ++ ": " ++ "ready to deploy"
-formatPreDeployment (d, AlreadyDone) = ""
-formatPreDeployment (d, (Error str)) = deployment_dst d ++ ": " ++ unwords ["Error:", str]
+formatPreDeployment :: (Deployment, PreDeployment) -> Maybe String
+formatPreDeployment (d, (Ready _ _ _)) = Just $ deployment_dst d ++ ": " ++ "ready to deploy"
+formatPreDeployment (d, AlreadyDone) = Nothing
+formatPreDeployment (d, (Error str)) = Just $ deployment_dst d ++ ": " ++ unwords ["Error:", str]
 
 
 
