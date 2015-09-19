@@ -37,7 +37,7 @@ optionsParser :: ParserInfo Options
 optionsParser = info (helper <*> parseOptions) help
   where
     help = fullDesc <> progDesc description
-    description = "Super User Spark"
+    description = "Super User Spark, author: Tom Sydney Kerckhove"
 
 parseOptions :: Parser Options
 parseOptions = Options
@@ -94,13 +94,68 @@ parseGlobalOptions :: Parser GlobalOptions
 parseGlobalOptions = GlobalOptions
   <$> flag True False -- Backwards
     ( long "no-line-up"
+      <> short 'L'
       <> help "Don't line up arrows" )
   <*> option auto
     ( long "indent"
+      <> short 'i'
       <> help "How many spaces to use for indentation when formatting" )
   <*> flag True False -- Backwards
     ( long "no-trailing-newline"
+      <> short 'N'
       <> help "Don't add a trailing newline to a formatted file" )
   <*> switch
     ( long "always-quote"
+      <> short 'Q'
       <> help "Always quote file names" )
+  <*> switch
+    ( long "compress"
+      <> short 'c'
+      <> help "Compress the card as much as possible." )
+  <*> strOption
+    ( long "output"
+      <> short 'o'
+      <> metavar "FILE"
+      <> help "The output file for compilation" )
+  <*> option auto
+    ( long "format"
+      <> short 'f'
+      <> metavar "FORMAT"
+      <> help "Compilation format" )
+  <*> option (Just <$> auto)
+    ( long "kind"
+      <> short 'k'
+      <> value Nothing
+      <> metavar "KIND"
+      <> help "The kind specification for unspecified deployments (default: LinkDeployment)" )
+  <*> option (Just <$> auto)
+    ( long "override"
+      <> short 'O'
+      <> value Nothing
+      <> metavar "KIND"
+      <> help "Override every deployment to be of the given kind" )
+  <*> option auto
+    ( long "thoroughness"
+      <> short 't'
+      <> metavar "THOROUGHNESS"
+      <> help "How thoroughly to check whether the source and destination are equal" )
+  <*> switch
+    ( long "replace-links"
+      <> help "Replace links at deploy destinations."
+    )
+  <*> switch
+    ( long "replace-files"
+      <> help "Replace existing files at deploy destinations."
+    )
+  <*> switch
+    ( long "replace-Directories"
+      <> help "Replace existing directories at deploy destinations."
+    )
+  <*> switch
+    ( long "replace"
+      <> short 'r'
+      <> help "Equivalent to --replace-files --replace-directories --replace-links"
+    )
+  <*> switch
+    ( long "debug"
+      <> help "Show al debug information." )

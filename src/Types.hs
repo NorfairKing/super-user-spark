@@ -166,10 +166,21 @@ data Command = CommandParse String
     deriving (Show, Eq)
 
 data GlobalOptions = GlobalOptions {
-    opt_lineUp          :: Bool
-  , opt_indent          :: Int
-  , opt_trailingNewline :: Bool
-  , opt_alwaysQuote     :: Bool
+    opt_lineUp              :: Bool
+  , opt_indent              :: Int
+  , opt_trailingNewline     :: Bool
+  , opt_alwaysQuote         :: Bool
+  , opt_compress            :: Bool
+  , opt_output              :: FilePath
+  , opt_format              :: CompileFormat
+  , opt_kind                :: Maybe DeploymentKind
+  , opt_overrride           :: Maybe DeploymentKind
+  , opt_thoroughness        :: CheckThoroughness
+  , opt_replace_links       :: Bool
+  , opt_replace_files       :: Bool
+  , opt_replace_directories :: Bool
+  , opt_replace             :: Bool
+  , opt_debug               :: Bool
   } deriving (Show, Eq)
 
 ---[ Instructions ]--
