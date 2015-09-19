@@ -171,7 +171,7 @@ data GlobalOptions = GlobalOptions {
   , opt_trailingNewline     :: Bool
   , opt_alwaysQuote         :: Bool
   , opt_compress            :: Bool
-  , opt_output              :: FilePath
+  , opt_output              :: Maybe FilePath
   , opt_format              :: CompileFormat
   , opt_kind                :: Maybe DeploymentKind
   , opt_overrride           :: Maybe DeploymentKind

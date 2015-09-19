@@ -14,7 +14,27 @@ getInstructions = do
     Left err  -> die $ "Failed to parse instructions\n" ++ err
 
 transformOptions :: Options -> Either String Instructions
-transformOptions opts = undefined
+transformOptions opts = Right (dp, conf)
+  where
+    conf = Config {
+              conf_format_lineUp              = if opt_compress go then False else opt_lineUp go
+            , conf_format_indent              = if opt_compress go then 0     else opt_indent go
+            , conf_format_trailingNewline     = if opt_compress go then False else opt_trailingNewline go
+            , conf_format_alwaysQuote         = if opt_compress go then False else opt_alwaysQuote go
+            , conf_format_oneLine             = opt_compress go
+            , conf_compile_output             = opt_output go
+            , conf_compile_format             = opt_format go
+            , conf_compile_kind               = opt_kind go
+            , conf_compile_override           = opt_overrride go
+            , conf_check_thoroughness         = opt_thoroughness go
+            , conf_deploy_replace_links       = opt_replace_links go || opt_replace go
+            , conf_deploy_replace_files       = opt_replace_files go || opt_replace go
+            , conf_deploy_replace_directories = opt_replace_directories go || opt_replace go
+            , conf_debug                      = opt_debug go
+          }
+    dp = undefined
+    go = opt_global opts
+    cm = opt_command opts
 
 getOptions :: IO Options
 getOptions = do
@@ -99,6 +119,8 @@ parseGlobalOptions = GlobalOptions
   <*> option auto
     ( long "indent"
       <> short 'i'
+      <> value 4
+      <> metavar "NUM"
       <> help "How many spaces to use for indentation when formatting" )
   <*> flag True False -- Backwards
     ( long "no-trailing-newline"
@@ -112,14 +134,16 @@ parseGlobalOptions = GlobalOptions
     ( long "compress"
       <> short 'c'
       <> help "Compress the card as much as possible." )
-  <*> strOption
+  <*> option (Just <$> str)
     ( long "output"
       <> short 'o'
+      <> value Nothing
       <> metavar "FILE"
       <> help "The output file for compilation" )
   <*> option auto
     ( long "format"
       <> short 'f'
+      <> value FormatText
       <> metavar "FORMAT"
       <> help "Compilation format" )
   <*> option (Just <$> auto)
@@ -137,6 +161,7 @@ parseGlobalOptions = GlobalOptions
   <*> option auto
     ( long "thoroughness"
       <> short 't'
+      <> value ThoroughnessContent
       <> metavar "THOROUGHNESS"
       <> help "How thoroughly to check whether the source and destination are equal" )
   <*> switch
