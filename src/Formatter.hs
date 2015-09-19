@@ -1,6 +1,6 @@
 module Formatter where
 
-import           Data.List  (intersperse)
+import           Data.List (intersperse)
 import           Data.Maybe (catMaybes)
 
 import           Constants
