@@ -8,7 +8,7 @@ import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode, encodeFile)
 import           Data.ByteString.Lazy.Char8 (unpack)
 import qualified Data.ByteString.Lazy.Char8 as BS
-import           Data.List                  (find, isPrefixOf)
+import           Data.List                  (find, isPrefixOf, stripPrefix)
 import           System.Directory           (getCurrentDirectory,
                                              getHomeDirectory)
 import           System.FilePath            (normalise, takeDirectory, (</>))
@@ -135,6 +135,13 @@ sources :: FilePath -> PrefixPart
 sources fp@('.':f) = Alts [fp, f]
 sources fp = Literal fp
 
+stripHome :: FilePath -> SparkCompiler FilePath
+stripHome fp = do
+  home <- liftIO $ getHomeDirectory
+  return $ case home `stripPrefix` fp of
+                Nothing -> fp
+                Just stripped -> "~" ++ stripped
+
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -153,8 +160,11 @@ processDeclaration = do
             outof <- gets state_outof_prefix
             into <- gets state_into
 
-            let alternates = map normalise . resolvePrefix $ [Literal dir] ++ outof ++ [sources src]
-            let destination = normalise $ into </> dst
+            let alts = map normalise . resolvePrefix $ [Literal dir] ++ outof ++ [sources src]
+            let dest = normalise $ into </> dst
+
+            alternates <- mapM stripHome alts
+            destination <- stripHome dest
 
             add $ Put alternates destination resultKind
 
