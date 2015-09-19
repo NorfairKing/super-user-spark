@@ -1,6 +1,6 @@
 module Formatter where
 
-import           Data.List (intersperse)
+import           Data.List  (intersperse)
 import           Data.Maybe (catMaybes)
 
 import           Constants
@@ -35,12 +35,12 @@ onLines thingFormatter things = do
 
 
 card :: Card -> SparkFormatter ()
-card (Card name _ ds) = do
+card (Card name _ d) = do
     string keywordCard
     space
     string name
     space
-    declaration $ Block ds
+    declaration d
 
 braces :: SparkFormatter () -> SparkFormatter ()
 braces f = do
@@ -288,7 +288,7 @@ formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
 
 formatPreDeployment :: (Deployment, PreDeployment) -> Maybe String
 formatPreDeployment (d, (Ready _ _ _)) = Just $ deployment_dst d ++ ": " ++ "ready to deploy"
-formatPreDeployment (d, AlreadyDone) = Nothing
+formatPreDeployment (_, AlreadyDone) = Nothing
 formatPreDeployment (d, (Error str)) = Just $ deployment_dst d ++ ": " ++ unwords ["Error:", str]
 
 

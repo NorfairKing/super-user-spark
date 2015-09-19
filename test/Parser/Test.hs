@@ -141,7 +141,7 @@ test_parseDeploy = parserTests parseDeploy $
 
 test_card_empty = parserTests card $
     [
-    (Card "" testFileName [], [
+        (Card "" testFileName [], [
               "card \"\" {}"
             ]
         )
@@ -158,6 +158,31 @@ test_card_empty = parserTests card $
             ]
         )
     ]
+
+test_card_complicated = parserTests card $
+    [
+        (myCard,
+            [
+                "card testcard {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}"
+            ]
+        )
+    ]
+  where
+    myCard = Card "testcard" testFileName $
+                [
+                  Alternatives ["$(HOST)", "shared"]
+                , Deploy "hello" "goodbye" (Just LinkDeployment)
+                , IntoDir "$(HOME)"
+                , OutofDir "depot"
+                , SparkOff (CardName (CardNameReference "othercard"))
+                , DeployKindOverride LinkDeployment
+                , Block [
+                          Deploy "one" "more" (Just CopyDeployment)
+                        , Deploy "source" "destination" Nothing
+                        , Deploy "file" "file" Nothing
+                        ]
+                ]
+
 
 test_Block = parserTests block $
     [

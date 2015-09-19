@@ -53,54 +53,19 @@ parseCardReference = parse startingCardReference "Argument String"
 
 --[ Dispatch ]--
 
-parseDispatch :: Parser Dispatch
-parseDispatch = try parseParse
-            <|> try parseFormat
-            <|> try parseCompile
-            <|> try parseCheck
-            <|> try parseDeploy
+easyParse :: Parser a -> String -> Either String a
+easyParse p s = case parse p "arguments" s of
+                    Left err -> Left $ show err
+                    Right a -> Right a
 
-parseParse :: Parser Dispatch
-parseParse = do
-    string "parse"
-    skip linespace
-    fp <- filepath
-    return $ DispatchParse fp
-    <?> "Parse Instructions"
+parseCompilerCardReference :: String -> Either String CompilerCardReference
+parseCompilerCardReference = easyParse (compilerCardReference <?> "Compile Instructions")
 
-parseFormat :: Parser Dispatch
-parseFormat = do
-    string "format"
-    skip linespace
-    fp <- filepath
-    return $ DispatchFormat fp
-    <?> "Format Instructions"
+parseCheckerCardReference :: String -> Either String CheckerCardReference
+parseCheckerCardReference = easyParse (checkerCardReference <?> "Check Instructions")
 
-parseCompile :: Parser Dispatch
-parseCompile = do
-    string "compile"
-    skip linespace
-    ccr <- compilerCardReference
-    return $ DispatchCompile ccr
-    <?> "Compile Instructions"
-
-parseCheck :: Parser Dispatch
-parseCheck = do
-    string "check"
-    skip linespace
-    ccr <- checkerCardReference
-    return $ DispatchCheck ccr
-    <?> "Check Instructions"
-
-parseDeploy :: Parser Dispatch
-parseDeploy = do
-    dcr <- deployerCardReference
-    return $ DispatchDeploy dcr
-    <?> "Deploy Instructions"
-
-
-
-
+parseDeployerCardReference :: String -> Either String DeployerCardReference
+parseDeployerCardReference = easyParse (deployerCardReference <?> "Deploy Instructions")
 
 
 --[ Language ]--
@@ -131,10 +96,10 @@ card = do
     whitespace
     name <- cardName
     whitespace
-    Block ds <- block
+    b <- block
     whitespace
     fp <- getFile
-    return $ Card name fp ds
+    return $ Card name fp b
 
 cardName :: Parser CardName
 cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"

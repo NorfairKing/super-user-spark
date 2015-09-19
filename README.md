@@ -11,3 +11,8 @@ Most of the documentation is in the `doc` directory.
 - [Design](https://github.com/NorfairKing/super-user-spark/blob/master/doc/pillars.md)
 - [Language Specifications](https://github.com/NorfairKing/super-user-spark/blob/master/doc/language.md)
 - [FAQ](https://github.com/NorfairKing/super-user-spark/blob/master/doc/faq.md)
+
+## SUS Depot Examples
+If you would like to have your name on this list, just send a pull request.
+
+- [NorfairKing](https://github.com/NorfairKing/sus-depot)
