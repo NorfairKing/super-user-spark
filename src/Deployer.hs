@@ -222,12 +222,14 @@ deployment (Ready src dst kind) = do
 
 copy :: FilePath -> FilePath -> SparkDeployer ()
 copy src dst = do
+    debug $ unwords ["Copying:", src, "c->", dst]
     liftIO $ createDirectoryIfMissing True upperDir
     liftIO $ shelly $ cp_r (fromText $ pack src) (fromText $ pack dst)
   where upperDir = dropFileName dst
 
 link :: FilePath -> FilePath -> SparkDeployer ()
 link src dst = do
+    debug $ unwords ["Linking:", src, "l->", dst]
     liftIO $ createDirectoryIfMissing True upperDir
     liftIO $ createSymbolicLink src dst
   where upperDir = dropFileName dst

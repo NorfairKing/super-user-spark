@@ -91,9 +91,8 @@ initialState c@(Card _ fp (Block ds)) cds = do
     ,   state_all_cards = cds
     ,   state_declarations_left = ds
     ,   state_deployment_kind_override = override
-    ,   state_into_prefix = ""
-    ,   state_outof_prefix = ""
-    ,   state_alternatives = [""]
+    ,   state_into = ""
+    ,   state_outof_prefix = []
     }
 
 -- Compiler
@@ -120,6 +119,18 @@ add dep = tell [dep]
 addAll :: [Deployment] -> SparkCompiler ()
 addAll = tell
 
+resolvePrefix :: CompilerPrefix -> [FilePath]
+resolvePrefix [] = []
+resolvePrefix [Literal s] = [s]
+resolvePrefix [Alts ds] = ds
+resolvePrefix ((Literal s):ps) = do
+  rest <- resolvePrefix ps
+  return $ s </> rest
+resolvePrefix ((Alts as):ps) = do
+  a <- as
+  rest <- resolvePrefix ps
+  return $ a </> rest
+
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -133,16 +144,15 @@ processDeclaration = do
                     (Nothing, Just o , _      ) -> o
                     (Just o , _      , _      ) -> o
 
-            alternates <- gets state_alternatives
             dir <- gets state_current_directory
 
             outof <- gets state_outof_prefix
-            into <- gets state_into_prefix
+            into <- gets state_into
 
-            let alts = map (\alt -> normalise $ dir </> alt </> outof </> src) alternates
+            let alternates = map normalise . resolvePrefix $ [Literal dir] ++ outof ++ [Literal src]
             let destination = normalise $ into </> dst
 
-            add $ Put alts destination resultKind
+            add $ Put alternates destination resultKind
 
         SparkOff st -> do
             case st of
@@ -177,22 +187,22 @@ processDeclaration = do
 
 
         IntoDir dir -> do
-            ip <- gets state_into_prefix
+            ip <- gets state_into
             if null ip
-            then modify (\s -> s {state_into_prefix = dir} )
-            else modify (\s -> s {state_into_prefix = ip </> dir} )
+            then modify (\s -> s {state_into = dir} )
+            else modify (\s -> s {state_into = ip </> dir} )
         OutofDir dir -> do
             op <- gets state_outof_prefix
-            if null op
-            then modify (\s -> s {state_outof_prefix = dir} )
-            else modify (\s -> s {state_outof_prefix = op </> dir} )
+            modify (\s -> s {state_outof_prefix = op ++ [Literal dir]})
         DeployKindOverride kind -> modify (\s -> s {state_deployment_kind_override = Just kind })
         Block ds -> do
             before <- get
             modify (\s -> s {state_declarations_left = ds})
             compileDeployments
             put before
-        Alternatives ds -> modify (\s -> s {state_alternatives = ds})
+        Alternatives ds -> do
+            op <- gets state_outof_prefix
+            modify (\s -> s {state_outof_prefix = op ++ [Alts ds]})
 
 liftSparker :: Sparker a -> SparkCompiler a
 liftSparker = lift . lift
