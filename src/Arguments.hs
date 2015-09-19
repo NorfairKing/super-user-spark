@@ -4,6 +4,7 @@ import           Options.Applicative
 import           System.Environment  (getArgs)
 import           System.Exit         (die)
 
+import           Parser
 import           Types
 
 getInstructions :: IO Instructions
@@ -14,7 +15,16 @@ getInstructions = do
     Left err  -> die $ "Failed to parse instructions\n" ++ err
 
 transformOptions :: Options -> Either String Instructions
-transformOptions opts = Right (dp, conf)
+transformOptions opts = do
+    config <- configFromOptions go
+    dispatch <- dispatchFromCommand cmd
+    return (dispatch, config)
+  where
+    go = opt_global opts
+    cmd = opt_command opts
+
+configFromOptions :: GlobalOptions -> Either String SparkConfig
+configFromOptions go = Right conf
   where
     conf = Config {
               conf_format_lineUp              = if opt_compress go then False else opt_lineUp go
@@ -32,9 +42,13 @@ transformOptions opts = Right (dp, conf)
             , conf_deploy_replace_directories = opt_replace_directories go || opt_replace go
             , conf_debug                      = opt_debug go
           }
-    dp = undefined
-    go = opt_global opts
-    cm = opt_command opts
+
+dispatchFromCommand :: Command -> Either String Dispatch
+dispatchFromCommand (CommandParse str)    = DispatchParse   <$> pure str
+dispatchFromCommand (CommandFormat str)   = DispatchFormat  <$> pure str
+dispatchFromCommand (CommandCompile str)  = DispatchCompile <$> parseCompilerCardReference str
+dispatchFromCommand (CommandCheck str)    = DispatchCheck   <$> parseCheckerCardReference str
+dispatchFromCommand (CommandDeploy str)   = DispatchDeploy  <$> parseDeployerCardReference str
 
 getOptions :: IO Options
 getOptions = do
