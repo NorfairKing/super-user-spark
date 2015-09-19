@@ -131,6 +131,10 @@ resolvePrefix ((Alts as):ps) = do
   rest <- resolvePrefix ps
   return $ a </> rest
 
+sources :: FilePath -> PrefixPart
+sources fp@('.':f) = Alts [fp, f]
+sources fp = Literal fp
+
 processDeclaration :: SparkCompiler ()
 processDeclaration = do
     dec <- pop
@@ -149,7 +153,7 @@ processDeclaration = do
             outof <- gets state_outof_prefix
             into <- gets state_into
 
-            let alternates = map normalise . resolvePrefix $ [Literal dir] ++ outof ++ [Literal src]
+            let alternates = map normalise . resolvePrefix $ [Literal dir] ++ outof ++ [sources src]
             let destination = normalise $ into </> dst
 
             add $ Put alternates destination resultKind
