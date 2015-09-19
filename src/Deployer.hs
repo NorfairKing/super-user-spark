@@ -2,14 +2,15 @@
 
 module Deployer where
 
-import           Data.Maybe         (catMaybes)
 import           Data.List          (isPrefixOf)
+import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
 import           Prelude            hiding (error)
 import           Shelly             (cp_r, fromText, shelly)
-import           System.Directory   (createDirectoryIfMissing, emptyPermissions, getHomeDirectory,
-                                     getDirectoryContents, getPermissions,
-                                     removeDirectoryRecursive, removeFile)
+import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
+                                     getDirectoryContents, getHomeDirectory,
+                                     getPermissions, removeDirectoryRecursive,
+                                     removeFile)
 import           System.Posix.Env   (getEnv)
 
 import           System.Exit        (ExitCode (..))
@@ -327,7 +328,6 @@ completeI fp = do
     strs <- mapM replaceId ids
     completed <- mapM replaceHome strs
     return $ concat completed
-
 
 parseId :: FilePath -> [ID]
 parseId [] = [Plain ""]

@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, isPrefixOf)
 import           System.Directory           (getCurrentDirectory,
                                              getHomeDirectory)
-import           System.FilePath            (takeDirectory, (</>))
+import           System.FilePath            (normalise, takeDirectory, (</>))
 
 import qualified Parser                     as P
 import           Types
@@ -139,8 +139,8 @@ processDeclaration = do
             outof <- gets state_outof_prefix
             into <- gets state_into_prefix
 
-            let alts = map (\alt -> dir </> alt </> outof </> src) alternates
-            let destination = into </> dst
+            let alts = map (\alt -> normalise $ dir </> alt </> outof </> src) alternates
+            let destination = normalise $ into </> dst
 
             add $ Put alts destination resultKind
 
