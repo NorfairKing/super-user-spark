@@ -96,10 +96,10 @@ card = do
     whitespace
     name <- cardName
     whitespace
-    Block ds <- block
+    b <- block
     whitespace
     fp <- getFile
-    return $ Card name fp ds
+    return $ Card name fp b
 
 cardName :: Parser CardName
 cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"

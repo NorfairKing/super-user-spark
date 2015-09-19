@@ -1,6 +1,6 @@
 module Formatter where
 
-import           Data.List (intersperse)
+import           Data.List  (intersperse)
 import           Data.Maybe (catMaybes)
 
 import           Constants
@@ -35,12 +35,12 @@ onLines thingFormatter things = do
 
 
 card :: Card -> SparkFormatter ()
-card (Card name _ ds) = do
+card (Card name _ d) = do
     string keywordCard
     space
     string name
     space
-    declaration $ Block ds
+    declaration d
 
 braces :: SparkFormatter () -> SparkFormatter ()
 braces f = do

@@ -82,7 +82,7 @@ inputCompiled fp = do
 
 
 initialState :: Card -> [Card] -> Sparker CompilerState
-initialState c@(Card _ fp ds) cds = do
+initialState c@(Card _ fp (Block ds)) cds = do
     currentDir <- liftIO getCurrentDirectory
     override <- asks conf_compile_kind
     return $ CompilerState {
@@ -167,7 +167,7 @@ processDeclaration = do
                     allCards <- gets state_all_cards
                     case find (\c -> card_name c == name) allCards of
                         Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
-                        Just c@(Card _ _ dcs) -> do
+                        Just c@(Card _ _ (Block dcs)) -> do
                             before <- get
                             modify (\s -> s {state_declarations_left = dcs
                                             ,state_current_card = c})

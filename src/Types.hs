@@ -69,7 +69,7 @@ type Directory = FilePath
 data Card = Card {
         card_name    :: CardName
     ,   card_path    :: FilePath
-    ,   card_content :: [Declaration]
+    ,   card_content :: Declaration
     } deriving (Show, Eq)
 
 ---[ Declarations ]---
