@@ -318,6 +318,12 @@ type CompileError = String
 
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
 
+type CompilerPrefix = [PrefixPart]
+
+data PrefixPart = Literal String
+                | Alts [String]
+    deriving (Show, Eq)
+
 runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
 runSparkCompiler s func = runWriterT (runStateT func s)
 
@@ -328,9 +334,8 @@ data CompilerState = CompilerState {
     ,   state_all_cards                :: [Card]
     ,   state_declarations_left        :: [Declaration]
     ,   state_deployment_kind_override :: Maybe DeploymentKind
-    ,   state_into_prefix              :: FilePath
-    ,   state_outof_prefix             :: FilePath
-    ,   state_alternatives             :: [Directory]
+    ,   state_into                     :: Directory
+    ,   state_outof_prefix             :: CompilerPrefix
     } deriving (Show, Eq)
 
 

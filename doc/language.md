@@ -45,6 +45,25 @@ This is the main operation.
 <source> <deployment-kind-symbol> <destination>
 ```
 
+This will deploy `<source>` to `<destination>`.
+
+There is also a shorthand syntax:
+
+```
+<file>
+```
+
+This deploys `<file>` to `<file>`.
+It works very well if the name of the source and destination files are the same.
+
+Because spark is mainly used to deploy *dot*files, there is an implicit shorthand if the destination starts with a dot:
+
+```
+.<file>
+```
+
+Along with the regular `.<file>` to `.<file>` deployment, this will result in an implicit alternative `<file>` to `.<file>` deployment if the first one doesn't work out.
+
 ##### Deployment Kind
 There are two deployment kinds but three ways of declaring a deployment.
 

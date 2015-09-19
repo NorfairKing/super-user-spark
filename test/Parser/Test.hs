@@ -43,115 +43,21 @@ parseFails p strs = sequence_ $ map (parseFail p) strs
 
 
 
----[ Tests ]---
-
---[ Dispatch ]--
-
-test_parseParse = parserTests parseParse $
-    [
-    (DispatchParse "test.sus",
-            [
-                "parsetest.sus"
-            ,   "parse test.sus"
-            ,   "parse   test.sus"
-            ,   "parse\ttest.sus"
-            ,   "parse\t \t test.sus"
-            ]
-        )
-    ]
-
-test_parseFormat = parserTests parseFormat $
-    [
-    (DispatchFormat "test.sus",
-            [
-                "formattest.sus"
-            ,   "format test.sus"
-            ,   "format   test.sus"
-            ,   "format\ttest.sus"
-            ,   "format\t \t test.sus"
-            ]
-        )
-    ]
-
-test_parseCompile = parserTests parseCompile $
-    [
-        (DispatchCompile (CardFileReference "test.sus" Nothing),
-            [
-                "compiletest.sus"
-            ,   "compile test.sus"
-            ,   "compile   test.sus"
-            ,   "compile\ttest.sus"
-            ,   "compile\t \t test.sus"
-            ]
-        )
-    ,   (DispatchCompile (CardFileReference "test.sus" $ Just $ CardNameReference "card"),
-            [
-                "compiletest.sus card"
-            ,   "compile test.sus card"
-            ,   "compile   test.sus card"
-            ,   "compile\ttest.sus card"
-            ,   "compile\t \t test.sus card"
-            ]
-        )
-    ]
-
-test_parseCheck = parserTests parseCheck $
-    [
-        (DispatchCheck (CheckerCardCompiled "test.cd"),
-            [
-                "check compiled test.cd"
-            ,   "checkcompiled test.cd"
-            ,   "check compiledtest.cd"
-            ,   "checkcompiledtest.cd"
-            ]
-        )
-    ,   (DispatchCheck (CheckerCardUncompiled $ CardFileReference "test.sus" Nothing),
-            [
-                "check test.sus"
-            ,   "checktest.sus"
-            ]
-        )
-    ]
-
-test_parseDeploy = parserTests parseDeploy $
-    [
-        (DispatchDeploy (DeployerCardCompiled "test.cd"),
-            [
-                "compiledtest.cd"
-            ,   "compiled test.cd"
-            ]
-        )
-    ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" Nothing),
-            [
-                "filetest.sus"
-            ,   "file test.sus"
-            ]
-        )
-    ,   (DispatchDeploy (DeployerCardUncompiled $ StartFile $ CardFileReference "test.sus" $ Just $ CardNameReference "card"),
-            [
-                "filetest.sus card"
-            ,   "file test.sus card"
-            ]
-        )
-    ]
--- TODO tests with StartRepo"
-
-
 --[ Language ]--
 
 test_card_empty = parserTests card $
     [
-        (Card "" testFileName [], [
+        (Card "" testFileName (Block []), [
               "card \"\" {}"
             ]
         )
-    ,   (Card "hi" testFileName [], [
+    ,   (Card "hi" testFileName (Block []), [
               "card hi {}"
             , "card \"hi\" {}"
             , "card \nhi\n{}"
             ]
         )
-    ,   (Card "something spaced" testFileName [], [
+    ,   (Card "something spaced" testFileName (Block []), [
               "card \"something spaced\" {}"
             , "  card   \"something spaced\" {\n}"
             , " \t \n card \n\r  \"something spaced\" \t\n{\n\r}"
@@ -168,7 +74,7 @@ test_card_complicated = parserTests card $
         )
     ]
   where
-    myCard = Card "testcard" testFileName $
+    myCard = Card "testcard" testFileName $ Block
                 [
                   Alternatives ["$(HOST)", "shared"]
                 , Deploy "hello" "goodbye" (Just LinkDeployment)
