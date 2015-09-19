@@ -1,8 +1,8 @@
 module Compiler where
 
-import           Codec.Compression.GZip     (CompressionLevel (BestCompression),
-                                             compressLevel, compressWith,
-                                             decompress, defaultCompressParams)
+import           Codec.Compression.GZip     (bestCompression, compressLevel,
+                                             compressWith, decompress,
+                                             defaultCompressParams)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode, encodeFile)
@@ -58,7 +58,7 @@ outputCompiled deps = do
 
         FormatStandalone -> notImplementedYet
   where
-    compressionParams = defaultCompressParams {compressLevel = BestCompression}
+    compressionParams = defaultCompressParams {compressLevel = bestCompression}
 
 inputCompiled :: FilePath -> Sparker [Deployment]
 inputCompiled fp = do

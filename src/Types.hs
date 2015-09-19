@@ -150,6 +150,33 @@ data CardReference = CardRepo CardRepoReference
 ---[ Base monad ]---
 
 type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
+
+---[ Options ]---
+
+data Options = Options {
+    opt_command :: Command
+  , opt_global  :: GlobalOptions
+  } deriving (Show, Eq)
+
+data Command = CommandParse String
+             | CommandFormat String
+             | CommandCompile String
+             | CommandCheck String
+             | CommandDeploy String
+    deriving (Show, Eq)
+
+data GlobalOptions = GlobalOptions {
+    opt_lineUp          :: Bool
+  , opt_indent          :: Int
+  , opt_trailingNewline :: Bool
+  , opt_alwaysQuote     :: Bool
+  } deriving (Show, Eq)
+
+---[ Instructions ]--
+type Instructions = (Dispatch, SparkConfig)
+
+---[ Config ]---
+
 data SparkConfig = Config {
         conf_format_lineUp              :: Bool
     ,   conf_format_indent              :: Int
@@ -166,6 +193,7 @@ data SparkConfig = Config {
     ,   conf_deploy_replace_directories :: Bool
     ,   conf_debug                      :: Bool
     } deriving (Show, Eq)
+
 
 data CompileFormat = FormatBinary
                    | FormatText

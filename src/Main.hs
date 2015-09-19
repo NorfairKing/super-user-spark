@@ -2,11 +2,11 @@ module Main where
 
 import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
-import           System.Exit        (exitFailure)
-import           System.Exit        (exitSuccess)
+import           System.Exit        (die)
 
 import           Data.List          (isPrefixOf)
 
+import           Arguments
 import           Compiler
 import           Deployer
 import           Dispatch
@@ -20,22 +20,12 @@ main :: IO ()
 main = do
     checkSystemConsistency
 
-    as <- liftIO getArgs
+    (di, config) <- getInstructions
 
-    let (args, flags) = break ("-" `isPrefixOf`) as
-
-    let config = loadConfig flags
-    let disp   = loadDispatcher args
-
-    case disp of
-        Left err -> putStrLn $ show err
-        Right di -> do
-            er <- runSparker config $ dispatch di
-            case er of
-                Right _ -> exitSuccess
-                Left err -> do
-                    putStrLn $ showError err
-                    exitFailure
+    er <- runSparker config $ dispatch di
+    case er of
+        Left err -> die $ showError err
+        Right _ -> return ()
 
 
 spark :: StartingSparkReference -> Sparker ()
