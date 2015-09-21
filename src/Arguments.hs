@@ -1,11 +1,13 @@
 module Arguments where
 
+import           Data.Monoid (mconcat)
 import           Options.Applicative
 import           System.Environment  (getArgs)
-import           System.Exit         (die)
 
 import           Parser
 import           Types
+import           Utils
+
 
 getInstructions :: IO Instructions
 getInstructions = do
