@@ -20,6 +20,8 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
                                          runStateT)
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
+import           Debug.Trace
+import           System.FilePath.Posix  (takeExtension)
 
 import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..),
                                          object, (.:), (.=))
@@ -94,20 +96,34 @@ data CardNameReference = CardNameReference CardName
 data CardFileReference = CardFileReference FilePath (Maybe CardNameReference)
     deriving (Show, Eq)
 
--- To start, a card can't be referenced by its name.
-type StartingSparkReference = CardFileReference
-
 type CompilerCardReference = CardFileReference
 
 type CompiledCardReference = FilePath
 
-data CheckerCardReference = CheckerCardCompiled CompiledCardReference
-                          | CheckerCardUncompiled CardFileReference
+data DeployerCardReference = DeployerCardCompiled CompiledCardReference
+                           | DeployerCardUncompiled CardFileReference
     deriving (Show, Eq)
 
-data DeployerCardReference = DeployerCardCompiled CompiledCardReference
-                           | DeployerCardUncompiled StartingSparkReference
-    deriving (Show, Eq)
+type CheckerCardReference = DeployerCardReference
+
+instance Read CardFileReference where
+    readsPrec _ fp = case length (words fp) of
+                      1 -> [(CardFileReference fp Nothing ,"")]
+                      2 -> let [f, c] = words fp
+                            in [(CardFileReference f (Just $ CardNameReference c), "")]
+                      _ -> []
+
+-- TODO refactor these
+instance Read DeployerCardReference where
+    readsPrec _ fp = case length (words fp) of
+                      0 -> []
+                      1 -> if takeExtension fp == ".sus"
+                            then [(DeployerCardUncompiled (CardFileReference fp Nothing) ,"")]
+                            else [(DeployerCardCompiled fp, "")]
+                      2 -> let [f, c] = words fp
+                            in [(DeployerCardUncompiled (CardFileReference f (Just $ CardNameReference c)), "")]
+                      _ -> []
+
 
 data CardReference = CardFile CardFileReference
                    | CardName CardNameReference
@@ -124,11 +140,11 @@ data Options = Options {
   , opt_global  :: GlobalOptions
   } deriving (Show, Eq)
 
-data Command = CommandParse String
-             | CommandFormat String
-             | CommandCompile String
-             | CommandCheck String
-             | CommandDeploy String
+data Command = CommandParse FilePath
+             | CommandFormat FilePath
+             | CommandCompile CompilerCardReference
+             | CommandCheck CheckerCardReference
+             | CommandDeploy DeployerCardReference
     deriving (Show, Eq)
 
 data GlobalOptions = GlobalOptions {

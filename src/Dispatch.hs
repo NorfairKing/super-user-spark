@@ -18,8 +18,8 @@ dispatch (DispatchCompile (CardFileReference fp mcnr)) = do
     outputCompiled deployments
 dispatch (DispatchCheck ccr) = do
     deps <- case ccr of
-        CheckerCardCompiled fp -> inputCompiled fp
-        CheckerCardUncompiled (CardFileReference fp mcnr) -> do
+        DeployerCardCompiled fp -> inputCompiled fp
+        DeployerCardUncompiled (CardFileReference fp mcnr) -> do
             cards <- parseFile fp
             compileRef cards mcnr
     pdps <- check deps
@@ -28,6 +28,6 @@ dispatch (DispatchDeploy dcr) = do
     deps <- case dcr of
         DeployerCardCompiled fp -> inputCompiled fp
         DeployerCardUncompiled scr -> do
-            cards <- parseStartingCardReference scr
+            cards <- parseCardFileReference scr
             compile (head cards) cards -- filtering is already done at parse
     deploy deps
