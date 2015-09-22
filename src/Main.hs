@@ -1,10 +1,6 @@
 module Main where
 
-import           System.Directory   (createDirectoryIfMissing)
-import           System.Environment (getArgs)
-import           System.Exit        (die)
-
-import           Data.List          (isPrefixOf)
+import           System.Exit (die)
 
 import           Arguments
 import           Compiler
@@ -12,14 +8,11 @@ import           Deployer
 import           Dispatch
 import           Formatter
 import           Parser
-import           Paths
 import           Types
 import           Utils
 
 main :: IO ()
 main = do
-    checkSystemConsistency
-
     (di, config) <- getInstructions
 
     er <- runSparker config $ dispatch di
@@ -40,18 +33,9 @@ spark ssr = do
 showError :: SparkError -> String
 showError (ParseError err) = show err
 showError (CompileError err) = err
+showError (UnpredictedError err) = "Panic: " ++ err
 showError (DeployError err) =
     case err of
         PreDeployError ss -> unlines ss
         DuringDeployError ss -> unlines ss
         PostDeployError ss -> unlines ss
-
-showError (UnpredictedError err) = "Panic: " ++ err
-showError (GitError err) = show err
-
-
-checkSystemConsistency :: IO ()
-checkSystemConsistency = do
-    dir <- sparkDir
-    createDirectoryIfMissing True dir
-

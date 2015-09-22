@@ -13,6 +13,12 @@ cabal-version:       >=1.10
 executable spark
   main-is:          Main.hs
   hs-source-dirs:   src
+  ghc-options:      -Wall
+                    -fwarn-unused-imports
+                    -fwarn-incomplete-patterns
+                    -fno-warn-unused-do-bind
+                    -fno-warn-name-shadowing
+                    -fforce-recomp
   build-depends:    base                  >= 4.6   && < 4.9
                   , HTF                   >= 0.13  && < 0.14
                   , aeson                 >= 0.8   && < 0.9

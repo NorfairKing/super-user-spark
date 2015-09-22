@@ -1,7 +1,5 @@
 module Dispatch where
 
-import           Text.Parsec
-
 import           Compiler
 import           Deployer
 import           Formatter

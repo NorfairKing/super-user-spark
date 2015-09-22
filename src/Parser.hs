@@ -1,31 +1,15 @@
 module Parser where
-import           System.FilePath.Posix (takeExtension)
+
 import           Text.Parsec
 import           Text.Parsec.String
 
-import           Data.List             (find, isSuffixOf)
+import           Data.List          (find, isSuffixOf)
 
 import           Constants
-import           Git
 import           Types
 
 parseStartingCardReference :: StartingSparkReference -> Sparker [Card]
-parseStartingCardReference (StartRepo (CardRepoReference repo mb mfr)) = do
-    case mb of
-        Nothing -> return ()
-        Just gb -> runGitRepoController repo $ checkout gb
-    case mfr of
-        Nothing -> do
-            fps <- runGitRepoController repo $ listRepoDir "."
-            case filter (\f -> takeExtension f == '.':sparkExtension) fps of
-                [] -> throwError $ UnpredictedError $ unwords ["Didn't find any", "\"" ++ sparkExtension ++ "\"", "files in", show repo]
-                (h:_) -> parseStartingCardReference $ StartFile $ CardFileReference h Nothing
-        Just (CardFileReference fp mnr) -> do
-            gfp <- runGitRepoController repo $ repoFilePath fp
-            parseStartingCardReference $ StartFile $ CardFileReference gfp mnr
-
-
-parseStartingCardReference (StartFile (CardFileReference fp mnr)) = do
+parseStartingCardReference (CardFileReference fp mnr) = do
     css <- parseFile fp
     case mnr of
         Nothing -> return css
@@ -134,10 +118,7 @@ sparkOff = do
     <?> "sparkoff"
 
 startingCardReference :: Parser StartingSparkReference
-startingCardReference = try goFile <|> try goRepo <?> "starting card reference"
-  where
-    goFile = cardFileReference >>= return . StartFile
-    goRepo = cardRepoReference >>= return . StartRepo
+startingCardReference = cardFileReference <?> "starting card reference"
 
 compilerCardReference :: Parser CompilerCardReference
 compilerCardReference = unprefixedCardFileReference
@@ -162,12 +143,10 @@ compiledCardReference = do
     return fp
 
 cardReference :: Parser CardReference
-cardReference = try goName <|> try goFile <|> try goRepo
-    <?> "card reference"
+cardReference = try goName <|> try goFile <?> "card reference"
   where
     goName = cardNameReference >>= return . CardName
     goFile = cardFileReference >>= return . CardFile
-    goRepo = cardRepoReference >>= return . CardRepo
 
 cardNameReference :: Parser CardNameReference
 cardNameReference = do
@@ -193,30 +172,6 @@ unprefixedCardFileReference = do
         Nothing -> CardFileReference fp Nothing
         Just cn  -> CardFileReference fp (Just $ CardNameReference cn)
     <?> "card file reference"
-
-cardRepoReference :: Parser CardRepoReference
-cardRepoReference = do
-    string keywordGit
-    linespace
-    repo <- gitRepo
-    mb <- optionMaybe $ try $ do
-        string branchDelimiter
-        branch
-    mfpcn <- optionMaybe $ try $ do
-        linespace
-        fp <- filepath
-        linespace
-        mcn <- optionMaybe $ try cardName
-        return (fp, mcn)
-    return $ case mfpcn of
-        Nothing -> CardRepoReference repo mb Nothing
-        Just (fp, mcn) -> case mcn of
-            Nothing -> CardRepoReference repo mb (Just $ CardFileReference fp Nothing)
-            Just cn -> CardRepoReference repo mb (Just $ CardFileReference fp $ Just $ CardNameReference cn)
-    <?> "card git reference"
-  where
-    branch :: Parser Branch
-    branch = cardName -- Fix this is this is not quite enough.
 
 intoDir :: Parser Declaration
 intoDir = do
@@ -369,31 +324,6 @@ eol =   try (string "\n\r")
     <|> string "\r"
     <?> "end of line"
 
-
---[ Git ]--
-
-gitRepo :: Parser GitRepo
-gitRepo = do
-    prot <- gitProtocol
-    case prot of
-        HTTPS -> do
-            host <- manyTill (noneOf "/") (string "/")
-            path <- many (noneOf " :")
-            return $ GitRepo {
-                    repo_protocol = HTTPS, repo_host = host, repo_path = path
-                }
-        Git   -> do
-            host <- manyTill (noneOf ":") (string ":")
-            path <- manyTill anyToken (string ".git")
-            return $ GitRepo {
-                    repo_protocol = Git, repo_host = host, repo_path = path
-                }
-
-gitProtocol :: Parser GitProtocol
-gitProtocol = https <|> git
-  where
-    https = string "https://" >> return HTTPS
-    git   = string "git@"     >> return Git
 
 --[ Utils ]--
 
