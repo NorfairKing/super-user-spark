@@ -24,4 +24,3 @@ showError (DeployError err) =
         PreDeployError ss -> unlines ss
         DuringDeployError ss -> unlines ss
         PostDeployError ss -> unlines ss
-
