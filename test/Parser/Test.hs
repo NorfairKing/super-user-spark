@@ -148,50 +148,6 @@ test_cardFileReference = parserTests cardFileReference $
         )
     ]
 
-test_cardRepoReference = parserTests cardRepoReference $
-    [
-        (CardRepoReference repo Nothing Nothing,
-            [
-              "git " ++ repoStr
-            , "git\t" ++ repoStr
-            , "git \t" ++ repoStr
-            , "git        " ++ repoStr
-            ]
-        )
-    ,   (CardRepoReference repo (Just "development") Nothing,
-            [
-              "git " ++ repoStr ++ ":development"
-            , "git\t" ++ repoStr ++ ":development"
-            , "git \t" ++ repoStr ++ ":development"
-            , "git        " ++ repoStr ++ ":development"
-            ]
-        )
-    ,   (CardRepoReference repo Nothing (Just $ CardFileReference "card.sus" Nothing),
-            [
-              "git " ++ repoStr ++ " card.sus"
-            , "git\t\t" ++ repoStr ++ "\t\tcard.sus"
-            , "git " ++ repoStr ++ " \"card.sus\""
-            ]
-        )
-    ,   (CardRepoReference repo Nothing (Just $ CardFileReference "card.sus" $ Just $ CardNameReference "name"),
-            [
-              "git " ++ repoStr ++ " card.sus name"
-            , "git\t\t" ++ repoStr ++ "\t\tcard.sus\tname"
-            , "git " ++ repoStr ++ " \"card.sus\" \"name\""
-            ]
-        )
-    ,   (CardRepoReference repo (Just "master") (Just $ CardFileReference "card.sus" $ Just $ CardNameReference "name"),
-            [
-              "git " ++ repoStr ++ ":master card.sus name"
-            , "git\t\t" ++ repoStr ++ ":master\t\tcard.sus\tname"
-            , "git " ++ repoStr ++ ":master \"card.sus\" \"name\""
-            ]
-        )
-    ]
-  where
-    repo = GitRepo {repo_protocol = Git  , repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"}
-    repoStr = "git@bitbucket.org:syd_kerckhove/private-depot.git"
-
 test_intoDir = parserTests intoDir $
     [
         (IntoDir "~", [
@@ -430,22 +386,3 @@ test_eol_fail = parseFails eol $
     ,   " \t"
     ]
 
---[ Git ]--
-
-test_gitRepo = parserTests gitRepo $
-    [
-        (GitRepo {repo_protocol = HTTPS, repo_host = "github.com", repo_path = "NorfairKing/sus-depot"},
-        ["https://github.com/NorfairKing/sus-depot"])
-    ,   (GitRepo {repo_protocol = Git  , repo_host = "github.com", repo_path = "NorfairKing/sus-depot"},
-        ["git@github.com:NorfairKing/sus-depot.git"])
-    ,   (GitRepo {repo_protocol = HTTPS, repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"},
-        ["https://bitbucket.org/syd_kerckhove/private-depot"])
-    ,   (GitRepo {repo_protocol = Git  , repo_host = "bitbucket.org", repo_path = "syd_kerckhove/private-depot"},
-        ["git@bitbucket.org:syd_kerckhove/private-depot.git"])
-    ]
-
-test_gitProtocol = parserTests gitProtocol $
-    [
-        (HTTPS, ["https://"])
-    ,   (Git, ["git@"])
-    ]
