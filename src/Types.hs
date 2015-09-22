@@ -135,17 +135,7 @@ type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 
 ---[ Options ]---
 
-data Options = Options {
-    opt_command :: Command
-  , opt_global  :: GlobalOptions
-  } deriving (Show, Eq)
-
-data Command = CommandParse FilePath
-             | CommandFormat FilePath
-             | CommandCompile CompilerCardReference
-             | CommandCheck CheckerCardReference
-             | CommandDeploy DeployerCardReference
-    deriving (Show, Eq)
+type Options = (Dispatch, GlobalOptions)
 
 data GlobalOptions = GlobalOptions {
     opt_lineUp              :: Bool
