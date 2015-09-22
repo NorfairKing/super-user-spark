@@ -181,30 +181,8 @@ mkind Nothing = do
     string unspecifiedKindSymbol
 
 cardReference :: CardReference -> SparkFormatter ()
-cardReference (CardRepo crr) = cardRepoReference crr
 cardReference (CardFile cfr) = cardFileReference cfr
 cardReference (CardName cnr) = cardNameReference cnr
-
-cardRepoReference :: CardRepoReference -> SparkFormatter ()
-cardRepoReference (CardRepoReference repo mb mfr) = do
-    string keywordGit
-    string " "
-    string $ show repo
-    case mb of
-        Nothing -> return ()
-        Just b -> do
-            string branchDelimiter
-            string b
-    case mfr of
-        Nothing -> return ()
-        Just (CardFileReference fp mnr) -> do
-            string " "
-            string fp
-            case mnr of
-                Nothing -> return ()
-                Just (CardNameReference cn) -> do
-                    string " "
-                    string cn
 
 cardFileReference :: CardFileReference -> SparkFormatter ()
 cardFileReference (CardFileReference fp mnr) = do

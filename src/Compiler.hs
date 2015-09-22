@@ -5,10 +5,9 @@ import           Codec.Compression.GZip     (bestCompression, compressLevel,
                                              defaultCompressParams)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
-import           Data.Binary                (decodeOrFail, encode, encodeFile)
-import           Data.ByteString.Lazy.Char8 (unpack)
+import           Data.Binary                (decodeOrFail, encode)
 import qualified Data.ByteString.Lazy.Char8 as BS
-import           Data.List                  (find, isPrefixOf, stripPrefix)
+import           Data.List                  (find, stripPrefix)
 import           System.Directory           (getCurrentDirectory,
                                              getHomeDirectory)
 import           System.FilePath            (normalise, takeDirectory, (</>))
@@ -82,14 +81,14 @@ inputCompiled fp = do
 
 
 initialState :: Card -> [Card] -> Sparker CompilerState
-initialState c@(Card _ fp (Block ds)) cds = do
+initialState c@(Card _ fp statement) cds = do
     currentDir <- liftIO getCurrentDirectory
     override <- asks conf_compile_kind
     return $ CompilerState {
         state_current_card = c
     ,   state_current_directory = currentDir </> takeDirectory fp
     ,   state_all_cards = cds
-    ,   state_declarations_left = ds
+    ,   state_declarations_left = [statement]
     ,   state_deployment_kind_override = override
     ,   state_into = ""
     ,   state_outof_prefix = []
@@ -170,8 +169,6 @@ processDeclaration = do
 
         SparkOff st -> do
             case st of
-                CardRepo _ -> lift $ lift notImplementedYet
-
                 CardFile (CardFileReference file mn) -> do
                     dir <- gets state_current_directory
                     newCards <- liftSparker $ P.parseFile $ dir </> file
@@ -191,9 +188,9 @@ processDeclaration = do
                     allCards <- gets state_all_cards
                     case find (\c -> card_name c == name) allCards of
                         Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
-                        Just c@(Card _ _ (Block dcs)) -> do
+                        Just c@(Card _ _ statement) -> do
                             before <- get
-                            modify (\s -> s {state_declarations_left = dcs
+                            modify (\s -> s {state_declarations_left = [statement]
                                             ,state_current_card = c})
                             compileDeployments
                             put before
