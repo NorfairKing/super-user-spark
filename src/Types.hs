@@ -20,7 +20,6 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
                                          runStateT)
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
-import           Debug.Trace
 import           System.FilePath.Posix  (takeExtension)
 
 import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..),

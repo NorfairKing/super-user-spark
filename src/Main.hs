@@ -3,13 +3,8 @@ module Main where
 import           System.Exit (die)
 
 import           Arguments
-import           Compiler
-import           Deployer
 import           Dispatch
-import           Formatter
-import           Parser
 import           Types
-import           Utils
 
 main :: IO ()
 main = do
