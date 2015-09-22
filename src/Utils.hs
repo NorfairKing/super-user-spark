@@ -4,6 +4,8 @@ module Utils where
 
 import           Control.Monad.IO.Class (MonadIO)
 import           Control.Monad.Reader   (MonadReader)
+import           System.IO (hPutStrLn, stderr)
+import           System.Exit (exitFailure)
 import           Types
 
 {-
@@ -47,3 +49,6 @@ incaseElse bf funcif funcelse = do
 
 notImplementedYet :: Sparker ()
 notImplementedYet = throwError $ UnpredictedError "This feature is not implemented yet, it will be in the future, so be sure to check back in a newer version."
+
+die :: String -> IO a
+die err = hPutStrLn stderr err >> exitFailure

@@ -2,7 +2,6 @@ module Main where
 
 import           System.Directory   (createDirectoryIfMissing)
 import           System.Environment (getArgs)
-import           System.Exit        (die)
 
 import           Data.List          (isPrefixOf)
 
