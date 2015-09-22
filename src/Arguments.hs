@@ -16,13 +16,7 @@ getInstructions = do
     Left err  -> die $ "Failed to parse instructions\n" ++ err
 
 transformOptions :: Options -> Either String Instructions
-transformOptions opts = do
-    config <- configFromOptions go
-    let dispatch = dispatchFromCommand cmd
-    return (dispatch, config)
-  where
-    go = opt_global opts
-    cmd = opt_command opts
+transformOptions (dispatch, go) = (,) <$> pure dispatch <*> configFromOptions go
 
 configFromOptions :: GlobalOptions -> Either String SparkConfig
 configFromOptions go = Right conf
@@ -44,13 +38,6 @@ configFromOptions go = Right conf
             , conf_debug                      = opt_debug go
           }
 
-dispatchFromCommand :: Command -> Dispatch
-dispatchFromCommand (CommandParse str)  = DispatchParse   str
-dispatchFromCommand (CommandFormat str) = DispatchFormat  str
-dispatchFromCommand (CommandCompile cr) = DispatchCompile cr
-dispatchFromCommand (CommandCheck cr)   = DispatchCheck   cr
-dispatchFromCommand (CommandDeploy cr)  = DispatchDeploy  cr
-
 getOptions :: IO Options
 getOptions = do
   args <- getArgs
@@ -59,9 +46,8 @@ getOptions = do
 
 runOptionsParser :: [String] -> ParserResult Options
 runOptionsParser strs = execParserPure prefs optionsParser strs
-  where
-    prefs = ParserPrefs {
-            prefMultiSuffix = "SPARK"    -- ^ metavar suffix for multiple options
+  where prefs = ParserPrefs {
+            prefMultiSuffix = "SPARK"  -- ^ metavar suffix for multiple options
           , prefDisambiguate = True    -- ^ automatically disambiguate abbreviations (default: False)
           , prefShowHelpOnError = True -- ^ always show help text on parse errors (default: False)
           , prefBacktrack = True       -- ^ backtrack to parent parser when a subcommand fails (default: True)
@@ -75,11 +61,9 @@ optionsParser = info (helper <*> parseOptions) help
     description = "Super User Spark, author: Tom Sydney Kerckhove"
 
 parseOptions :: Parser Options
-parseOptions = Options
-    <$> parseCommand
-    <*> parseGlobalOptions
+parseOptions = (,) <$> parseCommand <*> parseGlobalOptions
 
-parseCommand :: Parser Command
+parseCommand :: Parser Dispatch
 parseCommand = hsubparser $ mconcat
     [
       command "parse"   parseParse
@@ -89,42 +73,42 @@ parseCommand = hsubparser $ mconcat
     , command "deploy"  parseDeploy
     ]
 
-parseParse :: ParserInfo Command
+parseParse :: ParserInfo Dispatch
 parseParse = info parser modifier
   where
-    parser = CommandParse <$> strArgument (metavar "FILE" <> help "the file to parse")
+    parser = DispatchParse <$> strArgument (metavar "FILE" <> help "the file to parse")
     modifier = fullDesc
             <> progDesc "Parse a spark file and check for syntactic errors."
 
-parseFormat :: ParserInfo Command
+parseFormat :: ParserInfo Dispatch
 parseFormat = info parser modifier
   where
-    parser = CommandFormat <$> strArgument (metavar "FILE" <> help "the file to format")
+    parser = DispatchFormat <$> strArgument (metavar "FILE" <> help "the file to format")
     modifier = fullDesc
             <> progDesc "Format a spark file."
 
-parseCompile :: ParserInfo Command
+parseCompile :: ParserInfo Dispatch
 parseCompile = info parser modifier
   where
-    parser = CommandCompile
+    parser = DispatchCompile
       <$> argument auto
         (metavar "CARD" <> help "the card file to compile")
     modifier = fullDesc
             <> progDesc "Compile a spark card."
 
-parseCheck :: ParserInfo Command
+parseCheck :: ParserInfo Dispatch
 parseCheck = info parser modifier
   where
-    parser = CommandCheck
+    parser = DispatchCheck
       <$> argument auto
          (metavar "CARD" <> help "the card to check")
     modifier = fullDesc
             <> progDesc "Check the deployment of a spark card."
 
-parseDeploy :: ParserInfo Command
+parseDeploy :: ParserInfo Dispatch
 parseDeploy = info parser modifier
   where
-    parser = CommandDeploy
+    parser = DispatchDeploy
       <$> argument auto
         (metavar "CARD" <> help "the card to deploy") -- TODO more help
     modifier = fullDesc
