@@ -20,16 +20,6 @@ main = do
         Left err -> die $ showError err
         Right _ -> return ()
 
-
-spark :: StartingSparkReference -> Sparker ()
-spark ssr = do
-    cs <- parseStartingCardReference ssr
-    fcs <- formatCards cs
-    debug fcs
-    dp <- compile (head cs) cs
-    debug $ formatDeployments dp
-    deploy dp
-
 showError :: SparkError -> String
 showError (ParseError err) = show err
 showError (CompileError err) = err

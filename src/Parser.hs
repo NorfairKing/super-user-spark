@@ -8,8 +8,9 @@ import           Data.List          (find, isSuffixOf)
 import           Constants
 import           Types
 
-parseStartingCardReference :: StartingSparkReference -> Sparker [Card]
-parseStartingCardReference (CardFileReference fp mnr) = do
+
+parseCardFileReference :: CardFileReference -> Sparker [Card]
+parseCardFileReference (CardFileReference fp mnr) = do
     css <- parseFile fp
     case mnr of
         Nothing -> return css
@@ -25,32 +26,6 @@ parseFile file = do
     case parse sparkFile file str of
         Left pe -> throwError $ ParseError pe
         Right cs -> return cs
-
-
-parseCardReference :: String -> Either ParseError StartingSparkReference
-parseCardReference = parse startingCardReference "Argument String"
-
-
-
-
----[ Parsing ]---
-
---[ Dispatch ]--
-
-easyParse :: Parser a -> String -> Either String a
-easyParse p s = case parse p "arguments" s of
-                    Left err -> Left $ show err
-                    Right a -> Right a
-
-parseCompilerCardReference :: String -> Either String CompilerCardReference
-parseCompilerCardReference = easyParse (compilerCardReference <?> "Compile Instructions")
-
-parseCheckerCardReference :: String -> Either String CheckerCardReference
-parseCheckerCardReference = easyParse (checkerCardReference <?> "Check Instructions")
-
-parseDeployerCardReference :: String -> Either String DeployerCardReference
-parseDeployerCardReference = easyParse (deployerCardReference <?> "Deploy Instructions")
-
 
 --[ Language ]--
 
@@ -117,23 +92,14 @@ sparkOff = do
     return $ SparkOff ref
     <?> "sparkoff"
 
-startingCardReference :: Parser StartingSparkReference
-startingCardReference = cardFileReference <?> "starting card reference"
-
 compilerCardReference :: Parser CompilerCardReference
 compilerCardReference = unprefixedCardFileReference
-
-checkerCardReference :: Parser CheckerCardReference
-checkerCardReference = goComp <|> goUncomp
-  where
-    goComp = compiledCardReference >>= return . CheckerCardCompiled
-    goUncomp = unprefixedCardFileReference >>= return . CheckerCardUncompiled
 
 deployerCardReference :: Parser DeployerCardReference
 deployerCardReference = goComp <|> goUncomp
   where
     goComp = compiledCardReference >>= return . DeployerCardCompiled
-    goUncomp = startingCardReference >>= return . DeployerCardUncompiled
+    goUncomp = unprefixedCardFileReference >>= return . DeployerCardUncompiled
 
 compiledCardReference :: Parser CompiledCardReference
 compiledCardReference = do

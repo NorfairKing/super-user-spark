@@ -25,18 +25,6 @@ file <file-path> <card-name>
 
 The `<card-name>` argument is optional, if it is not given the reference will lead to the first card in the file.
 
-- By repository.
-
-```
-git <git-repository>:<branch-name> <file-path> <card-name>
-```
-
-The `:<branch-name>` `<file-path>` and `<card-name>` arguments are optional, but if `<card-name>` is given, `<filepath>` must be given as well.
-If `<branch-name` is not given, the reference will lead to the default branch (usually master).
-If `<file-path>` is not given, the reference will lead to the first `*.sus` file it can find in the root of the repository.
-If `<card-name>` is not given the reference will lead to the first card in the file.
-
-
 ### Declarations
 #### File deployment
 This is the main operation.

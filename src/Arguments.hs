@@ -4,7 +4,6 @@ import           Data.Monoid (mconcat)
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
-import           Parser
 import           Types
 import           Utils
 
@@ -19,7 +18,7 @@ getInstructions = do
 transformOptions :: Options -> Either String Instructions
 transformOptions opts = do
     config <- configFromOptions go
-    dispatch <- dispatchFromCommand cmd
+    let dispatch = dispatchFromCommand cmd
     return (dispatch, config)
   where
     go = opt_global opts
@@ -45,12 +44,12 @@ configFromOptions go = Right conf
             , conf_debug                      = opt_debug go
           }
 
-dispatchFromCommand :: Command -> Either String Dispatch
-dispatchFromCommand (CommandParse str)    = DispatchParse   <$> pure str
-dispatchFromCommand (CommandFormat str)   = DispatchFormat  <$> pure str
-dispatchFromCommand (CommandCompile str)  = DispatchCompile <$> parseCompilerCardReference str
-dispatchFromCommand (CommandCheck str)    = DispatchCheck   <$> parseCheckerCardReference str
-dispatchFromCommand (CommandDeploy str)   = DispatchDeploy  <$> parseDeployerCardReference str
+dispatchFromCommand :: Command -> Dispatch
+dispatchFromCommand (CommandParse str)  = DispatchParse   str
+dispatchFromCommand (CommandFormat str) = DispatchFormat  str
+dispatchFromCommand (CommandCompile cr) = DispatchCompile cr
+dispatchFromCommand (CommandCheck cr)   = DispatchCheck   cr
+dispatchFromCommand (CommandDeploy cr)  = DispatchDeploy  cr
 
 getOptions :: IO Options
 getOptions = do
@@ -107,21 +106,27 @@ parseFormat = info parser modifier
 parseCompile :: ParserInfo Command
 parseCompile = info parser modifier
   where
-    parser = CommandCompile <$> strArgument (metavar "CARD" <> help "the card file to compile")
+    parser = CommandCompile
+      <$> argument auto
+        (metavar "CARD" <> help "the card file to compile")
     modifier = fullDesc
             <> progDesc "Compile a spark card."
 
 parseCheck :: ParserInfo Command
 parseCheck = info parser modifier
   where
-    parser = CommandCheck <$> strArgument (metavar "CARD" <> help "the card to check")
+    parser = CommandCheck
+      <$> argument auto
+         (metavar "CARD" <> help "the card to check")
     modifier = fullDesc
             <> progDesc "Check the deployment of a spark card."
 
 parseDeploy :: ParserInfo Command
 parseDeploy = info parser modifier
   where
-    parser = CommandDeploy <$> strArgument (metavar "CARD" <> help "the card to deploy")
+    parser = CommandDeploy
+      <$> argument auto
+        (metavar "CARD" <> help "the card to deploy") -- TODO more help
     modifier = fullDesc
             <> progDesc "Deploy a spark card."
 

@@ -13,7 +13,7 @@ Trying to put them before or inbetween may not work.
 A `.sus` file's syntax can be checked by entering the following command:
 
 ```
-$ spark parse "path/to/card.sus"
+$ spark parse path/to/card.sus
 ```
 
 `spark` will exit...
@@ -30,7 +30,7 @@ Formatting is used to format a `.sus` file into a pretty representation.
 This mostly includes nice whitespace.
 
 ```
-$ spark format "path/to/card.sus"
+$ spark format path/to/card.sus
 ```
 
 #### Formatting options
@@ -95,10 +95,11 @@ Compile a spark card.
 This, unlike deployment, happens independtly of the system that `spark` is being run on.
 
 ```
-$ spark compile "path/to/card.sus"
+$ spark compile path/to/card.sus
 $ spark compile "path/to/card.sus card-name"
 ```
 
+Not that the quotes are required if you specify a card name.
 This will compile the spark card to a list of deployments.
 
 #### Compiling options
@@ -117,17 +118,20 @@ Look at what is done already and what needs to be done for a given card to be de
 You can reference a starting card either by file or by git repository:
 
 ```
-$ spark check "path/to/card.sus"
+$ spark check path/to/card.sus
 $ spark check "path/to/card.sus card-name"
 ```
+
+Not that the quotes are required if you specify a card name.
 
 You can also supply a compiled card:
 
 ```
-$ spark check "compiled path/to/compiled/card"
+$ spark check path/to/compiled/card
 ```
 
 Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
+Don't use the `.sus` extension for compiled cards or `spark` will interpret them as uncompiled card files.
 
 #### Check options
 
@@ -139,18 +143,20 @@ Deployment doesn't require any special commands, just a card reference.
 You can reference a starting card either by file or by git repository:
 
 ```
-$ spark deploy "file path/to/card.sus" # By file
-$ spark deploy "file path/to/card.sus card-name" # By file with card name
-$ spark deploy "git git@github.com:NorfairKing/sus-depot.git spark.sus card-name" # By git reference
+$ spark deploy path/to/card.sus # By file
+$ spark deploy "path/to/card.sus card-name" # By file with card name
 ```
+
+Not that the quotes are required if you specify a card name.
 
 You can also supply a compiled card:
 
 ```
-$ spark deploy "compiled path/to/compiled/card"
+$ spark deploy compiled path/to/compiled/card
 ```
 
 Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
+Don't use the `.sus` extension for compiled cards or `spark` will interpret them as uncompiled card files.
 
 #### Deployment options
 
