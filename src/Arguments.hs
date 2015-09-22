@@ -167,7 +167,7 @@ parseGlobalOptions = GlobalOptions
       <> short 'k'
       <> value Nothing
       <> metavar "KIND"
-      <> help "The kind specification for unspecified deployments (default: LinkDeployment)" )
+      <> help "The kind specification for unspecified deployments (default: link)" )
   <*> option (Just <$> auto)
     ( long "override"
       <> short 'O'
