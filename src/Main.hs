@@ -1,10 +1,9 @@
 module Main where
 
-import           System.Exit (die)
-
 import           Arguments
 import           Dispatch
 import           Types
+import           Utils
 
 main :: IO ()
 main = do
