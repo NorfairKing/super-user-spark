@@ -16,3 +16,5 @@ Most of the documentation is in the `doc` directory.
 If you would like to have your name on this list, just send a pull request.
 
 - [NorfairKing](https://github.com/NorfairKing/sus-depot)
+- [plietar](https://github.com/plietar/dotfiles)
+- [mkirsche](https://github.com/mkirsche/sus-depot)

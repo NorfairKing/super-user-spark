@@ -1,5 +1,5 @@
 name:                super-user-spark
-version:             0.2.0.0
+version:             0.2.0.1
 license:             MIT
 license-file:        LICENSE
 description:         Configure your dotfile deployment with a DSL.
@@ -15,6 +15,16 @@ cabal-version:       >=1.10
 executable spark
   main-is:          Main.hs
   hs-source-dirs:   src
+  other-modules:    Arguments
+                  , Compiler
+                  , Constants
+                  , Deployer
+                  , Dispatch
+                  , Formatter
+                  , Main
+                  , Parser
+                  , Types
+                  , Utils
   ghc-options:      -Wall
                     -fwarn-unused-imports
                     -fwarn-incomplete-patterns
