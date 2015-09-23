@@ -5,10 +5,6 @@ abbreviations: NYI="Not Yet Implemented"
 
 ## Commands
 
-A note on optional flags: 
-Flags need to be specified *after* a command.
-Trying to put them before or inbetween may not work.
-
 ### Syntax checking
 A `.sus` file's syntax can be checked by entering the following command:
 
@@ -79,15 +75,15 @@ card card-name {
     kind copy
     alternatives one two
 
-    "file-one"   ->  file-two
-     something  c-> "copied"
+    "file one"   -> file-two
+     something  c-> copied
 }
 ```
 
 into this:
 
 ```
-cardcard-name{into~;outofdirectory;kindcopy;alternativesone two;"file-one"-> file-two;something c->"copied"}
+cardcard-name{into~;outofdirectory;kindcopy;alternativesone two;"file-one"-> file-two;something c-> copied}
 ```
 
 ### Compiling 
@@ -152,7 +148,7 @@ Not that the quotes are required if you specify a card name.
 You can also supply a compiled card:
 
 ```
-$ spark deploy compiled path/to/compiled/card
+$ spark deploy path/to/compiled/card
 ```
 
 Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
