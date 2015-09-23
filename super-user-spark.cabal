@@ -2,8 +2,10 @@ name:                super-user-spark
 version:             0.2.0.0
 license:             MIT
 license-file:        LICENSE
+description:         Configure your dotfile deployment with a DSL.
+synopsis:            Configure your dotfile deployment with a DSL.
 author:              Tom Sydney Kerckhove
-maintainer:          syd.kerckhove@student.kuleuven.be
+maintainer:          syd.kerckhove@gmail.com
 category:            System
 build-type:          Simple
 extra-source-files:  README.md
@@ -34,7 +36,6 @@ executable spark
                   , text                  >= 1.2   && < 1.3
                   , transformers          >= 0.4   && < 0.5
                   , unix                  >= 2.7   && < 2.8
-                  , xdg-basedir           >= 0.2   && < 0.3
                   , zlib                  >= 0.6   && < 0.7
   default-language: Haskell2010
   
@@ -60,7 +61,6 @@ test-suite spark-tests
                   , text                  >= 1.2   && < 1.3
                   , transformers          >= 0.4   && < 0.5
                   , unix                  >= 2.7   && < 2.8
-                  , xdg-basedir           >= 0.2   && < 0.3
                   , zlib                  >= 0.6   && < 0.7
   default-language:  Haskell2010
   
