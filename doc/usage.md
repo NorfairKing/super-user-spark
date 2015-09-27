@@ -111,7 +111,7 @@ This will compile the spark card to a list of deployments.
 Assess the current state of the system.
 Look at what is done already and what needs to be done for a given card to be deployed
 
-You can reference a starting card either by file or by git repository:
+You can reference a starting card by file:
 
 ```
 $ spark check path/to/card.sus
@@ -136,7 +136,7 @@ Don't use the `.sus` extension for compiled cards or `spark` will interpret them
 ### Deployment
 Deployment doesn't require any special commands, just a card reference.
 
-You can reference a starting card either by file or by git repository:
+You can reference a starting card by file:
 
 ```
 $ spark deploy path/to/card.sus # By file
