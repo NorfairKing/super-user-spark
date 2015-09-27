@@ -6,9 +6,6 @@ keywordCard = "card"
 keywordSpark :: String
 keywordSpark = "spark"
 
-keywordGit :: String
-keywordGit = "git"
-
 keywordFile :: String
 keywordFile = "file"
 
