@@ -2,7 +2,7 @@
 
 module Deployer where
 
-import           Data.List          (isPrefixOf)
+import           Data.List          (isPrefixOf, sort)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
 import           Prelude            hiding (error)
@@ -11,7 +11,7 @@ import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
                                      getDirectoryContents, getHomeDirectory,
                                      getPermissions, removeDirectoryRecursive,
                                      removeFile)
-import           System.Posix.Env   (getEnv)
+import           System.Posix.Env   (getEnv, getEnvironment)
 
 import           System.Exit        (ExitCode (..))
 import           System.FilePath    (dropFileName, normalise, (</>))
@@ -322,10 +322,7 @@ filePathEqual :: FilePath -> FilePath -> Bool
 filePathEqual f g = (normalise f) == (normalise g)
 
 complete :: FilePath -> SparkDeployer FilePath
-complete fp = liftIO $ completeI fp
-
-completeI :: FilePath -> IO FilePath
-completeI fp = do
+complete fp = do
     let ids = parseId fp
     strs <- mapM replaceId ids
     completed <- mapM replaceHome strs
@@ -340,17 +337,19 @@ parseId (s:ss) = case parseId ss of
                     r               -> (Plain [s]):r
 
 
-replaceId :: ID -> IO FilePath
+replaceId :: ID -> SparkDeployer FilePath
 replaceId (Plain str) = return str
 replaceId (Var str) = do
-    e <- getEnv str
-    return $ case e of
-        Nothing -> ""
-        Just fp -> fp
+    e <- liftIO $ getEnv str
+    case e of -- TODO fix this to fit nicely with the other errors.
+        Nothing -> do
+            env <- liftIO $ getEnvironment
+            throwError $ DeployError $ PreDeployError $ return $ unwords ["variable", str, "could not be resolved from environment:\n", unlines . map show $ sort env]
+        Just fp -> return fp
 
-replaceHome :: FilePath -> IO FilePath
+replaceHome :: FilePath -> SparkDeployer FilePath
 replaceHome path = do
-    home <- getHomeDirectory
+    home <- liftIO $ getHomeDirectory
     return $ if "~" `isPrefixOf` path
         then home </> drop 2 path
         else path
