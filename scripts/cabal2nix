@@ -1,0 +1,62 @@
+#! /usr/bin/env nix-shell
+#! nix-shell -i bash -p cabal2nix
+
+usage() {
+    cat <<EOF
+Usage: $0 [-o path/to/expr.nix] [-s] [PACKAGEDIR]
+
+Description:
+
+  Use cabal2nix to generate the nix-expression for the package. This
+  is used to create either a standalone expr to be added into a
+  nixpkgs tree, or building with nix-shell.
+
+  This assumes that nix >= 1.10 is installed and that nix-shell is in
+  PATH.
+
+Arguments:
+
+  -o OUTPATH           Path to the generated Nix-expression.
+  -s                   Generate the expression for nix-shell usage.
+  PACKAGEDIR           Location of the directory containing the .cabal file.
+EOF
+}
+
+################################################## input parameters
+outpath=""
+outpath_default="super-user-spark.nix"
+
+packagedir=""
+packagedir_default="$PWD"
+
+extra_args=""
+
+while getopts ":o:sh" flag; do
+    case $flag in
+        o)
+            outpath="$OPTARG"
+            ;;
+        s)
+            extra_args="$extra_args --shell"
+            outpath_default="shell.nix"
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+shift $(expr $OPTIND - 1 )
+packagedir="$1"
+
+
+################################################## defaults
+test -z "$outpath"    && outpath="$outpath_default"
+test -z "$packagedir" && packagedir="$packagedir_default"
+
+
+################################################## run
+set -x
+cabal2nix --jailbreak $extra_args "$packagedir" | tee "$outpath"
+
