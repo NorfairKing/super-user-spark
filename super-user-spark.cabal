@@ -32,7 +32,7 @@ executable spark
                     -fno-warn-name-shadowing
   build-depends:    base                  >= 4.6   && < 4.9
                   , HTF                   >= 0.13  && < 0.14
-                  , aeson                 >= 0.8   && < 0.9
+                  , aeson                 >= 0.8   && < 0.11
                   , aeson-pretty          >= 0.7   && < 0.8
                   , binary                >= 0.7   && < 0.8
                   , bytestring            >= 0.10  && < 0.11
