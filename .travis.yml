@@ -8,8 +8,6 @@ language: c
 # release of a major GHC version. Setting HPVER implictly sets
 # GHCVER. Omit lines with versions you don't need/want testing for.
 env:
- - CABALVER=1.16 GHCVER=7.6.1
- - CABALVER=1.16 GHCVER=7.6.2
  - CABALVER=1.18 GHCVER=7.6.3
  - CABALVER=1.18 GHCVER=7.8.1
  - CABALVER=1.18 GHCVER=7.8.2
@@ -17,7 +15,6 @@ env:
  - CABALVER=1.18 GHCVER=7.8.4
  - CABALVER=1.22 GHCVER=7.10.1
  - CABALVER=1.22 GHCVER=7.10.2
- - CABALVER=1.22 GHCVER=head
 
 # Note: the distinction between `before_install` and `install` is not
 #       important.
