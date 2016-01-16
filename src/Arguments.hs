@@ -1,6 +1,6 @@
 module Arguments where
 
-import           Data.Monoid (mconcat)
+import           Data.Monoid         (mconcat)
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
@@ -182,7 +182,7 @@ parseGlobalOptions = GlobalOptions
       <> help "Replace existing directories at deploy destinations."
     )
   <*> switch
-    ( long "replace"
+    ( long "replace-all"
       <> short 'r'
       <> help "Equivalent to --replace-files --replace-directories --replace-links"
     )
