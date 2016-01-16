@@ -19,7 +19,8 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
                                      getSymbolicLinkStatus, isBlockDevice,
                                      isCharacterDevice, isDirectory,
                                      isNamedPipe, isRegularFile, isSocket,
-                                     isSymbolicLink, readSymbolicLink)
+                                     isSymbolicLink, readSymbolicLink,
+                                     removeLink)
 import           System.Process     (system)
 
 import           Formatter          (formatPostDeployments,
@@ -237,11 +238,7 @@ link src dst = do
 
 -- TODO these dont catch errors
 unlink :: FilePath -> SparkDeployer ()
-unlink fp = do
-    es <- liftIO $ system $ unwords $ ["/usr/bin/unlink", fp]
-    case es of
-        ExitSuccess -> debug $ unwords ["unlinked", fp]
-        ExitFailure _ -> throwError $ DeployError $ PreDeployError ["Something went wrong while unlinking " ++ fp ++ "."]
+unlink fp = liftIO $ removeLink fp
 
 rmFile :: FilePath -> SparkDeployer ()
 rmFile fp = do
