@@ -12,6 +12,7 @@ import           System.Directory           (getCurrentDirectory,
                                              getHomeDirectory)
 import           System.FilePath            (normalise, takeDirectory, (</>))
 
+import           Compiler.Types
 import qualified Parser                     as P
 import           Parser.Types
 import           Types

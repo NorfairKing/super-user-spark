@@ -22,6 +22,7 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
                                      isSymbolicLink, readSymbolicLink)
 import           System.Process     (system)
 
+import           Compiler.Types
 import           Deployer.Types
 import           Formatter          (formatPostDeployments,
                                      formatPreDeployments)
