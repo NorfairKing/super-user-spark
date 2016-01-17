@@ -1,42 +1,35 @@
 card main {
-
-    spark card configs
-    spark card scripts
-
+  spark card configs
+  spark card poems
 }
 
 card configs {
+  spark file bash.sus bash
 
-    alternatives super-laptop shared
+  alternatives super-laptop shared
+  into ~
 
-    into ~
+  {
+    outof zsh
 
-    spark file bash.sus bash
+    .zshrc
+    .zshenv
+    .zlogin
+  }
 
-    {
-        outof zsh
-
-        zshrc           -> .zshrc
-        zshenv          -> .zshenv
-        zlogin          -> .zlogin
-        
-    }
-
-    vim -> .vim
-
+  vim -> .vim
 }
 
-card scripts {
+card poems {
+  outof poems
+  into poems
+  {
+    kind copy
 
-    outof scripts
-    {
-        into /usr
-        {
-            into bin
-            kind copy
-
-            "cle an" -> clean
-        }
-    }
-
+    "A windows file with spaces.txt" -> clean
+  }
+  {
+    kind link
+    "
+  }
 }
