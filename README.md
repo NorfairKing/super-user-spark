@@ -1,4 +1,5 @@
 # Super User Spark
+[![Build Status](https://travis-ci.org/NorfairKing/super-user-spark.svg)](https://travis-ci.org/NorfairKing/super-user-spark)
 
 A safe way to never worry about your beautifully configured system again
 
