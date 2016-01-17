@@ -2,6 +2,7 @@
 module Types
     (
       module Types
+    , module SubTypes
     , module Control.Monad.Except
     , module Control.Monad.IO.Class
     , module Control.Monad.Reader
@@ -34,67 +35,10 @@ import           Text.Parsec            (ParseError)
 
 import           Constants
 
----[ Cards ]---
-type CardName = String
-type Source = FilePath
-type Destination = FilePath
-type Directory = FilePath
-
-data Card = Card {
-        card_name    :: CardName
-    ,   card_path    :: FilePath
-    ,   card_content :: Declaration
-    } deriving (Show, Eq)
-
----[ Declarations ]---
-data DeploymentKind = LinkDeployment
-                    | CopyDeployment
-    deriving (Show, Eq)
-
-instance Binary DeploymentKind where
-    put LinkDeployment = B.put True
-    put CopyDeployment = B.put False
-    get = do
-        b <- B.get :: Get Bool
-        return $ if b
-        then LinkDeployment
-        else CopyDeployment
-
-instance Read DeploymentKind where
-    readsPrec _ "link" = [(LinkDeployment,"")]
-    readsPrec _ "copy" = [(CopyDeployment,"")]
-    readsPrec _ _ = []
-
-instance FromJSON DeploymentKind where
-    parseJSON (String "link") = return LinkDeployment
-    parseJSON (String "copy") = return CopyDeployment
-    parseJSON _ = mzero
-
-instance ToJSON DeploymentKind where
-    toJSON LinkDeployment = String "link"
-    toJSON CopyDeployment = String "copy"
-
-
-
-data Declaration = SparkOff CardReference
-                 | Deploy Source Destination (Maybe DeploymentKind)
-                 | IntoDir Directory
-                 | OutofDir Directory
-                 | DeployKindOverride DeploymentKind
-                 | Alternatives [Directory]
-                 | Block [Declaration]
-    deriving (Show, Eq)
+import           Parser.Types
+import           SubTypes
 
 ---[ Card References ]--
-
--- Reference a card by name.
-data CardNameReference = CardNameReference CardName
-    deriving (Show, Eq)
-
--- Reference a card by the file it's in and therein potentially by a name reference
-data CardFileReference = CardFileReference FilePath (Maybe CardNameReference)
-    deriving (Show, Eq)
-
 type CompilerCardReference = CardFileReference
 
 type CompiledCardReference = FilePath
@@ -123,10 +67,6 @@ instance Read DeployerCardReference where
                             in [(DeployerCardUncompiled (CardFileReference f (Just $ CardNameReference c)), "")]
                       _ -> []
 
-
-data CardReference = CardFile CardFileReference
-                   | CardName CardNameReference
-    deriving (Show, Eq)
 
 ---[ Base monad ]---
 

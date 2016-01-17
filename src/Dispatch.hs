@@ -4,6 +4,7 @@ import           Compiler
 import           Deployer
 import           Formatter
 import           Parser
+import           Parser.Types
 import           Types
 
 dispatch :: Dispatch -> Sparker ()

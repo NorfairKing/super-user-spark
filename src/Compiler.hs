@@ -13,6 +13,7 @@ import           System.Directory           (getCurrentDirectory,
 import           System.FilePath            (normalise, takeDirectory, (</>))
 
 import qualified Parser                     as P
+import           Parser.Types
 import           Types
 import           Utils
 
