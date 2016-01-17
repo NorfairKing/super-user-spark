@@ -266,11 +266,12 @@ inQuotes :: Parser a -> Parser a
 inQuotes = between (char quotesChar) (char quotesChar)
 
 delim :: Parser ()
-delim = try (skip $ string lineDelimiter) <|> go
+delim = skip $ try (string lineDelimiter) <|> go
   where
     go = do
-        eol
-        whitespace
+        e <- eol
+        ws <- whitespace
+        return $ e ++ ws
 
 
 --[ Whitespace ]--
@@ -281,11 +282,11 @@ inLineSpace = between linespace linespace
 inWhiteSpace :: Parser a -> Parser a
 inWhiteSpace = between whitespace whitespace
 
-linespace :: Parser ()
-linespace = skip $ many $ oneOf linespaceChars
+linespace :: Parser String
+linespace = many $ oneOf linespaceChars
 
-whitespace :: Parser ()
-whitespace = skip $ many $ oneOf whitespaceChars
+whitespace :: Parser String
+whitespace = many $ oneOf whitespaceChars
 
 eol :: Parser ()
 eol =  skip newline
