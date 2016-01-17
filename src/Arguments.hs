@@ -4,6 +4,9 @@ import           Data.Monoid         (mconcat)
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
+import           Deployer.Types
+import           Dispatch.Types
+import           Monad
 import           Types
 import           Utils
 

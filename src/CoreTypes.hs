@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module SubTypes where
+module CoreTypes where
 
 import           Control.Monad (mzero)
 import           Data.Aeson    (FromJSON (..), ToJSON (..), Value (..), object,
@@ -19,8 +19,8 @@ instance Binary DeploymentKind where
     get = do
         b <- B.get :: Get Bool
         return $ if b
-        then LinkDeployment
-        else CopyDeployment
+            then LinkDeployment
+            else CopyDeployment
 
 instance Read DeploymentKind where
     readsPrec _ "link" = [(LinkDeployment,"")]

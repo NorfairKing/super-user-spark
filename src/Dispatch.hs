@@ -2,6 +2,8 @@ module Dispatch where
 
 import           Compiler
 import           Deployer
+import           Deployer.Types
+import           Dispatch.Types
 import           Formatter
 import           Parser
 import           Parser.Types

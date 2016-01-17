@@ -5,7 +5,6 @@ BIN = $(NAME)
 GHC = ghc
 GHC_OPTIMISATION = -O2
 GHC_FLAGS = 	-fwarn-unused-imports \
-				-fforce-recomp \
 				-fwarn-incomplete-patterns \
 				-Wall \
 				-fno-warn-unused-do-bind \
@@ -25,6 +24,9 @@ all: bin
 	
 bin:
 	$(GHC) $(GHC_OPTIONS) -o $(BIN) --make $(SRC)
+
+thorough:
+	$(GHC) $(GHC_OPTIONS) -fforce-recomp -o $(BIN) --make $(SRC)
 
 love:
 	@echo "not war"

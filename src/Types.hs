@@ -2,7 +2,10 @@
 module Types
     (
       module Types
-    , module SubTypes
+    , module CoreTypes
+    , module Monad
+    , module Config.Types
+
     , module Control.Monad.Except
     , module Control.Monad.IO.Class
     , module Control.Monad.Reader
@@ -21,7 +24,6 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
                                          runStateT)
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
-import           System.FilePath.Posix  (takeExtension)
 
 import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..),
                                          object, (.:), (.=))
@@ -35,19 +37,15 @@ import           Text.Parsec            (ParseError)
 
 import           Constants
 
+import           Config.Types
+import           CoreTypes
+import           Monad
 import           Parser.Types
-import           SubTypes
 
 ---[ Card References ]--
 type CompilerCardReference = CardFileReference
 
 type CompiledCardReference = FilePath
-
-data DeployerCardReference = DeployerCardCompiled CompiledCardReference
-                           | DeployerCardUncompiled CardFileReference
-    deriving (Show, Eq)
-
-type CheckerCardReference = DeployerCardReference
 
 instance Read CardFileReference where
     readsPrec _ fp = case length (words fp) of
@@ -56,25 +54,7 @@ instance Read CardFileReference where
                             in [(CardFileReference f (Just $ CardNameReference c), "")]
                       _ -> []
 
--- TODO refactor these
-instance Read DeployerCardReference where
-    readsPrec _ fp = case length (words fp) of
-                      0 -> []
-                      1 -> if takeExtension fp == ".sus"
-                            then [(DeployerCardUncompiled (CardFileReference fp Nothing) ,"")]
-                            else [(DeployerCardCompiled fp, "")]
-                      2 -> let [f, c] = words fp
-                            in [(DeployerCardUncompiled (CardFileReference f (Just $ CardNameReference c)), "")]
-                      _ -> []
-
-
----[ Base monad ]---
-
-type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
-
 ---[ Options ]---
-
-type Options = (Dispatch, GlobalOptions)
 
 data GlobalOptions = GlobalOptions {
     opt_lineUp              :: Bool
@@ -93,73 +73,6 @@ data GlobalOptions = GlobalOptions {
   , opt_replace             :: Bool
   , opt_debug               :: Bool
   } deriving (Show, Eq)
-
----[ Instructions ]--
-type Instructions = (Dispatch, SparkConfig)
-
----[ Config ]---
-
-data SparkConfig = Config {
-        conf_format_lineUp              :: Bool
-    ,   conf_format_indent              :: Int
-    ,   conf_format_trailingNewline     :: Bool
-    ,   conf_format_alwaysQuote         :: Bool
-    ,   conf_format_oneLine             :: Bool
-    ,   conf_compile_output             :: Maybe FilePath
-    ,   conf_compile_format             :: CompileFormat
-    ,   conf_compile_kind               :: Maybe DeploymentKind
-    ,   conf_compile_override           :: Maybe DeploymentKind
-    ,   conf_check_thoroughness         :: CheckThoroughness
-    ,   conf_deploy_replace_links       :: Bool
-    ,   conf_deploy_replace_files       :: Bool
-    ,   conf_deploy_replace_directories :: Bool
-    ,   conf_debug                      :: Bool
-    } deriving (Show, Eq)
-
-
-data CompileFormat = FormatBinary
-                   | FormatText
-                   | FormatJson
-                   | FormatStandalone
-    deriving (Show, Eq)
-
-instance Read CompileFormat where
-    readsPrec _ "binary"     = [(FormatBinary,"")]
-    readsPrec _ "text"       = [(FormatText,"")]
-    readsPrec _ "json"       = [(FormatJson,"")]
-    readsPrec _ "standalone" = [(FormatStandalone,"")]
-    readsPrec _ _ = []
-
-data CheckThoroughness = ThoroughnessName
-                       | ThoroughnessChecksum
-                       | ThoroughnessContent
-    deriving (Show, Eq)
-
-instance Read CheckThoroughness where
-    readsPrec _ "name"       = [(ThoroughnessName,"")]
-    readsPrec _ "checksum"   = [(ThoroughnessChecksum,"")]
-    readsPrec _ "content"    = [(ThoroughnessContent,"")]
-    readsPrec _ _ = []
-
-
-data SparkError = ParseError ParseError
-                | CompileError CompileError
-                | DeployError DeployError
-                | UnpredictedError String
-    deriving Show
-
-runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
-runSparker conf func = runReaderT (runExceptT func) conf
-
----[ Dispatching ]---
-
-data Dispatch = DispatchParse FilePath
-              | DispatchFormat FilePath
-              | DispatchCompile CompilerCardReference
-              | DispatchCheck CheckerCardReference
-              | DispatchDeploy DeployerCardReference
-    deriving (Show, Eq)
-
 
 ---[ Compiling Types ]---
 data Deployment = Put {
@@ -224,8 +137,6 @@ instance ToJSON Deployment where
 
 
 
-type CompileError = String
-
 type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
 
 type CompilerPrefix = [PrefixPart]
@@ -248,38 +159,6 @@ data CompilerState = CompilerState {
     ,   state_outof_prefix             :: CompilerPrefix
     } deriving (Show, Eq)
 
-
-
----[ Deploying Types ]---
-
-type SparkDeployer = StateT DeployerState Sparker
-data DeployerState = DeployerState
-data DeployError = PreDeployError [String]
-                 | DuringDeployError [String]
-                 | PostDeployError [String]
-    deriving (Show, Eq)
-
-runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
-runSparkDeployer state func = runStateT func state
-
-data Diagnostics = NonExistent
-                 | IsFile Permissions
-                 | IsDirectory Permissions
-                 | IsLink Permissions
-                 | IsPipe
-                 | IsSocket
-                 | IsCharDevice
-                 | IsBlockDevice
-    deriving (Show, Eq)
-
-data PreDeployment = Ready FilePath FilePath DeploymentKind
-                   | AlreadyDone
-                   | Error String
-    deriving (Show, Eq)
-
-data ID = Plain String
-        | Var String
-    deriving (Show, Eq)
 
 
 ---[ Pretty Types ]---

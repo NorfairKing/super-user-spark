@@ -22,8 +22,10 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
                                      isSymbolicLink, readSymbolicLink)
 import           System.Process     (system)
 
+import           Deployer.Types
 import           Formatter          (formatPostDeployments,
                                      formatPreDeployments)
+import           Monad
 import           Types
 import           Utils
 

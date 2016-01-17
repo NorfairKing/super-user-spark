@@ -6,6 +6,7 @@ import           Text.Parsec.String
 import           Data.List          (find, isSuffixOf)
 
 import           Constants
+import           Deployer.Types
 import           Parser.Types
 import           Types
 
