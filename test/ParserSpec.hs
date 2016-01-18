@@ -3,7 +3,7 @@ module ParserSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Data.Either        (isRight)
+import           Data.Either        (isLeft, isRight)
 
 import           Text.Parsec
 import           Text.Parsec.String
@@ -11,56 +11,122 @@ import           Text.Parsec.String
 import           Parser
 import           Parser.Types
 
-parseSucceeds :: (Show a, Eq a) => Parser a -> String -> IO ()
-parseSucceeds parser input = parseWithoutSource parser input `shouldSatisfy` isRight
+shouldSucceed :: (Show a, Eq a) => Parser a -> String -> IO ()
+shouldSucceed parser input = input `shouldSatisfy` succeeds parser
+
+shouldFail :: (Show a, Eq a) => Parser a -> String -> IO ()
+shouldFail parser input = input `shouldNotSatisfy` succeeds parser
+
+succeeds :: (Show a, Eq a) => Parser a -> String -> Bool
+succeeds parser input = isRight $ parseWithoutSource (parser >> eof) input
+
+fails :: (Show a, Eq a) => Parser a -> String -> Bool
+fails parser input = not $ succeeds parser input
+
+parseShouldSucceedAs :: (Show a, Eq a) => Parser a -> String -> a -> IO ()
+parseShouldSucceedAs parser input a = parseFromSource parser (show input) input `shouldBe` Right a
 
 parseShouldBe :: (Show a, Eq a) => Parser a -> String -> Either ParseError a -> IO ()
-parseShouldBe parser input result = parseWithoutSource parser input `shouldBe` result
+parseShouldBe parser input result = parseFromSource parser (show input) input `shouldBe` result
 
 parseWithoutSource :: Parser a -> String -> Either ParseError a
 parseWithoutSource parser input = parseFromSource parser "Test input" input
 
+generateLetter :: Gen Char
+generateLetter = elements $ ['a'..'z'] ++ ['A'..'Z']
+
+generateTab :: Gen Char
+generateTab = return '\t'
+
+generateSpace :: Gen Char
+generateSpace = return ' '
+
+generateLineFeed :: Gen Char
+generateLineFeed= return '\n'
+
+generateCarriageReturn :: Gen Char
+generateCarriageReturn= return '\r'
+
+generateLineSpace :: Gen String
+generateLineSpace = listOf $ oneof [generateTab, generateSpace]
+
+generateWhiteSpace :: Gen String
+generateWhiteSpace = listOf $ oneof [generateTab, generateSpace, generateLineFeed, generateCarriageReturn]
+
 spec :: Spec
 spec = do
     describe "eol" $ do
-        let t = parseSucceeds eol
+        let s = shouldSucceed eol
         it "succeeds for Linux line endings" $ do
-            t "\n"
+            s "\n"
         it "succeeds for Windows line endings" $ do
-            t "\r\n"
+            s "\r\n"
         it "succeeds for Mac line endings" $ do
-            t "\r"
+            s "\r"
+
+        let f = shouldFail eol
+        it "fails for the empty string" $ do
+            f ""
+
+        let mf c = property $ (\i -> f $ replicate i c)
+        it "fails for spaces" $ do
+            property $ forAll (listOf generateSpace) (\ss -> f ss)
+        it "fails for tabs" $ do
+            property $ forAll (listOf generateTab) (\ss -> f ss)
+        it "fails for linespace" $ do
+            property $ forAll generateLineSpace (\ls -> f ls)
 
     describe "linespace" $ do
-        let t = parseSucceeds whitespace
-            m c = property $ (\i -> t $ replicate i c)
+        let s = shouldSucceed whitespace
         it "succeeds for spaces" $ do
-            m ' '
+            property $ forAll (listOf generateSpace) s
         it "succeeds for tabs" $ do
-            m '\t'
+            property $ forAll (listOf generateTab) s
         it "succeeds for mixtures of spaces and tabs" $ do
-            t " \t"
-            t "\t "
-            t "\t  \t\t\t  \t\t \t"
+            property $ forAll generateLineSpace s
 
+        let f = shouldSucceed whitespace
+        it "fails for line ending characters" $ do
+            property $ forAll (listOf $ oneof [generateCarriageReturn, generateLineFeed]) f
+        it "fails for any non-linespace, even if there's linespace in it" $  do
+            property $ forAll (listOf1 generateLetter) (\ls ->
+                        forAll generateLineSpace (\ls1 ->
+                         forAll generateLineSpace (\ls2 ->
+                            shouldFail linespace (ls1 ++ ls ++ ls2))))
 
 
     describe "whitespace" $ do
-        let t = parseSucceeds whitespace
-            m c = property $ (\i -> t $ replicate i c)
+        let s = shouldSucceed whitespace
         it "succeeds for spaces" $ do
-            m ' '
+            property $ forAll (listOf generateSpace) s
         it "succeeds for tabs" $ do
-            m '\t'
+            property $ forAll (listOf generateTab) s
         it "succeeds carriage returns" $ do
-            m '\r'
+            property $ forAll (listOf generateCarriageReturn) s
         it "succeeds line feeds" $ do
-            m '\n'
+            property $ forAll (listOf generateLineFeed) s
         it "succeeds for mixtures of spaces, tabs, carriage returns and line feeds" $ do
-            t "\n\r"
-            t " \t\n\r"
-            t " \t \n \r\n\t\t\t  \n\n\r\n"
+            property $ forAll generateWhiteSpace s
+
+        it "fails for any non-whitespace, even if there's whitespace in it" $  do
+            property $ forAll (listOf1 generateLetter) (\ls ->
+                        forAll generateWhiteSpace (\ws1 ->
+                         forAll generateWhiteSpace (\ws2 ->
+                            shouldFail whitespace (ws1 ++ ls ++ ws2))))
 
 
+    describe "inLineSpace" $ do
+        it "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
+            property $
+                forAll generateLineSpace (\ws1 ->
+                  forAll generateLineSpace (\ws2 ->
+                    forAll (listOf1 generateLetter) (\ls ->
+                        parseShouldSucceedAs (inLineSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
 
-
+    describe "inWhiteSpace" $ do
+        it "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
+            property $
+                forAll generateWhiteSpace (\ws1 ->
+                  forAll generateWhiteSpace (\ws2 ->
+                    forAll (listOf1 generateLetter) (\ls ->
+                        parseShouldSucceedAs (inWhiteSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
