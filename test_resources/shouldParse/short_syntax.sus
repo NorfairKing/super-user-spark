@@ -1,0 +1,11 @@
+card "bash" {
+  into ~
+
+  # Without the dot shortcut
+  test.txt
+  file
+  
+  # With the dot shortcut
+  .bashrc
+  .bash_aliases 
+}

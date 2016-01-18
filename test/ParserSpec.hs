@@ -3,10 +3,14 @@ module ParserSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Data.Either        (isLeft, isRight)
+import           Control.Monad         (forM, forM_)
+import           Data.Either           (isLeft, isRight)
 
 import           Text.Parsec
 import           Text.Parsec.String
+
+import           System.Directory      (getDirectoryContents)
+import           System.FilePath.Posix ((<.>), (</>))
 
 import           Parser
 import           Parser.Types
@@ -147,3 +151,26 @@ spec = do
         it "succeeds on an eol" $ do
             once $ forAll (arbitrary `suchThat` succeeds eol) (shouldSucceed delim)
 
+
+    let tr = "test_resources"
+    describe "positive black box parse tests" $ do
+        let dirs = map (tr </>) ["shouldParse", "shouldCompile", "shouldNotCompile"]
+        forFiles dirs $ \f -> do
+            it (f ++ " correctly gets parsed succesfully") $ do
+                contents <- readFile $ f
+                parseFromSource sparkFile f contents `shouldSatisfy` isRight
+
+    describe "negative black box parse tests" $ do
+        let dir = tr </> "shouldNotParse"
+        forFiles [dir] $ \f -> do
+            it (f ++ " correctly gets parsed unsuccesfully") $ do
+                contents <- readFile f
+                parseFromSource sparkFile f contents `shouldSatisfy` isLeft
+
+forFiles :: [FilePath] -> (FilePath -> SpecWith a) -> SpecWith a
+forFiles dirs func = do
+    allFiles <- fmap concat $ forM dirs $ \dir -> do
+        files <- runIO (getDirectoryContents dir)
+        let ffiles = filter (`notElem` [".", ".."]) files
+        return $ map (dir </>) ffiles
+    forM_ allFiles func
