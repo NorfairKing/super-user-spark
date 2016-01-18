@@ -130,3 +130,20 @@ spec = do
                   forAll generateWhiteSpace (\ws2 ->
                     forAll (listOf1 generateLetter) (\ls ->
                         parseShouldSucceedAs (inWhiteSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
+
+    describe "inBraces" $ do
+        it "succeeds for cases where we enclose braces around a string without braces" $ do
+            forAll (listOf1 arbitrary `suchThat` (\c -> c /= "{" && c /= "}")) (\word ->
+                parseShouldSucceedAs (inBraces $ string word) ("{" ++ word ++ "}") word)
+
+    describe "inQuotes" $ do
+        it "succeeds for cases where we enclose quotes around a string without quotes" $ do
+            forAll (listOf1 arbitrary `suchThat` (/= "\"")) (\word ->
+                parseShouldSucceedAs (inQuotes $ string word) ("\"" ++ word ++ "\"") word)
+
+    describe "delim" $ do
+        it "succeeds on a semicolon" $ do
+            shouldSucceed delim ";"
+        it "succeeds on an eol" $ do
+            once $ forAll (arbitrary `suchThat` succeeds eol) (shouldSucceed delim)
+

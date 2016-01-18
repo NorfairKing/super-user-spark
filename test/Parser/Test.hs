@@ -287,23 +287,3 @@ test_quotedIdentifier_fail    = parseFails quotedIdentifier $
     ,   "a\"", "abc\""
     ]
 
-
-
---[ Delimiters ]--
-
-test_inBraces_letter        = parserTest (inBraces plainIdentifier) "a" "{a}"
-test_inBraces_word          = parserTest (inBraces plainIdentifier) "abc" "{abc}"
-
-test_inQuotes_letter        = parserTest (inQuotes plainIdentifier) "a" "\"a\""
-test_inQuotes_word          = parserTest (inQuotes plainIdentifier) "abc" "\"abc\""
-
-
-test_delim = parseItselfs delim $
-    [
-        ";"
-    ,   "\n"
-    ,   "\r"
-    ,   "\n\r"
-    ,   "\r\n"
-    ,   "\n\r  \t \n\t \n"
-    ]
