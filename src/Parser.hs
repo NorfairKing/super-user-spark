@@ -34,6 +34,7 @@ parseFromSource = parse
 
 --[ Language ]--
 
+-- TODO type alias for spark file
 sparkFile :: Parser [Card]
 sparkFile = do
     clean <- eatComments
@@ -64,9 +65,6 @@ card = do
     whitespace
     fp <- getFile
     return $ Card name fp b
-
-cardName :: Parser CardName
-cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim
@@ -127,6 +125,8 @@ cardNameReference = do
     return $ CardNameReference name
     <?> "card name reference"
 
+cardName :: Parser CardName
+cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
