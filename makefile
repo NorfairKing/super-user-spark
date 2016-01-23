@@ -34,6 +34,9 @@ build:
 test:
 	stack test
 
+install:
+	stack install
+
 pedantic:
 	stack clean
 	stack build \
@@ -50,6 +53,7 @@ pedantic:
         -fwarn-unused-do-bind \
         -fno-warn-name-shadowing \
         -fno-warn-orphans"
+
 
 love:
 	@echo "not war"
