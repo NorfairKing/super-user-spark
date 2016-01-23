@@ -10,8 +10,9 @@ import           Text.Parsec.String
 
 import           System.FilePath.Posix ((</>))
 
+import           CoreTypes
 import           Parser
---import           Parser.Types
+import           Parser.Types
 
 import           TestUtils
 
@@ -27,14 +28,18 @@ succeeds parser input = isRight $ parseWithoutSource (parser >> eof) input
 fails :: (Show a, Eq a) => Parser a -> String -> Bool
 fails parser input = not $ succeeds parser input
 
+testInputSource :: String
+testInputSource = "Test input"
+
 parseShouldSucceedAs :: (Show a, Eq a) => Parser a -> String -> a -> IO ()
-parseShouldSucceedAs parser input a = parseFromSource parser (show input) input `shouldBe` Right a
+parseShouldSucceedAs parser input a = parseFromSource parser testInputSource input `shouldBe` Right a
 
 parseShouldBe :: (Show a, Eq a) => Parser a -> String -> Either ParseError a -> IO ()
-parseShouldBe parser input result = parseFromSource parser (show input) input `shouldBe` result
+parseShouldBe parser input result = parseFromSource parser testInputSource input `shouldBe` result
+
 
 parseWithoutSource :: Parser a -> String -> Either ParseError a
-parseWithoutSource parser input = parseFromSource parser "Test input" input
+parseWithoutSource parser input = parseFromSource parser testInputSource input
 
 generateLetter :: Gen Char
 generateLetter = elements $ ['a'..'z'] ++ ['A'..'Z']
@@ -218,10 +223,54 @@ pathParserTests = do
     describe "directory" $ do
         pend
 
+twice gen = (,) <$> gen <*> gen
+
+trice gen = (,,) <$> gen <*> gen <*> gen
+
+generateCardName = generateWord
+
 declarationParserTests :: Spec
 declarationParserTests = do
     describe "card" $ do
-        pend
+        let pc = parseShouldSucceedAs card
+        it "Succeeds on this card with an empty name correctly" $ do
+            pc "card \"\" {}" $ Card "" testInputSource (Block [])
+
+        it "Succeeds on this compressed empty cards" $ do
+            forAll generateCardName $ \n ->
+                parseShouldSucceedAs card ("card" ++ n ++ "{}") $ Card n testInputSource (Block [])
+
+        it "Succeeds on empty cards with whitespace around the name" $ do
+            forAll generateCardName $ \n ->
+                forAll (twice generateWhiteSpace) $ \(ws1, ws2) ->
+                    parseShouldSucceedAs card ("card" ++ ws1 ++ n ++ ws2 ++ "{}") $ Card n testInputSource (Block [])
+
+        it "Succeeds on empty cards with whitespace between the brackets" $ do
+            forAll generateCardName $ \n ->
+                forAll generateWhiteSpace $ \ws ->
+                    parseShouldSucceedAs card ("card" ++ n ++ "{" ++ ws ++ "}") $ Card n testInputSource (Block [])
+
+        it "Fails on any card with an empty body" $ do
+            forAll generateCardName $ \n ->
+                forAll generateWhiteSpace $ \ws ->
+                    shouldFail card ("card" ++ n ++ ws)
+
+        it "Succeeds on this complicated example" $ do
+            parseShouldSucceedAs card ("card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}")
+                $ Card "complicated" testInputSource $ Block
+                    [
+                      Alternatives ["$(HOST)", "shared"]
+                    , Deploy "hello" "goodbye" (Just LinkDeployment)
+                    , IntoDir "$(HOME)"
+                    , OutofDir "depot"
+                    , SparkOff (CardName (CardNameReference "othercard"))
+                    , DeployKindOverride LinkDeployment
+                    , Block [
+                              Deploy "one" "more" (Just CopyDeployment)
+                            , Deploy "source" "destination" Nothing
+                            , Deploy "file" "file" Nothing
+                            ]
+                    ]
 
     describe "declarations" $ do
         pend

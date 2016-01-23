@@ -44,52 +44,6 @@ parseFails p strs = sequence_ $ map (parseFail p) strs
 
 
 --[ Language ]--
-
-test_card_empty = parserTests card $
-    [
-        (Card "" testFileName (Block []), [
-              "card \"\" {}"
-            ]
-        )
-    ,   (Card "hi" testFileName (Block []), [
-              "card hi {}"
-            , "card \"hi\" {}"
-            , "card \nhi\n{}"
-            ]
-        )
-    ,   (Card "something spaced" testFileName (Block []), [
-              "card \"something spaced\" {}"
-            , "  card   \"something spaced\" {\n}"
-            , " \t \n card \n\r  \"something spaced\" \t\n{\n\r}"
-            ]
-        )
-    ]
-
-test_card_complicated = parserTests card $
-    [
-        (myCard,
-            [
-                "card testcard {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}"
-            ]
-        )
-    ]
-  where
-    myCard = Card "testcard" testFileName $ Block
-                [
-                  Alternatives ["$(HOST)", "shared"]
-                , Deploy "hello" "goodbye" (Just LinkDeployment)
-                , IntoDir "$(HOME)"
-                , OutofDir "depot"
-                , SparkOff (CardName (CardNameReference "othercard"))
-                , DeployKindOverride LinkDeployment
-                , Block [
-                          Deploy "one" "more" (Just CopyDeployment)
-                        , Deploy "source" "destination" Nothing
-                        , Deploy "file" "file" Nothing
-                        ]
-                ]
-
-
 test_Block = parserTests block $
     [
         (Block [IntoDir "~", Deploy "bashrc" ".bashrc" Nothing],
