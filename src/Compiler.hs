@@ -125,12 +125,12 @@ resolvePrefix [] = []
 resolvePrefix [Literal s] = [s]
 resolvePrefix [Alts ds] = ds
 resolvePrefix ((Literal s):ps) = do
-  rest <- resolvePrefix ps
-  return $ s </> rest
+    rest <- resolvePrefix ps
+    return $ s </> rest
 resolvePrefix ((Alts as):ps) = do
-  a <- as
-  rest <- resolvePrefix ps
-  return $ a </> rest
+    a <- as
+    rest <- resolvePrefix ps
+    return $ a </> rest
 
 sources :: FilePath -> PrefixPart
 sources fp@('.':f) = Alts [fp, f]
@@ -138,8 +138,8 @@ sources fp = Literal fp
 
 stripHome :: FilePath -> SparkCompiler FilePath
 stripHome fp = do
-  home <- liftIO $ getHomeDirectory
-  return $ case home `stripPrefix` fp of
+    home <- liftIO $ getHomeDirectory
+    return $ case home `stripPrefix` fp of
                 Nothing -> fp
                 Just stripped -> "~" ++ stripped
 

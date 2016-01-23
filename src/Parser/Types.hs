@@ -1,12 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Parser.Types where
 
-import           Control.Monad (mzero)
 import           CoreTypes
-import           Data.Aeson    (FromJSON (..), ToJSON (..), Value (..), object,
-                                (.:), (.=))
-import           Data.Binary   (Binary (..), Get)
-import qualified Data.Binary   as B
 
 -- * Cards
 

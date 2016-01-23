@@ -301,17 +301,15 @@ cardReferenceParserTests = do
 parserBlackBoxTests :: Spec
 parserBlackBoxTests = do
     let tr = "test_resources"
-    describe "positive black box parse tests" $ do
+    describe "Correct succesful parse examples" $ do
         let dirs = map (tr </>) ["shouldParse", "shouldCompile", "shouldNotCompile"]
         forFileInDirss dirs $ concerningContents $ \f contents -> do
-            it (f ++ " correctly gets parsed succesfully") $ do
-                parseFromSource sparkFile f contents `shouldSatisfy` isRight
+            it f $ parseFromSource sparkFile f contents `shouldSatisfy` isRight
 
-    describe "negative black box parse tests" $ do
+    describe "Correct unsuccesfull parse examples" $ do
         let dirs = map (tr </>) ["shouldNotParse"]
         forFileInDirss dirs $ concerningContents $ \f contents -> do
-            it (f ++ " correctly gets parsed unsuccesfully") $
-                parseFromSource sparkFile f contents `shouldSatisfy` isLeft
+            it f $ parseFromSource sparkFile f contents `shouldSatisfy` isLeft
 
 
 

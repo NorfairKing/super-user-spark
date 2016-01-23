@@ -2,8 +2,7 @@
 module CoreTypes where
 
 import           Control.Monad (mzero)
-import           Data.Aeson    (FromJSON (..), ToJSON (..), Value (..), object,
-                                (.:), (.=))
+import           Data.Aeson    (FromJSON (..), ToJSON (..), Value (..))
 
 import           Data.Binary   (Binary (..), Get)
 import qualified Data.Binary   as B

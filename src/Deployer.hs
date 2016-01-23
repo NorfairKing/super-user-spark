@@ -2,6 +2,7 @@
 
 module Deployer where
 
+import           Control.Monad      (void)
 import           Data.List          (isPrefixOf, sort)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
@@ -53,7 +54,7 @@ deployAll deps = do
 
     case catErrors pdps of
         [] -> do
-            deployments pdps
+            void $ deployments pdps
             postdeployments deps pdps
 
         ss -> throwError $ DeployError $ PreDeployError ss

@@ -57,7 +57,7 @@ getFile = do
 card :: Parser Card
 card = do
     whitespace
-    string keywordCard
+    skip $ string keywordCard
     whitespace
     name <- cardName
     whitespace
@@ -89,7 +89,7 @@ block = do
 
 sparkOff :: Parser Declaration
 sparkOff = do
-    string keywordSpark
+    skip $ string keywordSpark
     linespace
     ref <- cardReference
     return $ SparkOff ref
@@ -106,7 +106,7 @@ deployerCardReference = goComp <|> goUncomp
 
 compiledCardReference :: Parser CompiledCardReference
 compiledCardReference = do
-    string "compiled"
+    skip $ string "compiled"
     skip linespace
     fp <- filepath
     return fp
@@ -119,7 +119,7 @@ cardReference = try goName <|> try goFile <?> "card reference"
 
 cardNameReference :: Parser CardNameReference
 cardNameReference = do
-    string keywordCard
+    skip $ string keywordCard
     linespace
     name <- cardName
     return $ CardNameReference name
@@ -130,7 +130,7 @@ cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
-    string keywordFile
+    skip $ string keywordFile
     skip linespace
     unprefixedCardFileReference
 
@@ -146,7 +146,7 @@ unprefixedCardFileReference = do
 
 intoDir :: Parser Declaration
 intoDir = do
-    string keywordInto
+    skip $ string keywordInto
     linespace
     dir <- directory
     return $ IntoDir dir
@@ -154,7 +154,7 @@ intoDir = do
 
 outOfDir :: Parser Declaration
 outOfDir = do
-    string keywordOutof
+    skip $ string keywordOutof
     linespace
     dir <- directory
     return $ OutofDir dir
@@ -162,7 +162,7 @@ outOfDir = do
 
 deploymentKindOverride :: Parser Declaration
 deploymentKindOverride = do
-    string keywordKindOverride
+    skip $ string keywordKindOverride
     linespace
     kind <- try copy <|> link
     return $ DeployKindOverride kind
@@ -199,7 +199,7 @@ deploymentKind = try link <|> try copy <|> def
 
 alternatives :: Parser Declaration
 alternatives = do
-    string keywordAlternatives
+    skip $ string keywordAlternatives
     linespace
     ds <- directory `sepBy1` linespace
     return $ Alternatives ds
@@ -241,11 +241,11 @@ notComment = manyTill anyChar (lookAhead ((skip comment) <|> eof))
 
 eatComments :: Parser String
 eatComments = do
-  optional comment
-  xs <- notComment `sepBy` comment
-  optional comment
-  let withoutComments = concat xs
-  return withoutComments
+    optional comment
+    xs <- notComment `sepBy` comment
+    optional comment
+    let withoutComments = concat xs
+    return withoutComments
 
 
 --[ Identifiers ]--

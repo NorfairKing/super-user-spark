@@ -1,6 +1,5 @@
 module Dispatch.Types where
 
-import           Monad
 import           Types
 
 import           Deployer.Types

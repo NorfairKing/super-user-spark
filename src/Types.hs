@@ -15,8 +15,6 @@ module Types
     , module Text.Parsec
     ) where
 
-import           Control.Applicative
-import           Control.Monad          (mzero)
 import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
@@ -25,17 +23,7 @@ import           Control.Monad.State    (StateT, get, gets, modify, put,
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (WriterT, runWriterT, tell)
 
-import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..),
-                                         object, (.:), (.=))
-
-import           Data.Binary            (Binary (..), Get)
-import qualified Data.Binary            as B
-import           Data.ByteString        (ByteString)
-import           Data.ByteString.Char8  (pack, unpack)
-import           System.Directory       (Permissions (..))
 import           Text.Parsec            (ParseError)
-
-import           Constants
 
 import           Config.Types
 import           CoreTypes
@@ -57,22 +45,22 @@ instance Read CardFileReference where
 ---[ Options ]---
 
 data GlobalOptions = GlobalOptions {
-    opt_lineUp              :: Bool
-  , opt_indent              :: Int
-  , opt_trailingNewline     :: Bool
-  , opt_alwaysQuote         :: Bool
-  , opt_compress            :: Bool
-  , opt_output              :: Maybe FilePath
-  , opt_format              :: CompileFormat
-  , opt_kind                :: Maybe DeploymentKind
-  , opt_overrride           :: Maybe DeploymentKind
-  , opt_thoroughness        :: CheckThoroughness
-  , opt_replace_links       :: Bool
-  , opt_replace_files       :: Bool
-  , opt_replace_directories :: Bool
-  , opt_replace             :: Bool
-  , opt_debug               :: Bool
-  } deriving (Show, Eq)
+      opt_lineUp              :: Bool
+    , opt_indent              :: Int
+    , opt_trailingNewline     :: Bool
+    , opt_alwaysQuote         :: Bool
+    , opt_compress            :: Bool
+    , opt_output              :: Maybe FilePath
+    , opt_format              :: CompileFormat
+    , opt_kind                :: Maybe DeploymentKind
+    , opt_overrride           :: Maybe DeploymentKind
+    , opt_thoroughness        :: CheckThoroughness
+    , opt_replace_links       :: Bool
+    , opt_replace_files       :: Bool
+    , opt_replace_directories :: Bool
+    , opt_replace             :: Bool
+    , opt_debug               :: Bool
+    } deriving (Show, Eq)
 
 ---[ Pretty Types ]---
 

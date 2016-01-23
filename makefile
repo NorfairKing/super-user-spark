@@ -27,21 +27,29 @@ GHC_OPTIONS = \
 
 
 all: bin test
-	
-bin:
-	$(GHC) $(GHC_OPTIONS) -o $(BIN) --make $(SRC)
 
-thorough:
-	$(GHC) $(GHC_OPTIONS) -fforce-recomp -o $(BIN) --make $(SRC)
+build:
+	stack build
 
-TEST_SRC = $(TEST_DIR)/MainTest.hs
-TEST_BIN = $(NAME)_test
+test:
+	stack test
 
-test: test_bin
-	./$(TEST_BIN)
-
-test_bin:
-	$(GHC) $(GHC_OPTIONS) -o $(TEST_BIN) --make $(TEST_SRC)
+pedantic:
+	stack clean
+	stack build \
+    --pedantic \
+    --fast \
+    --jobs=8 \
+    --ghc-options="\
+        -fforce-recomp \
+        -O0 \
+        -Wall \
+        -Werror \
+        -fwarn-unused-imports \
+        -fwarn-incomplete-patterns \
+        -fwarn-unused-do-bind \
+        -fno-warn-name-shadowing \
+        -fno-warn-orphans"
 
 love:
 	@echo "not war"
