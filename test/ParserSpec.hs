@@ -176,6 +176,11 @@ identifierParserTests = do
             pi "bashrc"
             pi "with spaces"
 
+    describe "identifier" $ do
+        it "succeeds for generated identifiers" $ do
+            forAll generateIdentifier $ \(e, a) ->
+                parseShouldSucceedAs identifier e a
+
 
 commentParserTests :: Spec
 commentParserTests = do
@@ -188,30 +193,30 @@ commentParserTests = do
     describe "notComment" $ do
         pend
 
-    let makeLineComment = ("#" ++) . (++ "\n")
     describe "lineComment" $ do
-        it "Succeeds for sentences starting with an \"#\" and ending in an end of line" $ do
-            pending
+        it "succeeds for generated line comments" $ do
+            forAll generateLineComment $ \(e, a) -> parseShouldSucceedAs lineComment e a
 
-    let makeBlockComment = ("[[" ++) . (++ "]]")
     describe "blockComment" $ do
-        it "Succeeds for sentences starting with a \"[[\" and ending in \"]]\"" $ do
-            pending
+        it "succeeds for generated block comments" $ do
+            forAll generateBlockComment $ \(e, a) -> parseShouldSucceedAs blockComment e a
 
     describe "comment" $ do
-        it "Succeeds for line comments" $ do
-            once $ forAll (generateWords `suchThat` (succeeds lineComment . makeLineComment)) (shouldSucceed lineComment . makeLineComment)
-        it "Succeeds for block comments" $ do
-            once $ forAll (generateWords `suchThat` (succeeds blockComment . makeBlockComment)) (shouldSucceed blockComment . makeBlockComment)
+        it "succeeds for generated line comments" $ do
+            forAll generateLineComment $ \(e, a) -> parseShouldSucceedAs comment e a
 
+        it "succeeds for generated block comments" $ do
+            forAll generateBlockComment $ \(e, a) -> parseShouldSucceedAs comment e a
 
 pathParserTests :: Spec
 pathParserTests = do
     describe "filepath" $ do
-        pend
+        it "succeeds for generated filepaths" $ do
+            forAll generateFilePath $ \(e, a) -> parseShouldSucceedAs filepath e a
 
     describe "directory" $ do
-        pend
+        it "succeeds for generated directories" $ do
+            forAll generateDirectory $ \(e, a) -> parseShouldSucceedAs directory e a
 
 declarationParserTests :: Spec
 declarationParserTests = do

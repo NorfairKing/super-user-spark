@@ -42,6 +42,9 @@ trice gen = (,,) <$> gen <*> gen <*> gen
 generateCardName :: Gen (String, String)
 generateCardName = oneof [generateQuotedIdentifier, generatePlainIdentifier]
 
+generateIdentifier :: Gen (String, String)
+generateIdentifier = oneof [generatePlainIdentifier, generateQuotedIdentifier]
+
 generateQuotedIdentifier :: Gen (String, String)
 generateQuotedIdentifier = do
     w <- generateWord
@@ -51,4 +54,34 @@ generatePlainIdentifier :: Gen (String, String)
 generatePlainIdentifier = do
     w <- generateWord
     return $ (w, w)
+
+generateFilePath :: Gen (FilePath, FilePath)
+generateFilePath = generateIdentifier
+
+generateDirectory :: Gen (FilePath, FilePath)
+generateDirectory = oneof [generateFilePath `suchThat` ((/= '/') . last . snd),  generateWithSlash]
+  where
+    generateWithSlash = do
+        (fpe, fpa) <- generatePlainIdentifier
+        return (fpe ++ "/", fpa)
+
+generateComment :: Gen (String, String)
+generateComment = oneof [generateLineComment, generateBlockComment]
+
+generateLineComment :: Gen (String, String)
+generateLineComment = do
+    ws <- generateWords
+    let ws' = "#" ++ ws ++ "\n"
+    return (ws', ws)
+
+generateBlockComment :: Gen (String, String)
+generateBlockComment = do
+    ws <- generateWords
+    let ws' = "[[" ++ ws ++ "]]"
+    return (ws', ws)
+
+
+
+
+
 

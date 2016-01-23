@@ -126,7 +126,7 @@ cardNameReference = do
     <?> "card name reference"
 
 cardName :: Parser CardName
-cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
+cardName = identifier <?> "card name"
 
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
@@ -207,7 +207,7 @@ alternatives = do
 -- [ FilePaths ]--
 
 filepath :: Parser FilePath
-filepath = try quotedIdentifier <|> plainIdentifier
+filepath = identifier <?> "Filepath"
 
 directory :: Parser Directory
 directory = do
@@ -249,6 +249,8 @@ eatComments = do
 
 
 --[ Identifiers ]--
+identifier :: Parser String
+identifier = try quotedIdentifier <|> plainIdentifier
 
 plainIdentifier :: Parser String
 plainIdentifier = many1 $ noneOf $ quotesChar : lineDelimiter ++ whitespaceChars ++ bracesChars
