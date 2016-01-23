@@ -12,6 +12,7 @@ import           System.FilePath.Posix ((</>))
 
 import           CoreTypes
 import           Parser
+import           Parser.Gen
 import           Parser.Types
 
 import           TestUtils
@@ -37,42 +38,12 @@ parseShouldSucceedAs parser input a = parseFromSource parser testInputSource inp
 parseShouldBe :: (Show a, Eq a) => Parser a -> String -> Either ParseError a -> IO ()
 parseShouldBe parser input result = parseFromSource parser testInputSource input `shouldBe` result
 
-
 parseWithoutSource :: Parser a -> String -> Either ParseError a
 parseWithoutSource parser input = parseFromSource parser testInputSource input
 
-generateLetter :: Gen Char
-generateLetter = elements $ ['a'..'z'] ++ ['A'..'Z']
-
-generateWord :: Gen String
-generateWord = listOf1 generateLetter
-
-generateTab :: Gen Char
-generateTab = return '\t'
-
-generateSpace :: Gen Char
-generateSpace = return ' '
-
-generateLineFeed :: Gen Char
-generateLineFeed= return '\n'
-
-generateCarriageReturn :: Gen Char
-generateCarriageReturn= return '\r'
-
-generateLineSpace :: Gen String
-generateLineSpace = listOf $ oneof [generateTab, generateSpace]
-
-generateWhiteSpace :: Gen String
-generateWhiteSpace = listOf $ oneof [generateTab, generateSpace, generateLineFeed, generateCarriageReturn]
-
-generateWords :: Gen String
-generateWords = fmap unwords $ listOf1 generateWord
-
-generateEol :: Gen String
-generateEol = elements ["\n", "\r", "\r\n"]
 
 spec :: Spec
-spec = do
+spec = parallel $ do
     blankspaceParserTests
     enclosingCharacterTests
     delimiterTests
@@ -128,7 +99,7 @@ blankspaceParserTests = do
         it "fails for line ending characters" $ do
             property $ forAll (listOf $ oneof [generateCarriageReturn, generateLineFeed]) f
         it "fails for any non-linespace, even if there's linespace in it" $  do
-            property $ forAll (listOf1 generateLetter) (\ls ->
+            property $ forAll (listOf1 generateNormalCharacter) (\ls ->
                         forAll generateLineSpace (\ls1 ->
                          forAll generateLineSpace (\ls2 ->
                             shouldFail linespace (ls1 ++ ls ++ ls2))))
@@ -148,7 +119,7 @@ blankspaceParserTests = do
             property $ forAll generateWhiteSpace s
 
         it "fails for any non-whitespace, even if there's whitespace in it" $  do
-            property $ forAll (listOf1 generateLetter) (\ls ->
+            property $ forAll (listOf1 generateNormalCharacter) (\ls ->
                         forAll generateWhiteSpace (\ws1 ->
                          forAll generateWhiteSpace (\ws2 ->
                             shouldFail whitespace (ws1 ++ ls ++ ws2))))
@@ -159,7 +130,7 @@ blankspaceParserTests = do
             property $
                 forAll generateLineSpace (\ws1 ->
                   forAll generateLineSpace (\ws2 ->
-                    forAll (listOf1 generateLetter) (\ls ->
+                    forAll (listOf1 generateNormalCharacter) (\ls ->
                         parseShouldSucceedAs (inLineSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
 
     describe "inWhiteSpace" $ do
@@ -167,7 +138,7 @@ blankspaceParserTests = do
             property $
                 forAll generateWhiteSpace (\ws1 ->
                   forAll generateWhiteSpace (\ws2 ->
-                    forAll (listOf1 generateLetter) (\ls ->
+                    forAll (listOf1 generateNormalCharacter) (\ls ->
                         parseShouldSucceedAs (inWhiteSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
 
 delimiterTests :: Spec
@@ -181,10 +152,29 @@ delimiterTests = do
 identifierParserTests :: Spec
 identifierParserTests = do
     describe "plainIdentifier" $ do
-        pend
+        it "succeeds for generated plain identifiers" $ do
+            forAll generatePlainIdentifier $ \(e, a) ->
+                parseShouldSucceedAs plainIdentifier e a
+
+        let pi = shouldSucceed plainIdentifier
+        it "succeeds for these examples" $ do
+            pi "bash"
+            pi "card"
+            pi ".bashrc"
+            pi "xmonad.hs"
 
     describe "quotedIdentifier" $ do
-        pend
+        it "succeeds for generated plain identifiers surrounded in quotes" $ do
+            forAll generatePlainIdentifier $ \(e, a) ->
+                parseShouldSucceedAs quotedIdentifier ("\"" ++ e ++ "\"") a
+        it "succeeds for generated quoted identifiers" $ do
+            forAll generateQuotedIdentifier $ \(e, a) ->
+                parseShouldSucceedAs quotedIdentifier e a
+
+        let pi i = parseShouldSucceedAs quotedIdentifier ("\"" ++ i ++ "\"") i
+        it "succeeds for these examples" $ do
+            pi "bashrc"
+            pi "with spaces"
 
 
 commentParserTests :: Spec
@@ -223,37 +213,35 @@ pathParserTests = do
     describe "directory" $ do
         pend
 
-twice gen = (,) <$> gen <*> gen
-
-trice gen = (,,) <$> gen <*> gen <*> gen
-
-generateCardName = generateWord
-
 declarationParserTests :: Spec
 declarationParserTests = do
+    describe "cardName" $ do
+        it "Succeeds on every card name that we generate" $ do
+            forAll generateCardName $ \(a, e) -> parseShouldSucceedAs cardName a e
+
     describe "card" $ do
         let pc = parseShouldSucceedAs card
         it "Succeeds on this card with an empty name correctly" $ do
             pc "card \"\" {}" $ Card "" testInputSource (Block [])
 
         it "Succeeds on this compressed empty cards" $ do
-            forAll generateCardName $ \n ->
-                parseShouldSucceedAs card ("card" ++ n ++ "{}") $ Card n testInputSource (Block [])
+            forAll generateCardName $ \(a, e) ->
+                parseShouldSucceedAs card ("card" ++ a ++ "{}") $ Card e testInputSource (Block [])
 
         it "Succeeds on empty cards with whitespace around the name" $ do
-            forAll generateCardName $ \n ->
+            forAll generateCardName $ \(a, e) ->
                 forAll (twice generateWhiteSpace) $ \(ws1, ws2) ->
-                    parseShouldSucceedAs card ("card" ++ ws1 ++ n ++ ws2 ++ "{}") $ Card n testInputSource (Block [])
+                    parseShouldSucceedAs card ("card" ++ ws1 ++ a ++ ws2 ++ "{}") $ Card e testInputSource (Block [])
 
         it "Succeeds on empty cards with whitespace between the brackets" $ do
-            forAll generateCardName $ \n ->
+            forAll generateCardName $ \(a, e) ->
                 forAll generateWhiteSpace $ \ws ->
-                    parseShouldSucceedAs card ("card" ++ n ++ "{" ++ ws ++ "}") $ Card n testInputSource (Block [])
+                    parseShouldSucceedAs card ("card" ++ a ++ "{" ++ ws ++ "}") $ Card e testInputSource (Block [])
 
         it "Fails on any card with an empty body" $ do
-            forAll generateCardName $ \n ->
+            forAll generateCardName $ \(a, _) ->
                 forAll generateWhiteSpace $ \ws ->
-                    shouldFail card ("card" ++ n ++ ws)
+                    shouldFail card ("card" ++ a ++ ws)
 
         it "Succeeds on this complicated example" $ do
             parseShouldSucceedAs card ("card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}")
@@ -336,15 +324,11 @@ cardReferenceParserTests = do
     describe "cardNameReference" $ do
         pend
 
-    describe "cardName" $ do
-        pend
-
     describe "cardFileReference" $ do
         pend
 
     describe "unprefixedCardFileReference" $ do
         pend
-
 
 
 parserBlackBoxTests :: Spec
@@ -359,7 +343,6 @@ parserBlackBoxTests = do
         let dirs = map (tr </>) ["shouldNotParse"]
         forFileInDirss dirs $ concerningContents $ \f contents -> do
             it f $ parseFromSource sparkFile f contents `shouldSatisfy` isLeft
-
 
 
 
