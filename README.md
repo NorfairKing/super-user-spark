@@ -20,3 +20,10 @@ If you would like to have your name on this list, just send a pull request.
 - [plietar](https://github.com/plietar/dotfiles)
 - [mkirsche](https://github.com/mkirsche/sus-depot)
 - [badi](https://github.com/badi/dotfiles/blob/master/deploy.sus)
+
+## Contributing
+Before contributing, make sure you installed the pre-commit tests:
+
+```
+spark deploy hooks.sus
+```

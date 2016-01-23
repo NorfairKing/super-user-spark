@@ -1,9 +1,12 @@
 module Formatter where
 
-import           Data.List  (intersperse)
-import           Data.Maybe (catMaybes)
+import           Data.List      (intersperse)
+import           Data.Maybe     (catMaybes)
 
+import           Compiler.Types
 import           Constants
+import           Deployer.Types
+import           Parser.Types
 import           Types
 
 formatCards :: [Card] -> Sparker String

@@ -6,6 +6,8 @@ import           Text.Parsec.String
 import           Data.List          (find, isSuffixOf)
 
 import           Constants
+import           Deployer.Types
+import           Parser.Types
 import           Types
 
 
@@ -23,12 +25,16 @@ parseCardFileReference (CardFileReference fp mnr) = do
 parseFile :: FilePath -> Sparker [Card]
 parseFile file = do
     str <- liftIO $ readFile file
-    case parse sparkFile file str of
+    case parseFromSource sparkFile file str of
         Left pe -> throwError $ ParseError pe
         Right cs -> return cs
 
+parseFromSource :: Parser a -> FilePath -> String -> Either ParseError a
+parseFromSource = parse
+
 --[ Language ]--
 
+-- TODO type alias for spark file
 sparkFile :: Parser [Card]
 sparkFile = do
     clean <- eatComments
@@ -51,7 +57,7 @@ getFile = do
 card :: Parser Card
 card = do
     whitespace
-    string keywordCard
+    skip $ string keywordCard
     whitespace
     name <- cardName
     whitespace
@@ -59,9 +65,6 @@ card = do
     whitespace
     fp <- getFile
     return $ Card name fp b
-
-cardName :: Parser CardName
-cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim
@@ -86,7 +89,7 @@ block = do
 
 sparkOff :: Parser Declaration
 sparkOff = do
-    string keywordSpark
+    skip $ string keywordSpark
     linespace
     ref <- cardReference
     return $ SparkOff ref
@@ -103,7 +106,7 @@ deployerCardReference = goComp <|> goUncomp
 
 compiledCardReference :: Parser CompiledCardReference
 compiledCardReference = do
-    string "compiled"
+    skip $ string "compiled"
     skip linespace
     fp <- filepath
     return fp
@@ -116,16 +119,18 @@ cardReference = try goName <|> try goFile <?> "card reference"
 
 cardNameReference :: Parser CardNameReference
 cardNameReference = do
-    string keywordCard
+    skip $ string keywordCard
     linespace
     name <- cardName
     return $ CardNameReference name
     <?> "card name reference"
 
+cardName :: Parser CardName
+cardName = try quotedIdentifier <|> try plainIdentifier <?> "card name"
 
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
-    string keywordFile
+    skip $ string keywordFile
     skip linespace
     unprefixedCardFileReference
 
@@ -141,7 +146,7 @@ unprefixedCardFileReference = do
 
 intoDir :: Parser Declaration
 intoDir = do
-    string keywordInto
+    skip $ string keywordInto
     linespace
     dir <- directory
     return $ IntoDir dir
@@ -149,7 +154,7 @@ intoDir = do
 
 outOfDir :: Parser Declaration
 outOfDir = do
-    string keywordOutof
+    skip $ string keywordOutof
     linespace
     dir <- directory
     return $ OutofDir dir
@@ -157,7 +162,7 @@ outOfDir = do
 
 deploymentKindOverride :: Parser Declaration
 deploymentKindOverride = do
-    string keywordKindOverride
+    skip $ string keywordKindOverride
     linespace
     kind <- try copy <|> link
     return $ DeployKindOverride kind
@@ -194,7 +199,7 @@ deploymentKind = try link <|> try copy <|> def
 
 alternatives :: Parser Declaration
 alternatives = do
-    string keywordAlternatives
+    skip $ string keywordAlternatives
     linespace
     ds <- directory `sepBy1` linespace
     return $ Alternatives ds
@@ -236,11 +241,11 @@ notComment = manyTill anyChar (lookAhead ((skip comment) <|> eof))
 
 eatComments :: Parser String
 eatComments = do
-  optional comment
-  xs <- notComment `sepBy` comment
-  optional comment
-  let withoutComments = concat xs
-  return withoutComments
+    optional comment
+    xs <- notComment `sepBy` comment
+    optional comment
+    let withoutComments = concat xs
+    return withoutComments
 
 
 --[ Identifiers ]--
@@ -260,13 +265,12 @@ inBraces = between (char '{') (char '}')
 inQuotes :: Parser a -> Parser a
 inQuotes = between (char quotesChar) (char quotesChar)
 
-delim :: Parser String
-delim = try (string lineDelimiter) <|> go
+delim :: Parser ()
+delim = try (skip $ string lineDelimiter) <|> go
   where
     go = do
-        e <- eol
-        ws <- whitespace
-        return $ e ++ ws
+        eol
+        whitespace
 
 
 --[ Whitespace ]--
@@ -277,18 +281,20 @@ inLineSpace = between linespace linespace
 inWhiteSpace :: Parser a -> Parser a
 inWhiteSpace = between whitespace whitespace
 
-linespace :: Parser String
-linespace = many $ oneOf linespaceChars
+linespace :: Parser ()
+linespace = skip $ many $ oneOf linespaceChars
 
-whitespace :: Parser String
-whitespace = many $ oneOf whitespaceChars
+whitespace :: Parser ()
+whitespace = skip $ many $ oneOf whitespaceChars
 
-eol :: Parser String
-eol =   try (string "\n\r")
-    <|> try (string "\r\n")
-    <|> try (string "\n")
-    <|> string "\r"
-    <?> "end of line"
+eol :: Parser ()
+eol =  skip newline
+  where
+    newline =
+            try (string "\r\n")
+        <|> try (string "\n")
+        <|> string "\r"
+        <?> "end of line"
 
 
 --[ Utils ]--

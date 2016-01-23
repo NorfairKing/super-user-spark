@@ -1,19 +1,19 @@
 module Arguments where
 
-import           Data.Monoid         (mconcat)
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
+import           Dispatch.Types
 import           Types
 import           Utils
 
 
 getInstructions :: IO Instructions
 getInstructions = do
-  mins <- fmap transformOptions getOptions
-  case mins of
-    Right ins -> return ins
-    Left err  -> die $ "Failed to parse instructions\n" ++ err
+    mins <- fmap transformOptions getOptions
+    case mins of
+        Right ins -> return ins
+        Left err  -> die $ "Failed to parse instructions\n" ++ err
 
 transformOptions :: Options -> Either String Instructions
 transformOptions (dispatch, go) = (,) <$> pure dispatch <*> configFromOptions go
@@ -40,9 +40,9 @@ configFromOptions go = Right conf
 
 getOptions :: IO Options
 getOptions = do
-  args <- getArgs
-  let result = runOptionsParser args
-  handleParseResult result
+    args <- getArgs
+    let result = runOptionsParser args
+    handleParseResult result
 
 runOptionsParser :: [String] -> ParserResult Options
 runOptionsParser strs = execParserPure prefs optionsParser strs
@@ -117,75 +117,75 @@ parseDeploy = info parser modifier
 
 parseGlobalOptions :: Parser GlobalOptions
 parseGlobalOptions = GlobalOptions
-  <$> flag True False -- Backwards
-    ( long "no-line-up"
-      <> short 'L'
-      <> help "Don't line up arrows" )
-  <*> option auto
-    ( long "indent"
-      <> short 'i'
-      <> value 4
-      <> metavar "NUM"
-      <> help "How many spaces to use for indentation when formatting" )
-  <*> flag True False -- Backwards
-    ( long "no-trailing-newline"
-      <> short 'N'
-      <> help "Don't add a trailing newline to a formatted file" )
-  <*> switch
-    ( long "always-quote"
-      <> short 'Q'
-      <> help "Always quote file names" )
-  <*> switch
-    ( long "compress"
-      <> short 'c'
-      <> help "Compress the card as much as possible." )
-  <*> option (Just <$> str)
-    ( long "output"
-      <> short 'o'
-      <> value Nothing
-      <> metavar "FILE"
-      <> help "The output file for compilation" )
-  <*> option auto
-    ( long "format"
-      <> short 'f'
-      <> value FormatText
-      <> metavar "FORMAT"
-      <> help "Compilation format" )
-  <*> option (Just <$> auto)
-    ( long "kind"
-      <> short 'k'
-      <> value Nothing
-      <> metavar "KIND"
-      <> help "The kind specification for unspecified deployments (default: link)" )
-  <*> option (Just <$> auto)
-    ( long "override"
-      <> short 'O'
-      <> value Nothing
-      <> metavar "KIND"
-      <> help "Override every deployment to be of the given kind" )
-  <*> option auto
-    ( long "thoroughness"
-      <> short 't'
-      <> value ThoroughnessContent
-      <> metavar "THOROUGHNESS"
-      <> help "How thoroughly to check whether the source and destination are equal" )
-  <*> switch
-    ( long "replace-links"
-      <> help "Replace links at deploy destinations."
-    )
-  <*> switch
-    ( long "replace-files"
-      <> help "Replace existing files at deploy destinations."
-    )
-  <*> switch
-    ( long "replace-Directories"
-      <> help "Replace existing directories at deploy destinations."
-    )
-  <*> switch
-    ( long "replace-all"
-      <> short 'r'
-      <> help "Equivalent to --replace-files --replace-directories --replace-links"
-    )
-  <*> switch
-    ( long "debug"
-      <> help "Show al debug information." )
+    <$> flag True False -- Backwards
+      ( long "no-line-up"
+        <> short 'L'
+        <> help "Don't line up arrows" )
+    <*> option auto
+      ( long "indent"
+        <> short 'i'
+        <> value 4
+        <> metavar "NUM"
+        <> help "How many spaces to use for indentation when formatting" )
+    <*> flag True False -- Backwards
+      ( long "no-trailing-newline"
+        <> short 'N'
+        <> help "Don't add a trailing newline to a formatted file" )
+    <*> switch
+      ( long "always-quote"
+        <> short 'Q'
+        <> help "Always quote file names" )
+    <*> switch
+      ( long "compress"
+        <> short 'c'
+        <> help "Compress the card as much as possible." )
+    <*> option (Just <$> str)
+      ( long "output"
+        <> short 'o'
+        <> value Nothing
+        <> metavar "FILE"
+        <> help "The output file for compilation" )
+    <*> option auto
+      ( long "format"
+        <> short 'f'
+        <> value FormatText
+        <> metavar "FORMAT"
+        <> help "Compilation format" )
+    <*> option (Just <$> auto)
+      ( long "kind"
+        <> short 'k'
+        <> value Nothing
+        <> metavar "KIND"
+        <> help "The kind specification for unspecified deployments (default: link)" )
+    <*> option (Just <$> auto)
+      ( long "override"
+        <> short 'O'
+        <> value Nothing
+        <> metavar "KIND"
+        <> help "Override every deployment to be of the given kind" )
+    <*> option auto
+      ( long "thoroughness"
+        <> short 't'
+        <> value ThoroughnessContent
+        <> metavar "THOROUGHNESS"
+        <> help "How thoroughly to check whether the source and destination are equal" )
+    <*> switch
+      ( long "replace-links"
+        <> help "Replace links at deploy destinations."
+      )
+    <*> switch
+      ( long "replace-files"
+        <> help "Replace existing files at deploy destinations."
+      )
+    <*> switch
+      ( long "replace-Directories"
+        <> help "Replace existing directories at deploy destinations."
+      )
+    <*> switch
+      ( long "replace-all"
+        <> short 'r'
+        <> help "Equivalent to --replace-files --replace-directories --replace-links"
+      )
+    <*> switch
+      ( long "debug"
+        <> help "Show al debug information." )

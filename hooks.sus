@@ -1,0 +1,5 @@
+card hooks {
+  into .git/hooks
+  outof scripts
+  pre_commit_test.sh -> pre-commit
+}

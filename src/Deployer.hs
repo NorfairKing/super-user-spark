@@ -2,6 +2,7 @@
 
 module Deployer where
 
+import           Control.Monad      (void)
 import           Data.List          (isPrefixOf, sort)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
@@ -22,8 +23,11 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
                                      isSymbolicLink, readSymbolicLink)
 import           System.Process     (system)
 
+import           Compiler.Types
+import           Deployer.Types
 import           Formatter          (formatPostDeployments,
                                      formatPreDeployments)
+import           Monad
 import           Types
 import           Utils
 
@@ -50,7 +54,7 @@ deployAll deps = do
 
     case catErrors pdps of
         [] -> do
-            deployments pdps
+            void $ deployments pdps
             postdeployments deps pdps
 
         ss -> throwError $ DeployError $ PreDeployError ss
