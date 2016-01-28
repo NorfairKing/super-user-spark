@@ -3,7 +3,7 @@ module Parser.Types where
 
 import           CoreTypes
 
-type SparkFile = [Card]
+data SparkFile = SparkFile FilePath [Card]
 
 -- * Cards
 
@@ -14,7 +14,6 @@ type Directory = FilePath
 
 data Card = Card {
         card_name    :: CardName
-    ,   card_path    :: FilePath
     ,   card_content :: Declaration
     } deriving (Show, Eq)
 

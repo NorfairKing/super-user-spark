@@ -204,21 +204,21 @@ declarationParserTests = do
     describe "card" $ do
         let pc = parseShouldSucceedAs card
         it "succeeds on this card with an empty name correctly" $ do
-            pc "card \"\" {}" $ Card "" testInputSource (Block [])
+            pc "card \"\" {}" $ Card "" (Block [])
 
         it "succeeds on this compressed empty cards" $ do
             forAll generateCardName $ \(a, e) ->
-                parseShouldSucceedAs card ("card" ++ a ++ "{}") $ Card e testInputSource (Block [])
+                parseShouldSucceedAs card ("card" ++ a ++ "{}") $ Card e (Block [])
 
         it "succeeds on empty cards with whitespace around the name" $ do
             forAll generateCardName $ \(a, e) ->
                 forAll (twice generateWhiteSpace) $ \(ws1, ws2) ->
-                    parseShouldSucceedAs card ("card" ++ ws1 ++ a ++ ws2 ++ "{}") $ Card e testInputSource (Block [])
+                    parseShouldSucceedAs card ("card" ++ ws1 ++ a ++ ws2 ++ "{}") $ Card e (Block [])
 
         it "succeeds on empty cards with whitespace between the brackets" $ do
             forAll generateCardName $ \(a, e) ->
                 forAll generateWhiteSpace $ \ws ->
-                    parseShouldSucceedAs card ("card" ++ a ++ "{" ++ ws ++ "}") $ Card e testInputSource (Block [])
+                    parseShouldSucceedAs card ("card" ++ a ++ "{" ++ ws ++ "}") $ Card e (Block [])
 
         it "fails on any card with an empty body" $ do
             forAll generateCardName $ \(a, _) ->
@@ -227,7 +227,7 @@ declarationParserTests = do
 
         it "succeeds on this complicated example" $ do
             parseShouldSucceedAs card ("card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}")
-                $ Card "complicated" testInputSource $ Block
+                $ Card "complicated" $ Block
                     [
                       Alternatives ["$(HOST)", "shared"]
                     , Deploy "hello" "goodbye" (Just LinkDeployment)

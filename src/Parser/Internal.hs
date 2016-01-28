@@ -12,7 +12,9 @@ import           Types
 
 
 parseCardFile :: FilePath -> String -> Either ParseError SparkFile
-parseCardFile = parse sparkFile
+parseCardFile f s = do
+    cs <- parseFromSource sparkFile f s
+    return $ SparkFile f cs
 
 parseFromSource :: Parser a -> FilePath -> String -> Either ParseError a
 parseFromSource = parse
@@ -20,24 +22,20 @@ parseFromSource = parse
 
 --[ Language ]--
 
-sparkFile :: Parser SparkFile
+sparkFile :: Parser [Card]
 sparkFile = do
     clean <- eatComments
     setInput clean
     resetPosition
-    card `sepEndBy1` whitespace
+    cards
+
+cards :: Parser [Card]
+cards = card `sepEndBy1` whitespace
 
 resetPosition :: Parser ()
 resetPosition = do
     pos <- getPosition
     setPosition $ setSourceColumn (setSourceLine pos 1) 1
-
-
-getFile :: Parser FilePath
-getFile = do
-    pos <- getPosition
-    let file = sourceName pos
-    return file
 
 card :: Parser Card
 card = do
@@ -48,8 +46,7 @@ card = do
     whitespace
     b <- block
     whitespace
-    fp <- getFile
-    return $ Card name fp b
+    return $ Card name b
 
 declarations :: Parser [Declaration]
 declarations = (inLineSpace declaration) `sepEndBy` delim

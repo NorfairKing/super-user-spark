@@ -18,22 +18,24 @@ import           Parser.Types
 import           Types
 import           Utils
 
-compileRef :: [Card] -> Maybe CardNameReference -> Sparker [Deployment]
-compileRef cs mcnr = do
-    firstCard <- case mcnr of
-            Nothing -> if null cs
+compileRef :: CompileScope -> Maybe CardNameReference -> Sparker [Deployment]
+compileRef scope mcnr = do
+    firstUnit <- case mcnr of
+            Nothing -> if null scope
                         then throwError $ CompileError "No cards found for compilation."
-                        else return $ head cs
+                        else return $ head scope
             Just (CardNameReference name) -> do
-                case find (\c -> card_name c == name) cs of
+                case find (\c -> (card_name . unitCard) c == name) scope of
                         Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
-                        Just card -> return card
-    compile firstCard cs
+                        Just cu -> return cu
+    compile firstUnit scope
 
+resolveUnits :: SparkFile -> [CompileUnit]
+resolveUnits (SparkFile fp cs) = map (Unit fp) cs
 
-compile :: Card -> [Card] -> Sparker [Deployment]
-compile card allCards = do
-    initial <- initialState card allCards
+compile :: CompileUnit -> CompileScope -> Sparker [Deployment]
+compile unit scope = do
+    initial <- initialState unit scope
     ((_,_),dps) <- runSparkCompiler initial compileDeployments
     return dps
 
@@ -82,14 +84,15 @@ inputCompiled fp = do
         FormatStandalone -> throwError $ CompileError "You're not supposed to use standalone compiled deployments in any other way than by executing it."
 
 
-initialState :: Card -> [Card] -> Sparker CompilerState
-initialState c@(Card _ fp statement) cds = do
+initialState :: CompileUnit -> CompileScope -> Sparker CompilerState
+initialState cu scope = do
     currentDir <- liftIO getCurrentDirectory
     override <- asks conf_compile_kind
+    let statement = card_content . unitCard $ cu
     return $ CompilerState {
-        state_current_card = c
-    ,   state_current_directory = currentDir </> takeDirectory fp
-    ,   state_all_cards = cds
+        state_current_unit = cu
+    ,   state_current_directory = currentDir </> takeDirectory (unitFilePath cu)
+    ,   state_scope = scope
     ,   state_declarations_left = [statement]
     ,   state_deployment_kind_override = override
     ,   state_into = ""
@@ -173,27 +176,28 @@ processDeclaration = do
             case st of
                 CardFile (CardFileReference file mn) -> do
                     dir <- gets state_current_directory
-                    newCards <- liftSparker $ P.parseFile $ dir </> file
-                    oldCards <- gets state_all_cards
+                    newCards <- fmap resolveUnits $ liftSparker $ P.parseFile $ dir </> file
+                    oldCards <- gets state_scope
                     let allCards = oldCards ++ newCards
                     nextCard <- case mn of
                                     Nothing -> return $ head newCards
                                     Just (CardNameReference name) ->
-                                        case find (\c -> card_name c == name) allCards of
+                                        case find (\c -> (card_name . unitCard) c == name) allCards of
                                             Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
                                             Just c -> return c
                     newDeclarations <- liftSparker $ compile nextCard newCards
-                    modify (\s -> s {state_all_cards = allCards})
+                    modify (\s -> s {state_scope = allCards})
                     addAll newDeclarations
 
                 CardName (CardNameReference name) -> do
-                    allCards <- gets state_all_cards
-                    case find (\c -> card_name c == name) allCards of
+                    allCards <- gets state_scope
+                    case find (\c -> (card_name . unitCard) c == name) allCards of
                         Nothing -> throwError $ CompileError "card not found" -- FIXME this is unsafe.
-                        Just c@(Card _ _ statement) -> do
+                        Just cu -> do
+                            let statement = card_content . unitCard $ cu
                             before <- get
-                            modify (\s -> s {state_declarations_left = [statement]
-                                            ,state_current_card = c})
+                            modify (\s -> s { state_declarations_left = [statement]
+                                            , state_current_unit = cu})
                             compileDeployments
                             put before
 

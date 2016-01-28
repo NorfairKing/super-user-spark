@@ -9,8 +9,8 @@ import           Deployer.Types
 import           Parser.Types
 import           Types
 
-formatCards :: [Card] -> Sparker String
-formatCards cs = do
+formatSparkFile :: SparkFile -> Sparker String
+formatSparkFile (SparkFile _ cs) = do
     initial <- initialState
     (_, res) <- runSparkFormatter initial (cards cs)
     return res
@@ -38,7 +38,7 @@ onLines thingFormatter things = do
 
 
 card :: Card -> SparkFormatter ()
-card (Card name _ d) = do
+card (Card name d) = do
     string keywordCard
     space
     string name
