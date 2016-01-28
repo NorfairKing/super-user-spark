@@ -8,7 +8,10 @@ import           Types
 
 parseFile :: FilePath -> Sparker SparkFile
 parseFile file = do
-    str <- liftIO $ readFile file
-    case parseCardFile file str of
+    sf <- liftIO $ parseFileIO file
+    case sf of
         Left pe -> throwError $ ParseError pe
         Right cs -> return cs
+
+parseFileIO :: FilePath -> IO (Either ParseError SparkFile)
+parseFileIO file = (liftIO $ readFile file) >>= return . parseCardFile file

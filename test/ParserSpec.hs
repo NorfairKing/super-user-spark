@@ -57,46 +57,46 @@ blankspaceParserTests = do
         it "fails for the empty string" $ do
             f ""
         it "fails for spaces" $ do
-            property $ forAll (listOf generateSpace) (\ss -> f ss)
+            forAll (listOf generateSpace) (\ss -> f ss)
         it "fails for tabs" $ do
-            property $ forAll (listOf generateTab) (\ss -> f ss)
+            forAll (listOf generateTab) (\ss -> f ss)
         it "fails for linespace" $ do
-            property $ forAll generateLineSpace (\ls -> f ls)
+            forAll generateLineSpace (\ls -> f ls)
 
     describe "linespace" $ do
         let s = shouldSucceed whitespace
         it "succeeds for spaces" $ do
-            property $ forAll (listOf generateSpace) s
+            forAll (listOf generateSpace) s
         it "succeeds for tabs" $ do
-            property $ forAll (listOf generateTab) s
+            forAll (listOf generateTab) s
         it "succeeds for mixtures of spaces and tabs" $ do
-            property $ forAll generateLineSpace s
+            forAll generateLineSpace s
 
         let f = shouldSucceed whitespace
         it "fails for line ending characters" $ do
-            property $ forAll (listOf $ oneof [generateCarriageReturn, generateLineFeed]) f
+            forAll (listOf $ oneof [generateCarriageReturn, generateLineFeed]) f
         it "fails for any non-linespace, even if there's linespace in it" $  do
-            property $ forAll (listOf1 generateNormalCharacter) (\ls ->
-                        forAll generateLineSpace (\ls1 ->
-                         forAll generateLineSpace (\ls2 ->
-                            shouldFail linespace (ls1 ++ ls ++ ls2))))
+            forAll (listOf1 generateNormalCharacter) (\ls ->
+             forAll generateLineSpace (\ls1 ->
+              forAll generateLineSpace (\ls2 ->
+               shouldFail linespace (ls1 ++ ls ++ ls2))))
 
 
     describe "whitespace" $ do
         let s = shouldSucceed whitespace
         it "succeeds for spaces" $ do
-            property $ forAll (listOf generateSpace) s
+            forAll (listOf generateSpace) s
         it "succeeds for tabs" $ do
-            property $ forAll (listOf generateTab) s
+            forAll (listOf generateTab) s
         it "succeeds carriage returns" $ do
-            property $ forAll (listOf generateCarriageReturn) s
+            forAll (listOf generateCarriageReturn) s
         it "succeeds line feeds" $ do
-            property $ forAll (listOf generateLineFeed) s
+            forAll (listOf generateLineFeed) s
         it "succeeds for mixtures of spaces, tabs, carriage returns and line feeds" $ do
-            property $ forAll generateWhiteSpace s
+            forAll generateWhiteSpace s
 
         it "fails for any non-whitespace, even if there's whitespace in it" $  do
-            property $ forAll (listOf1 generateNormalCharacter) (\ls ->
+            forAll (listOf1 generateNormalCharacter) (\ls ->
                         forAll generateWhiteSpace (\ws1 ->
                          forAll generateWhiteSpace (\ws2 ->
                             shouldFail whitespace (ws1 ++ ls ++ ws2))))
@@ -104,19 +104,17 @@ blankspaceParserTests = do
 
     describe "inLineSpace" $ do
         it "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
-            property $
-                forAll generateLineSpace (\ws1 ->
-                  forAll generateLineSpace (\ws2 ->
-                    forAll (listOf1 generateNormalCharacter) (\ls ->
-                        parseShouldSucceedAs (inLineSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
+            forAll generateLineSpace (\ws1 ->
+              forAll generateLineSpace (\ws2 ->
+                forAll (listOf1 generateNormalCharacter) (\ls ->
+                    parseShouldSucceedAs (inLineSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
 
     describe "inWhiteSpace" $ do
         it "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
-            property $
-                forAll generateWhiteSpace (\ws1 ->
-                  forAll generateWhiteSpace (\ws2 ->
-                    forAll (listOf1 generateNormalCharacter) (\ls ->
-                        parseShouldSucceedAs (inWhiteSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
+            forAll generateWhiteSpace (\ws1 ->
+              forAll generateWhiteSpace (\ws2 ->
+                forAll (listOf1 generateNormalCharacter) (\ls ->
+                    parseShouldSucceedAs (inWhiteSpace $ string ls) (ws1 ++ ls ++ ws2) ls)))
 
 delimiterTests :: Spec
 delimiterTests = do
@@ -281,9 +279,6 @@ toplevelParserTests = do
         pend
 
     describe "resetPosition" $ do
-        pend
-
-    describe "getFile" $ do
         pend
 
 cardReferenceParserTests :: Spec
