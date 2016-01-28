@@ -18,8 +18,9 @@ executable spark
   other-modules:    Arguments
                   , Compiler
                   , Compiler.Types
-                  , Constants
                   , Config.Types
+                  , Constants
+                  , CoreTypes
                   , Deployer
                   , Deployer.Types
                   , Dispatch
@@ -28,6 +29,7 @@ executable spark
                   , Main
                   , Monad
                   , Parser
+                  , Parser.Internal
                   , Parser.Types
                   , Types
                   , Utils

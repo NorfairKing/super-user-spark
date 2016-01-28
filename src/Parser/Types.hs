@@ -3,6 +3,8 @@ module Parser.Types where
 
 import           CoreTypes
 
+type SparkFile = [Card]
+
 -- * Cards
 
 type CardName = String

@@ -13,34 +13,11 @@ import           System.FilePath.Posix ((</>))
 import           CoreTypes
 import           Parser
 import           Parser.Gen
+import           Parser.Internal
 import           Parser.Types
 
+import           Parser.TestUtils
 import           TestUtils
-
-shouldSucceed :: (Show a, Eq a) => Parser a -> String -> IO ()
-shouldSucceed parser input = input `shouldSatisfy` succeeds parser
-
-shouldFail :: (Show a, Eq a) => Parser a -> String -> IO ()
-shouldFail parser input = input `shouldNotSatisfy` succeeds parser
-
-succeeds :: (Show a, Eq a) => Parser a -> String -> Bool
-succeeds parser input = isRight $ parseWithoutSource (parser >> eof) input
-
-fails :: (Show a, Eq a) => Parser a -> String -> Bool
-fails parser input = not $ succeeds parser input
-
-testInputSource :: String
-testInputSource = "Test input"
-
-parseShouldSucceedAs :: (Show a, Eq a) => Parser a -> String -> a -> IO ()
-parseShouldSucceedAs parser input a = parseFromSource parser testInputSource input `shouldBe` Right a
-
-parseShouldBe :: (Show a, Eq a) => Parser a -> String -> Either ParseError a -> IO ()
-parseShouldBe parser input result = parseFromSource parser testInputSource input `shouldBe` result
-
-parseWithoutSource :: Parser a -> String -> Either ParseError a
-parseWithoutSource parser input = parseFromSource parser testInputSource input
-
 
 spec :: Spec
 spec = parallel $ do
@@ -221,34 +198,34 @@ pathParserTests = do
 declarationParserTests :: Spec
 declarationParserTests = do
     describe "cardName" $ do
-        it "Succeeds on every card name that we generate" $ do
+        it "succeeds on every card name that we generate" $ do
             forAll generateCardName $ \(a, e) -> parseShouldSucceedAs cardName a e
 
     describe "card" $ do
         let pc = parseShouldSucceedAs card
-        it "Succeeds on this card with an empty name correctly" $ do
+        it "succeeds on this card with an empty name correctly" $ do
             pc "card \"\" {}" $ Card "" testInputSource (Block [])
 
-        it "Succeeds on this compressed empty cards" $ do
+        it "succeeds on this compressed empty cards" $ do
             forAll generateCardName $ \(a, e) ->
                 parseShouldSucceedAs card ("card" ++ a ++ "{}") $ Card e testInputSource (Block [])
 
-        it "Succeeds on empty cards with whitespace around the name" $ do
+        it "succeeds on empty cards with whitespace around the name" $ do
             forAll generateCardName $ \(a, e) ->
                 forAll (twice generateWhiteSpace) $ \(ws1, ws2) ->
                     parseShouldSucceedAs card ("card" ++ ws1 ++ a ++ ws2 ++ "{}") $ Card e testInputSource (Block [])
 
-        it "Succeeds on empty cards with whitespace between the brackets" $ do
+        it "succeeds on empty cards with whitespace between the brackets" $ do
             forAll generateCardName $ \(a, e) ->
                 forAll generateWhiteSpace $ \ws ->
                     parseShouldSucceedAs card ("card" ++ a ++ "{" ++ ws ++ "}") $ Card e testInputSource (Block [])
 
-        it "Fails on any card with an empty body" $ do
+        it "fails on any card with an empty body" $ do
             forAll generateCardName $ \(a, _) ->
                 forAll generateWhiteSpace $ \ws ->
                     shouldFail card ("card" ++ a ++ ws)
 
-        it "Succeeds on this complicated example" $ do
+        it "succeeds on this complicated example" $ do
             parseShouldSucceedAs card ("card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}")
                 $ Card "complicated" testInputSource $ Block
                     [
