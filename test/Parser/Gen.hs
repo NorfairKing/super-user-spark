@@ -3,6 +3,8 @@ module Parser.Gen where
 import           Test.Hspec
 import           Test.QuickCheck
 
+import           Data.List       (isSuffixOf)
+
 generateNormalCharacter :: Gen Char
 generateNormalCharacter = elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'1']
 
@@ -56,14 +58,10 @@ generatePlainIdentifier = do
     return $ (w, w)
 
 generateFilePath :: Gen (FilePath, FilePath)
-generateFilePath = generateIdentifier
+generateFilePath = generateIdentifier `suchThat` (\(_,f) -> not $ "/" `isSuffixOf` f)
 
 generateDirectory :: Gen (FilePath, FilePath)
-generateDirectory = oneof [generateFilePath `suchThat` ((/= '/') . last . snd),  generateWithSlash]
-  where
-    generateWithSlash = do
-        (fpe, fpa) <- generatePlainIdentifier
-        return (fpe ++ "/", fpa)
+generateDirectory = generateFilePath
 
 generateComment :: Gen (String, String)
 generateComment = oneof [generateLineComment, generateBlockComment]
@@ -80,7 +78,8 @@ generateBlockComment = do
     let ws' = "[[" ++ ws ++ "]]"
     return (ws', ws)
 
-
+generateDeploymentKindSymbol :: Gen String
+generateDeploymentKindSymbol = elements ["l->", "c->", "->"]
 
 
 

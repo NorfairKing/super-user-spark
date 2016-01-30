@@ -1,5 +1,7 @@
 module ParserSpec where
 
+import           Debug.Trace
+
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -234,11 +236,17 @@ pathParserTests = do
         it "succeeds for this relative filepath with a double dot" $ do
             s "/home/user/../user/test.txt"
 
+        let f = shouldFail filepath
+        it "fails for just a slash" $ do
+            f "/"
+        it "fails for strings ending in a slash" $ do
+            property $ \s -> f (s ++ "/")
+
     describe "directory" $ do
         it "succeeds for generated directories" $ do
             forAll generateDirectory $ \(e, a) -> parseShouldSucceedAs directory e a
 
-        let s = shouldSucceed filepath
+        let s = shouldSucceed directory
         it "succeeds for the home directory" $ do
             s "~"
         it "succeeds for this relative directory" $ do
@@ -249,6 +257,12 @@ pathParserTests = do
             s "~/.vim"
             s "~/Dropbox"
             s "~/.xmonad"
+
+        let f = shouldFail directory
+        it "fails for just a slash" $ do
+            f "/"
+        it "fails for strings ending in a slash" $ do
+            property $ \s -> f (s ++ "/")
 
 
 declarationParserTests :: Spec
@@ -316,16 +330,47 @@ declarationParserTests = do
     describe "outofDir" $ do
         pend
 
-    describe "deployment" $ do
-        pend
-
-    describe "shortDeployment" $ do
-        pend
-
-    describe "longDeployment" $ do
-        pend
     describe "alternatives" $ do
         pend
+
+    describe "deployment" $ do
+        it "succeeds for short deployments"
+            pending
+        it "succeeds for long deployments"
+            pending
+
+    describe "shortDeployment" $ do
+        it "succeeds for any filepath with an identity deployment" $ do
+            property $ \f -> succeeds filepath f
+                ==> parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
+
+        it "succeeds for generated filepaths with an identity deployment" $ do
+            forAll generateFilePath $ \(f,g) -> parseShouldSucceedAs shortDeployment f (Deploy g g Nothing)
+
+        it "succeeds for any directory with an identity deployment" $ do
+            property $ \f -> succeeds directory f
+                ==> parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
+
+        it "succeeds for generated directories with an identity deployment" $ do
+            forAll generateDirectory $ \(f,g) -> parseShouldSucceedAs shortDeployment f (Deploy g g Nothing)
+
+        let s f = parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
+        it "succeeds as-is for these cases" $ do
+            s "file.txt"
+            s "xmonad.hs"
+            s "/home/user/.bashrc"
+
+    describe "longDeployment" $ do
+        it "succeeds for the canonical expected generated strings" $ do
+            -- forAll generateDeploymentKindSymbol $ \dks ->
+            --   forAll generateLineSpace $ \ls1 ->
+            --     forAll generateLineSpace $ \ls2 ->
+            --       forAll generateFilePath $ \(fp1,fp1a) ->
+            --         forAll generateFilePath $ \(fp2,fp2a) ->
+            --           case parseWithoutSource deploymentKind dks of
+            --             Left err -> fail "There was a problem with parsing the deployment kind"
+            --             Right dk -> parseShouldSucceedAs longDeployment (fp1 ++ ls1 ++ dks ++ ls2 ++ fp2) (Deploy fp1a fp2a dk)
+            pendingWith "This goes wrong because identifiers can end with \'l\' or \'c\'. Make sure to document this behaviour."
 
     describe "deploymentKind" $ do
         let (-=>) = parseShouldSucceedAs deploymentKind

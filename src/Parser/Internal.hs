@@ -155,7 +155,7 @@ deploymentKindOverride = do
 
 shortDeployment :: Parser Declaration
 shortDeployment = do
-    source <- filepath
+    source <- try directory <|> filepath
     return $ Deploy source source Nothing
 
 longDeployment :: Parser Declaration
@@ -189,15 +189,14 @@ alternatives = do
 -- [ FilePaths ]--
 
 filepath :: Parser FilePath
-filepath = identifier <?> "Filepath"
+filepath = do
+    i <- identifier <?> "Filepath"
+    if "/" `isSuffixOf` i
+    then unexpected "slash at the end"
+    else return i
 
 directory :: Parser Directory
-directory = do
-    d <- filepath
-    return $ if "/" `isSuffixOf` d
-    then init d
-    else d
-    <?> "directory"
+directory = filepath <?> "Directory"
 
 
 --[ Comments ]--
