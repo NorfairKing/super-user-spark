@@ -203,17 +203,17 @@ directory = do
 --[ Comments ]--
 
 comment :: Parser String
-comment = lineComment <|> blockComment <?> "Comments"
+comment = try lineComment <|> try blockComment <?> "Comment"
 
 lineComment :: Parser String
-lineComment = do
-    skip $ string lineCommentStr
-    anyChar `manyTill` try eol
+lineComment = (<?> "Line comment") $ do
+    skip $ try $ string lineCommentStr
+    anyChar `manyTill` eol
 
 blockComment :: Parser String
-blockComment = do
-    skip $ string start
-    anyChar `manyTill` try (string stop)
+blockComment = (<?> "Block comment") $ do
+    skip $ try $ string start
+    anyChar `manyTill` (try $ string stop)
   where (start, stop) = blockCommentStrs
 
 

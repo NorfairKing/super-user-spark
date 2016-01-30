@@ -138,6 +138,10 @@ identifierParserTests = do
             pi ".bashrc"
             pi "xmonad.hs"
 
+        it "fails for generated quoted identifiers" $ do
+            forAll generateQuotedIdentifier $ \(e, _) ->
+                shouldFail plainIdentifier e
+
     describe "quotedIdentifier" $ do
         it "succeeds for generated plain identifiers surrounded in quotes" $ do
             forAll generatePlainIdentifier $ \(e, a) ->
@@ -151,30 +155,53 @@ identifierParserTests = do
             pi "bashrc"
             pi "with spaces"
 
+        it "fails for generated plain identifiers" $ do
+            forAll generatePlainIdentifier $ \(e, _) ->
+                shouldFail quotedIdentifier e
+
+        it "fails for generated identifiers with just one quote" $ do
+            forAll generatePlainIdentifier $ \(e, _) ->
+                shouldFail quotedIdentifier ("\"" ++ e) .&&. shouldFail quotedIdentifier (e ++ "\"")
+
     describe "identifier" $ do
         it "succeeds for generated identifiers" $ do
             forAll generateIdentifier $ \(e, a) ->
                 parseShouldSucceedAs identifier e a
 
-
 commentParserTests :: Spec
 commentParserTests = do
     describe "eatComments" $ do
-        pend
+        it "should succeed unchanged on anything without comments" $ do
+            property $ \s -> (not $ succeedsAnywhere comment s) ==> parseShouldSucceedAs eatComments s s
 
-    describe "removeComments" $ do
-        pend
+        let (-=>) e a = parseShouldSucceedAs eatComments e a
+        it "successfully removes comments in these strings" $ do
+            "abc#def\nghi"                          -=> "abcghi"
+            "abc# This is a bigger comment \r\nghi" -=> "abcghi"
+            "abc[[def]]ghi"                         -=> "abcghi"
+            "abc[[ This is a bigger comment ]]ghi"  -=> "abcghi"
+            "Heavy[[use]]of#comments\n."            -=> "Heavyof."
 
     describe "notComment" $ do
-        pend
+        it "should succeed for any string that doesn't contain comments" $ do
+            property $ \s -> (not $ succeedsAnywhere comment s) ==> parseShouldSucceedAs notComment s s
 
     describe "lineComment" $ do
         it "succeeds for generated line comments" $ do
             forAll generateLineComment $ \(e, a) -> parseShouldSucceedAs lineComment e a
+        it "succeeds for these test cases" $ do
+            parseShouldSucceedAs lineComment "#a\n" "a"
+            parseShouldSucceedAs lineComment "# This is a comment\n" " This is a comment"
+            parseShouldSucceedAs lineComment "## This is a comment with two comment signs.\n" "# This is a comment with two comment signs."
+            parseShouldSucceedAs lineComment "# with other eol\r\n" " with other eol"
 
     describe "blockComment" $ do
         it "succeeds for generated block comments" $ do
             forAll generateBlockComment $ \(e, a) -> parseShouldSucceedAs blockComment e a
+        it "succeeds of these test cases" $ do
+            parseShouldSucceedAs blockComment "[[a]]" "a"
+            parseShouldSucceedAs blockComment "[[ This is a block comment. ]]" " This is a block comment. "
+            parseShouldSucceedAs blockComment "[[ [This is a [block] comment containing brackets.] ]]" " [This is a [block] comment containing brackets.] "
 
     describe "comment" $ do
         it "succeeds for generated line comments" $ do
@@ -188,10 +215,41 @@ pathParserTests = do
     describe "filepath" $ do
         it "succeeds for generated filepaths" $ do
             forAll generateFilePath $ \(e, a) -> parseShouldSucceedAs filepath e a
+        it "succeeds for this quoted filepath with a space in it" $ do
+            parseShouldSucceedAs filepath "\"/home/user/with spaces\"" "/home/user/with spaces"
+
+        let s = shouldSucceed filepath
+        it "succeeds for this file without an extension" $ do
+            s "withoutExtension"
+        it "succeeds for this simple file" $ do
+            s "test.txt"
+        it "succeeds for this simple file with a long extension" $ do
+            s "file.somelongextension"
+        it "succeeds for this absolute filepath" $ do
+            s "/home/user/test.txt"
+        it "succeeds for this absolute filepath with a long extension" $ do
+            s "/home/user/file.somelongextension"
+        it "succeeds for this absolute filepath with multiple extensions" $ do
+            s "/home/user/test.multiple.extensions"
+        it "succeeds for this relative filepath with a double dot" $ do
+            s "/home/user/../user/test.txt"
 
     describe "directory" $ do
         it "succeeds for generated directories" $ do
             forAll generateDirectory $ \(e, a) -> parseShouldSucceedAs directory e a
+
+        let s = shouldSucceed filepath
+        it "succeeds for the home directory" $ do
+            s "~"
+        it "succeeds for this relative directory" $ do
+            s "directory"
+        it "succeeds for this absolute directory" $ do
+            s "/home/user"
+        it "succeeds for these directories in the home directory" $ do
+            s "~/.vim"
+            s "~/Dropbox"
+            s "~/.xmonad"
+
 
 declarationParserTests :: Spec
 declarationParserTests = do
@@ -266,12 +324,20 @@ declarationParserTests = do
 
     describe "longDeployment" $ do
         pend
-
-    describe "deploymentKind" $ do
-        pend
-
     describe "alternatives" $ do
         pend
+
+    describe "deploymentKind" $ do
+        let (-=>) = parseShouldSucceedAs deploymentKind
+        it "succeeds for the link deployment kind" $ do
+            "l->" -=> Just LinkDeployment
+        it "succeeds for the copy deployment kind" $ do
+            "c->" -=> Just CopyDeployment
+        it "succeeds for the default deployment kind" $ do
+            "->" -=> Nothing
+        it "fails for anything else" $ do
+            property $ \s -> (not $ any (== s) ["l->", "c->", "->"]) ==> shouldFail deploymentKind s
+
 
 toplevelParserTests :: Spec
 toplevelParserTests = do

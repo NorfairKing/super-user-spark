@@ -18,7 +18,17 @@ shouldFail :: (Show a, Eq a) => Parser a -> String -> IO ()
 shouldFail parser input = input `shouldNotSatisfy` succeeds parser
 
 succeeds :: (Show a, Eq a) => Parser a -> String -> Bool
-succeeds parser input = isRight $ parseWithoutSource (parser >> eof) input
+succeeds parser = succeedsWithLeftover $ parser >> eof
+
+succeedsWithLeftover :: (Show a, Eq a) => Parser a -> String -> Bool
+succeedsWithLeftover parser input = isRight $ parseWithoutSource parser input
+
+succeedsAnywhere :: (Show a, Eq a) => Parser a -> String -> Bool
+succeedsAnywhere p s = or $ map (succeedsWithLeftover p) (tails s)
+  where
+    tails :: [a] -> [[a]]
+    tails [] = [[]]
+    tails ass@(_:as) = ass : tails as
 
 fails :: (Show a, Eq a) => Parser a -> String -> Bool
 fails parser input = not $ succeeds parser input
