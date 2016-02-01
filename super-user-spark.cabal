@@ -61,8 +61,7 @@ test-suite spark-tests
   type:             exitcode-stdio-1.0
   main-is:          MainTest.hs
   hs-source-dirs:   src, test
-  other-modules:    Parser.Test
-                  , Compiler.Test
+  other-modules:    ParserSpec
   build-depends:    base                  >= 4.6   && < 4.9
                   , hspec                 >= 2.2   && < 2.3
                   , HUnit                 >= 1.2   && < 1.3

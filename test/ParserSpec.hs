@@ -314,10 +314,22 @@ declarationParserTests = do
                     ]
 
     describe "declarations" $ do
-        pend
+        it "succeeds for generated declarations'" $ do
+            pending
+        let s = parseShouldSucceedAs declarations
+        it "succeeds for these cases" $ do
+            s "into dir;outof dir" [IntoDir "dir", OutofDir "dir"]
 
     describe "declaration" $ do
-        pend
+        it "succeeds for generated declarations" $ do
+            pending
+        let s = parseShouldSucceedAs declaration
+        it "succeeds for these cases" $ do
+            s "into directory" (IntoDir "directory")
+            s "outof \"other directory\"" (OutofDir "other directory")
+            s "{}" (Block [])
+            s "{{{};{};{}}}" (Block [Block [Block [], Block [], Block[]]])
+            s "\"hi i'm a file\"c->iamthedestination" (Deploy "hi i'm a file" "iamthedestination" (Just CopyDeployment))
 
     describe "block" $ do
         it "succeeds for empty blocks" $ do
@@ -331,10 +343,10 @@ declarationParserTests = do
         it "succeeds for these cases" $ do
             s "{into ~;bashrc -> .bashrc}" (Block [IntoDir "~", Deploy "bashrc" ".bashrc" Nothing])
             s "{\n    into \"~\"\n    \"xmonad\" -> \".xmonad\"\n}" (Block [IntoDir "~", Deploy "xmonad" ".xmonad" Nothing])
-        pend
 
     describe "sparkOff" $ do
-        pend
+        it "succeeds for generated sparkOff declarations" $ do
+            pending
 
         let s f g = parseShouldSucceedAs sparkOff f (SparkOff $ CardName $ CardNameReference g)
         it "succeeds for these cases" $ do
