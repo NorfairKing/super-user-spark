@@ -32,8 +32,8 @@ configFromOptions go = Right conf
             , conf_compile_kind               = opt_kind go
             , conf_compile_override           = opt_overrride go
             , conf_check_thoroughness         = opt_thoroughness go
-            , conf_deploy_replace_links       = opt_replace_links go || opt_replace go
-            , conf_deploy_replace_files       = opt_replace_files go || opt_replace go
+            , conf_deploy_replace_links       = opt_replace_links go       || opt_replace go
+            , conf_deploy_replace_files       = opt_replace_files go       || opt_replace go
             , conf_deploy_replace_directories = opt_replace_directories go || opt_replace go
             , conf_debug                      = opt_debug go
           }
@@ -47,11 +47,11 @@ getOptions = do
 runOptionsParser :: [String] -> ParserResult Options
 runOptionsParser strs = execParserPure prefs optionsParser strs
   where prefs = ParserPrefs {
-            prefMultiSuffix = "SPARK"  -- ^ metavar suffix for multiple options
-          , prefDisambiguate = True    -- ^ automatically disambiguate abbreviations (default: False)
-          , prefShowHelpOnError = True -- ^ always show help text on parse errors (default: False)
-          , prefBacktrack = True       -- ^ backtrack to parent parser when a subcommand fails (default: True)
-          , prefColumns = 80           -- ^ number of columns in the terminal, used to format the help page (default: 80)
+            prefMultiSuffix = "SPARK"  -- metavar suffix for multiple options
+          , prefDisambiguate = True    -- automatically disambiguate abbreviations (default: False)
+          , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
+          , prefBacktrack = True       -- backtrack to parent parser when a subcommand fails (default: True)
+          , prefColumns = 80           -- number of columns in the terminal, used to format the help page (default: 80)
         }
 
 optionsParser :: ParserInfo Options
@@ -188,4 +188,5 @@ parseGlobalOptions = GlobalOptions
       )
     <*> switch
       ( long "debug"
-        <> help "Show al debug information." )
+        <> help "Show al debug information."
+      )

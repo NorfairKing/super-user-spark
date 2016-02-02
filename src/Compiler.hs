@@ -11,21 +11,38 @@ import           Data.List                  (find)
 
 import           Compiler.Internal
 import           Compiler.Types
+import           Parser
 import           Parser.Types
 import           Types
 import           Utils
 
-compileRef :: CompileScope -> Maybe CardNameReference -> Sparker [Deployment]
-compileRef scope mcnr = do
-    firstUnit <- case mcnr of
+compileJob :: CompilerCardReference -> Sparker [Deployment]
+compileJob (CardFileReference fp mcn) = do
+    sf <- parseFile fp
+    let scope = sparkFileCards sf
+    firstUnit <- case mcn of
             Nothing -> if null scope
-                        then throwError $ CompileError "No cards found for compilation."
+                        then throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
                         else return $ head scope
             Just (CardNameReference name) -> do
-                case find (\c -> (card_name . unitCard) c == name) scope of
+                case find (\c -> card_name c == name) scope of
                         Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
                         Just cu -> return cu
-    compile firstUnit scope
+
+    (deps, crfs) <- embedPureCompiler $ compileUnit firstUnit
+    restDeps <- fmap concat $ mapM compileCardReference crfs
+    return $ deps ++ restDeps
+
+  where
+    compileCardReference :: CardReference -> Sparker [Deployment]
+    compileCardReference (CardFile cfr) = compileJob cfr
+    compileCardReference (CardName cnr) = compileJob (CardFileReference fp $ Just cnr)
+
+embedPureCompiler :: PureCompiler a -> Sparker a
+embedPureCompiler func = withExceptT CompileError $ mapExceptT (mapReaderT idToIO) func
+  where
+    idToIO :: Identity a -> IO a
+    idToIO = return . runIdentity
 
 outputCompiled :: [Deployment] -> Sparker ()
 outputCompiled deps = do

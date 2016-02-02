@@ -3,7 +3,11 @@ module Parser.Types where
 
 import           CoreTypes
 
-data SparkFile = SparkFile FilePath [Card]
+data SparkFile = SparkFile
+    { sparkFilePath  :: FilePath
+    , sparkFileCards :: [Card]
+    }
+
 
 -- * Cards
 

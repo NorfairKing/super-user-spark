@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module Types
     (
       module Types
@@ -10,18 +13,28 @@ module Types
     , module Control.Monad.IO.Class
     , module Control.Monad.Reader
     , module Control.Monad.State
+    , module Control.Monad.Supply
     , module Control.Monad.Writer
     , module Control.Monad.Trans
+    , module Control.Monad.Identity
     , module Text.Parsec
+
+    , module Debug.Trace
     ) where
 
-import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
-import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State    (StateT, get, gets, modify, put,
-                                         runStateT)
+import           Control.Monad.Except   (ExceptT, mapExceptT, runExceptT,
+                                         throwError, withExceptT)
+import           Control.Monad.Identity (Identity, runIdentity)
+import           Control.Monad.IO.Class (MonadIO (..), liftIO)
+import           Control.Monad.Reader   (MonadReader (..), ReaderT, ask, asks,
+                                         mapReaderT, runReaderT)
+import           Control.Monad.State    (MonadState (..), StateT, evalStateT,
+                                         get, gets, modify, put, runStateT)
+import           Control.Monad.Supply   (MonadSupply (..), SupplyT, evalSupplyT)
 import           Control.Monad.Trans    (lift)
-import           Control.Monad.Writer   (WriterT, runWriterT, tell)
+import           Control.Monad.Writer   (MonadWriter (..), WriterT, execWriterT,
+                                         runWriterT, tell)
+import           Debug.Trace
 
 import           Text.Parsec            (ParseError)
 
@@ -75,4 +88,20 @@ data FormatterState = FormatterState {
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
 
+-- Extra instances
+instance MonadWriter w m => MonadWriter w (SupplyT d m) where
+    writer = lift . writer
+    tell = lift . tell
+    listen = error "don't listen!"
+    pass = error "don't pass!"
+
+instance MonadState s m => MonadState s (SupplyT d m) where
+    get = lift get
+    put = lift . put
+    state = lift . state
+
+instance MonadReader c m => MonadReader c (SupplyT d m) where
+    ask = lift ask
+    local = error "don't local!"
+    reader = lift . reader
 

@@ -6,7 +6,6 @@ import           Deployer.Types
 import           Dispatch.Types
 import           Formatter
 import           Parser
-import           Parser.Types
 import           Types
 
 dispatch :: Dispatch -> Sparker ()
@@ -15,26 +14,17 @@ dispatch (DispatchFormat fp) = do
     sf <- parseFile fp
     str <- formatSparkFile sf
     liftIO $ putStrLn str
-dispatch (DispatchCompile (CardFileReference fp mcnr)) = do
-    sf <- parseFile fp
-    let cus = resolveUnits sf
-    deployments <- compileRef cus mcnr
+dispatch (DispatchCompile cfr) = do
+    deployments <- compileJob cfr
     outputCompiled deployments
 dispatch (DispatchCheck ccr) = do
     deps <- case ccr of
         DeployerCardCompiled fp -> inputCompiled fp
-        DeployerCardUncompiled (CardFileReference fp mcnr) -> do
-            sf <- parseFile fp
-            let cus = resolveUnits sf
-            compileRef cus mcnr
+        DeployerCardUncompiled cfr -> compileJob cfr
     pdps <- check deps
     liftIO $ putStr $ formatPreDeployments $ zip deps pdps
 dispatch (DispatchDeploy dcr) = do
     deps <- case dcr of
         DeployerCardCompiled fp -> inputCompiled fp
-        DeployerCardUncompiled (CardFileReference fp mcnr) -> do
-            sf <- parseFile fp
-            let cus = resolveUnits sf
-            compileRef cus mcnr
-            -- compile (head cards) cards -- filtering is already done at parse
+        DeployerCardUncompiled cfr -> compileJob cfr
     deploy deps

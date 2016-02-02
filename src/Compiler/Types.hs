@@ -78,33 +78,20 @@ instance ToJSON Deployment where
                          , "deployment kind" .= deployment_kind depl
                          ]
 
-
-
-type SparkCompiler = StateT CompilerState (WriterT [Deployment] Sparker)
-
-type CompileScope = [CompileUnit]
-data CompileUnit = Unit {
-      unitFilePath :: FilePath
-    , unitCard     :: Card
-    } deriving (Show, Eq)
-
 type CompilerPrefix = [PrefixPart]
 
 data PrefixPart = Literal String
                 | Alts [String]
     deriving (Show, Eq)
 
-runSparkCompiler :: CompilerState -> SparkCompiler a -> Sparker ((a,CompilerState), [Deployment])
-runSparkCompiler s func = runWriterT (runStateT func s)
-
-
-data CompilerState = CompilerState {
-        state_current_unit             :: CompileUnit
-    ,   state_current_directory        :: FilePath
-    ,   state_scope                    :: CompileScope
-    ,   state_declarations_left        :: [Declaration]
-    ,   state_deployment_kind_override :: Maybe DeploymentKind
+data CompilerState = CompilerState
+    {   state_deployment_kind_override :: Maybe DeploymentKind
     ,   state_into                     :: Directory
     ,   state_outof_prefix             :: CompilerPrefix
     } deriving (Show, Eq)
+
+type ImpureCompiler = ExceptT CompileError (ReaderT SparkConfig IO)
+type PureCompiler = ExceptT CompileError (ReaderT SparkConfig Identity)
+type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
+type SuppliedCompiler = SupplyT Declaration InternalCompiler
 

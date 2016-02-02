@@ -13,11 +13,13 @@ runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
 
 
+
 data SparkError = ParseError ParseError
                 | CompileError CompileError
                 | DeployError DeployError
                 | UnpredictedError String
     deriving Show
+
 type CompileError = String
 data DeployError = PreDeployError [String]
                  | DuringDeployError [String]
