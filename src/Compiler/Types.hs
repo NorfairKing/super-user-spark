@@ -19,12 +19,11 @@ import           Monad
 import           Parser.Types
 import           Types
 
-data Deployment = Put {
-        deployment_srcs :: [FilePath]
+data Deployment = Put
+    {   deployment_srcs :: [FilePath]
     ,   deployment_dst  :: FilePath
     ,   deployment_kind :: DeploymentKind
-    }
-    deriving Eq
+    } deriving Eq
 
 instance Binary Deployment where
     put depl = do
