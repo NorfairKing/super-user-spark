@@ -2,27 +2,9 @@ module Compiler.Internal where
 
 import           Compiler.Types
 import           Compiler.Utils
-import           Control.Monad   (unless)
 import           Parser.Types
 import           System.FilePath (normalise, (</>))
 import           Types
-
-
-sources :: FilePath -> PrefixPart
-sources fp@('.':f) = Alts [fp, f]
-sources fp = Literal fp
-
-resolvePrefix :: CompilerPrefix -> [FilePath]
-resolvePrefix [] = []
-resolvePrefix [Literal s] = [s]
-resolvePrefix [Alts ds] = ds
-resolvePrefix ((Literal s):ps) = do
-    rest <- resolvePrefix ps
-    return $ s </> rest
-resolvePrefix ((Alts as):ps) = do
-    a <- as
-    rest <- resolvePrefix ps
-    return $ a </> rest
 
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
 compileUnit card = do
@@ -30,16 +12,10 @@ compileUnit card = do
     execWriterT $ evalStateT (compileDecs [card_content card]) initSt
 
 compileDecs :: [Declaration] -> InternalCompiler ()
-compileDecs ds = flip evalSupplyT ds $ go
-  where
-    go = do
-        e <- exhausted
-        unless e $ do
-            d <- supply
-            compileDec d
-            go
+compileDecs = mapM_ compileDec
 
-compileDec :: Declaration -> SuppliedCompiler ()
+
+compileDec :: Declaration -> InternalCompiler ()
 compileDec (Deploy src dst kind) = do
     override <- gets state_deployment_kind_override
     superOverride <- asks conf_compile_override
@@ -79,7 +55,7 @@ compileDec (DeployKindOverride kind) = do
 
 compileDec (Block ds) = do
     before <- get
-    lift $ compileDecs ds
+    compileDecs ds
     put before
 
 

@@ -93,5 +93,4 @@ data CompilerState = CompilerState
 type ImpureCompiler = ExceptT CompileError (ReaderT SparkConfig IO)
 type PureCompiler = ExceptT CompileError (ReaderT SparkConfig Identity)
 type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
-type SuppliedCompiler = SupplyT Declaration InternalCompiler
 

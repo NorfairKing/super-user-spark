@@ -13,7 +13,6 @@ module Types
     , module Control.Monad.IO.Class
     , module Control.Monad.Reader
     , module Control.Monad.State
-    , module Control.Monad.Supply
     , module Control.Monad.Writer
     , module Control.Monad.Trans
     , module Control.Monad.Identity
@@ -29,8 +28,8 @@ import           Control.Monad.IO.Class (MonadIO (..), liftIO)
 import           Control.Monad.Reader   (MonadReader (..), ReaderT, ask, asks,
                                          mapReaderT, runReaderT)
 import           Control.Monad.State    (MonadState (..), StateT, evalStateT,
-                                         get, gets, modify, put, runStateT)
-import           Control.Monad.Supply   (MonadSupply (..), SupplyT, evalSupplyT)
+                                         execStateT, get, gets, modify, put,
+                                         runStateT)
 import           Control.Monad.Trans    (lift)
 import           Control.Monad.Writer   (MonadWriter (..), WriterT, execWriterT,
                                          runWriterT, tell)
@@ -87,21 +86,4 @@ data FormatterState = FormatterState {
 
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
-
--- Extra instances
-instance MonadWriter w m => MonadWriter w (SupplyT d m) where
-    writer = lift . writer
-    tell = lift . tell
-    listen = error "don't listen!"
-    pass = error "don't pass!"
-
-instance MonadState s m => MonadState s (SupplyT d m) where
-    get = lift get
-    put = lift . put
-    state = lift . state
-
-instance MonadReader c m => MonadReader c (SupplyT d m) where
-    ask = lift ask
-    local = error "don't local!"
-    reader = lift . reader
 

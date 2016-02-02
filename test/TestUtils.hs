@@ -1,7 +1,12 @@
-module TestUtils where
+module TestUtils (
+      module TestUtils
+    , module Debug.Trace
+    ) where
 
 import           Test.Hspec
 import           Test.QuickCheck
+
+import           Debug.Trace
 
 import           Control.Monad         (forM, forM_)
 
