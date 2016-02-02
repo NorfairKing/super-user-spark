@@ -3,6 +3,7 @@ module Arguments where
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
+import           Config
 import           Dispatch.Types
 import           Types
 import           Utils
@@ -21,7 +22,7 @@ transformOptions (dispatch, go) = (,) <$> pure dispatch <*> configFromOptions go
 configFromOptions :: GlobalOptions -> Either String SparkConfig
 configFromOptions go = Right conf
   where
-    conf = Config {
+    conf = defaultConfig {
               conf_format_lineUp              = if opt_compress go then False else opt_lineUp go
             , conf_format_indent              = if opt_compress go then 0     else opt_indent go
             , conf_format_trailingNewline     = if opt_compress go then False else opt_trailingNewline go
