@@ -32,5 +32,5 @@ before_install:
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test --haddock
+script: stack $ARGS --no-terminal --install-ghc test --test-arguments="--seed=42" --haddock
 

@@ -32,7 +32,7 @@ build:
 	stack build
 
 test:
-	stack test
+	stack test --test-arguments="--seed=42" # No flaky tests!
 
 install:
 	stack install
