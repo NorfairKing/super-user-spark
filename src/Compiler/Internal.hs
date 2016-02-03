@@ -16,6 +16,16 @@ compileDecs = mapM_ compileDec
 
 
 compileDec :: Declaration -> InternalCompiler ()
+compileDec (Deploy [] [] _) = throwError $ "Deployment given with empty source and destination "
+compileDec (Deploy [] dst _) = throwError $ "Empty source for deployment with destination " ++ dst
+compileDec (Deploy src [] _) = throwError $ "Empty destination for deployment with source " ++ src
+compileDec (Deploy src dst _)
+    | containsNewline src = throwError $
+        "Source of deployment with destination " ++ dst ++ " contains newline characters."
+    | containsNewline dst = throwError $
+        "Destination of deployment with source " ++ src ++ " contains newline characters."
+  where
+    containsNewline f = any (\c -> elem c f) ['\n', '\r']
 compileDec (Deploy src dst kind) = do
     override <- gets state_deployment_kind_override
     superOverride <- asks conf_compile_override
@@ -24,7 +34,6 @@ compileDec (Deploy src dst kind) = do
             (Nothing, Nothing, Just k ) -> k
             (Nothing, Just o , _      ) -> o
             (Just o , _      , _      ) -> o
-
     outof <- gets state_outof_prefix
     into <- gets state_into
 

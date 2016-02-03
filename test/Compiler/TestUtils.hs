@@ -38,3 +38,34 @@ compilationShouldFail
     -> SparkConfig
     -> IO ()
 compilationShouldFail ds s c = runInternalCompiler ds s c `shouldSatisfy` isLeft
+
+singleShouldFail
+    :: SparkConfig
+    -> CompilerState
+    -> Declaration
+    -> IO ()
+singleShouldFail c s d = compilationShouldFail [d] s c
+
+shouldCompileTo
+    :: SparkConfig
+    -> CompilerState
+    -> [Declaration]
+    -> [Deployment]
+    -> IO ()
+shouldCompileTo c s ds eds = do
+    compilationShouldSucceed ds s c
+    let Right (_, (ads, crs)) = runInternalCompiler ds s c
+    ads `shouldBe` eds
+    crs `shouldSatisfy` null
+
+singleShouldCompileTo
+    :: SparkConfig
+    -> CompilerState
+    -> Declaration
+    -> Deployment
+    -> IO ()
+singleShouldCompileTo c s d eds = shouldCompileTo c s [d] [eds]
+
+
+-- Filepath utils
+containsNewlineCharacter f = any (\c -> elem c f) ['\n', '\r']
