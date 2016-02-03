@@ -16,6 +16,7 @@ main = do
 
 showError :: SparkError -> String
 showError (ParseError err) = show err
+showError (PreCompileError errs) = unlines errs
 showError (CompileError err) = err
 showError (UnpredictedError err) = "Panic: " ++ err
 showError (DeployError err) =
