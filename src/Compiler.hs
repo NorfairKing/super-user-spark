@@ -8,6 +8,7 @@ import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find)
+import           System.FilePath            (takeDirectory, (</>))
 
 import           Compiler.Internal
 import           Compiler.Types
@@ -30,13 +31,19 @@ compileJob (CardFileReference fp mcn) = do
                         Just cu -> return cu
 
     (deps, crfs) <- embedPureCompiler $ compileUnit firstUnit
-    restDeps <- fmap concat $ mapM compileCardReference crfs
+    restDeps <- fmap concat
+                $ mapM compileCardReference
+                $ map (resolveCardReferenceRelativeTo fp) crfs
     return $ deps ++ restDeps
 
   where
     compileCardReference :: CardReference -> Sparker [Deployment]
     compileCardReference (CardFile cfr) = compileJob cfr
     compileCardReference (CardName cnr) = compileJob (CardFileReference fp $ Just cnr)
+
+resolveCardReferenceRelativeTo :: FilePath -> CardReference -> CardReference
+resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) = CardFile $ CardFileReference (takeDirectory fp </> cfp) mcn
+resolveCardReferenceRelativeTo _ cn = cn
 
 embedPureCompiler :: PureCompiler a -> Sparker a
 embedPureCompiler func = withExceptT CompileError $ mapExceptT (mapReaderT idToIO) func
