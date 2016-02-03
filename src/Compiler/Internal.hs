@@ -6,6 +6,9 @@ import           Parser.Types
 import           System.FilePath (normalise, (</>))
 import           Types
 
+preCompileChecks :: Card -> PureCompiler ()
+preCompileChecks _ = return ()
+
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
 compileUnit card = do
     initSt <- initialState
@@ -59,7 +62,7 @@ compileDec (OutofDir dir) = do
 
 
 compileDec (DeployKindOverride kind) = do
-     modify (\s -> s {state_deployment_kind_override = Just kind })
+     modify (\s -> s { state_deployment_kind_override = Just kind })
 
 
 compileDec (Block ds) = do
@@ -70,5 +73,5 @@ compileDec (Block ds) = do
 
 compileDec (Alternatives ds) = do
     op <- gets state_outof_prefix
-    modify (\s -> s {state_outof_prefix = op ++ [Alts ds]})
+    modify (\s -> s { state_outof_prefix = op ++ [Alts ds] })
 

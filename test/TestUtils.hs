@@ -29,5 +29,5 @@ forFileInDirss dirs func = do
         else return []
     forM_ allFiles func
 
-pend = it "has no tests yet" pending
+pend = it "is still missing some tests" pending
 

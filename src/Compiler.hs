@@ -21,7 +21,7 @@ compileJob :: CompilerCardReference -> Sparker [Deployment]
 compileJob (CardFileReference fp mcn) = do
     sf <- parseFile fp
     let scope = sparkFileCards sf
-    firstUnit <- case mcn of
+    unit <- case mcn of
             Nothing -> if null scope
                         then throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
                         else return $ head scope
@@ -30,7 +30,9 @@ compileJob (CardFileReference fp mcn) = do
                         Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
                         Just cu -> return cu
 
-    (deps, crfs) <- embedPureCompiler $ compileUnit firstUnit
+    (deps, crfs) <- embedPureCompiler $ do
+        preCompileChecks unit
+        compileUnit unit
     restDeps <- fmap concat
                 $ mapM compileCardReference
                 $ map (resolveCardReferenceRelativeTo fp) crfs

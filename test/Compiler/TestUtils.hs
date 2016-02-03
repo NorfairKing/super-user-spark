@@ -66,6 +66,18 @@ singleShouldCompileTo
     -> IO ()
 singleShouldCompileTo c s d eds = shouldCompileTo c s [d] [eds]
 
+shouldResultInState
+    :: SparkConfig
+    -> CompilerState
+    -> Declaration
+    -> CompilerState
+    -> IO ()
+shouldResultInState c s d es = do
+    compilationShouldSucceed [d] s c
+    let Right (as, _) = runInternalCompiler [d] s c
+    as `shouldBe` es
+
+
 
 -- Filepath utils
 containsNewlineCharacter f = any (\c -> elem c f) ['\n', '\r']

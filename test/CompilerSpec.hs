@@ -88,6 +88,7 @@ singleCompileDec = describe "compileDec" $ do
         it "uses the outof's correctly" $ do
             pending
 
+        pend
 
     describe "SparkOff" $ do
         it "adds a single card file reference to the list of cards to spark later" $ do
@@ -99,6 +100,27 @@ singleCompileDec = describe "compileDec" $ do
         it "adds any card reference to the list" $ do
             pending
 
+        pend
+
+    describe "IntoDir" $ do
+        pend
+
+    describe "OutofDir" $ do
+        pend
+
+    describe "DeployKindOverride" $ do
+        pend
+
+    describe "Block" $ do
+        it "uses a separate scope for its sub-compilation" $ do
+            pendingWith "first we need an arbitrary instance for declarations"
+
+    describe "Alternatives" $ do
+        it "adds an alternatives prefix to the outof prefix in the compiler state" $ do
+            forAll (listOf validFilePath) $ \fps ->
+                shouldResultInState c s (Alternatives fps) $ s { state_outof_prefix = [Alts fps] }
+
+        pend
 
 
 compilerBlackBoxTests :: Spec
