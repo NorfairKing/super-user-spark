@@ -17,6 +17,7 @@ import           Config
 import           Parser.Types
 import           TestUtils
 import           Types
+import           Utils
 
 spec :: Spec
 spec = parallel $ do
@@ -34,8 +35,6 @@ cleanContentCheckSpec = do
     let c = defaultConfig
     let run = runPreCompiler
 
-    let nonNull = arbitrary `suchThat` (not . null)
-
     describe "cleanCardCheck" $ do
         pend
 
@@ -43,19 +42,57 @@ cleanContentCheckSpec = do
         pend
 
     describe "cleanDeclarationCheck" $ do
-        pend -- forAll cleanFilePath $ \fp
+        describe "Deploy" $ do
+            pend
+
+        describe "SparkOff" $ do
+            pend
+
+        describe "IntoDir" $ do
+            pend
+
+        describe "OutofDir" $ do
+            pend
+
+        describe "DeployKindOverride" $ do
+            pend
+
+        describe "Alternatives" $ do
+            pend
+
+        describe "Block" $ do
+            pend
+
+    describe "cleanCardReferenceCheck" $ do
+        pend
+
+    describe "cleanCardFileReferenceCheck" $ do
+        pend
+
+    describe "cleanCardNameReferenceCheck" $ do
+        pend
+
+    describe "cleanCardNameCheck" $ do
+        pend
+
+    let nonNull = arbitrary `suchThat` (not . null)
+    let withoutNewlines = nonNull `suchThat` (not . containsNewlineCharacter)
 
     describe "cleanFilePathCheck" $ do
         it "reports empty an filepath" $ do
             filePathDirty []
         it "reports filepaths with newlines" $ do
             forAll (nonNull `suchThat` containsNewlineCharacter) filePathDirty
+        it "reports filepaths with multiple consequtive slashes" $ do
+            once $ forAll (withoutNewlines `suchThat` containsMultipleConsequtiveSlashes) filePathDirty
 
         let c = filePathClean
         it "doesn't report these valid filepaths" $ do
+            c "noextension"
             c ".bashrc"
             c "file.txt"
             c "Some file with spaces.doc"
+            c "some/relative/filepath.file"
 
 
 defaultCompilerState :: CompilerState
@@ -85,34 +122,9 @@ singleCompileDecSpec = describe "compileDec" $ do
         it "handles filepaths with a leading dot correctly" $ do
             pending
 
-        it "normalizes \'..\' in both source and destination" $ do
-            pending
-
-        it "fails on deployments with empty sources" $ do
-            forAll nonNull $ \t ->
-                sf (Deploy [] t Nothing)
-
-        it "fails on deployments with empty destinations" $ do
-            forAll nonNull $ \t ->
-                sf (Deploy t [] Nothing)
-
-        it "fails on deployments with empty source and destination" $ do
-            sf (Deploy [] [] Nothing)
-
-        it "fails on deployments with a newline character in the source" $ do
-            forAll (nonNull `suchThat` containsNewlineCharacter) $ \from ->
-                forAll validFilePath $ \to ->
-                    sf (Deploy from to Nothing)
-
-        it "fails on deployments with a newline character in the destination" $ do
-            forAll validFilePath $ \from ->
-                forAll (nonNull `suchThat` containsNewlineCharacter) $ \to ->
-                    sf (Deploy from to Nothing)
-
         it "figures out the correct paths in these cases with default config and initial state" $ do
             let d = (Deploy "from" "to" $ Just LinkDeployment)
             sc d (Put ["from"] "to" LinkDeployment)
-
 
         it "uses the alternates correctly" $ do
             pending

@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Utils where
 
+import           Data.List   (isInfixOf)
 import           System.Exit (exitFailure)
 import           System.IO   (hPutStrLn, stderr)
 import           Types
@@ -35,4 +36,7 @@ die err = hPutStrLn stderr err >> exitFailure
 
 containsNewline :: String -> Bool
 containsNewline f = any (\c -> elem c f) ['\n', '\r']
+
+containsMultipleConsequtiveSlashes :: String -> Bool
+containsMultipleConsequtiveSlashes = isInfixOf "//"
 

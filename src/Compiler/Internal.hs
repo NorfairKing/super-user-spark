@@ -3,7 +3,7 @@ module Compiler.Internal where
 import           Compiler.Types
 import           Compiler.Utils
 import           Parser.Types
-import           System.FilePath (normalise, (</>))
+import           System.FilePath ((</>))
 import           Types
 import           Utils
 
@@ -18,16 +18,42 @@ cleanCardCheck (Card name d) = do
     cleanCardNameCheck name
     cleanDeclarationCheck d
 
+cleanDeclarationCheck :: Declaration -> Precompiler ()
+cleanDeclarationCheck (Deploy src dst _) = do
+    cleanFilePathCheck src
+    cleanFilePathCheck dst
+
+cleanDeclarationCheck (SparkOff cr) = cleanCardReferenceCheck cr
+cleanDeclarationCheck (IntoDir dir) = cleanFilePathCheck dir
+cleanDeclarationCheck (OutofDir dir) = cleanFilePathCheck dir
+cleanDeclarationCheck (DeployKindOverride _) = return ()
+cleanDeclarationCheck (Alternatives fs) = mapM_ cleanFilePathCheck fs
+cleanDeclarationCheck (Block ds) = mapM_ cleanDeclarationCheck ds
+
+cleanCardReferenceCheck :: CardReference -> Precompiler ()
+cleanCardReferenceCheck (CardFile cfr) = cleanCardFileReferenceCheck cfr
+cleanCardReferenceCheck (CardName cnr) = cleanCardNameReferenceCheck cnr
+
+cleanCardFileReferenceCheck :: CardFileReference -> Precompiler ()
+cleanCardFileReferenceCheck (CardFileReference fp mcnr) = do
+    cleanFilePathCheck fp
+    case mcnr of
+        Nothing -> return ()
+        Just cnr -> cleanCardNameReferenceCheck cnr
+
+cleanCardNameReferenceCheck :: CardNameReference -> Precompiler ()
+cleanCardNameReferenceCheck (CardNameReference cn) = cleanCardNameCheck cn
+
 cleanCardNameCheck :: CardName -> Precompiler ()
 cleanCardNameCheck _ = return ()
-
-cleanDeclarationCheck :: Declaration -> Precompiler ()
-cleanDeclarationCheck _ = return ()
 
 cleanFilePathCheck :: FilePath -> Precompiler ()
 cleanFilePathCheck [] = dirty "Empty filepath"
 cleanFilePathCheck fp
-    | containsNewline fp = dirty $ "Filepath contains newline character(s): " ++ fp
+    | containsNewline fp =
+        dirty $ "Filepath contains newline character(s): " ++ fp
+    | containsMultipleConsequtiveSlashes fp =
+        dirty $ "Filepath contains multiple consequtive slashes: " ++ fp
     | otherwise = return ()
 
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
@@ -40,14 +66,6 @@ compileDecs = mapM_ compileDec
 
 
 compileDec :: Declaration -> InternalCompiler ()
-compileDec (Deploy [] [] _) = throwError $ "Deployment given with empty source and destination "
-compileDec (Deploy [] dst _) = throwError $ "Empty source for deployment with destination " ++ dst
-compileDec (Deploy src [] _) = throwError $ "Empty destination for deployment with source " ++ src
-compileDec (Deploy src dst _)
-    | containsNewline src = throwError $
-        "Source of deployment with destination " ++ dst ++ " contains newline characters."
-    | containsNewline dst = throwError $
-        "Destination of deployment with source " ++ src ++ " contains newline characters."
 compileDec (Deploy src dst kind) = do
     override <- gets state_deployment_kind_override
     superOverride <- asks conf_compile_override
@@ -59,13 +77,13 @@ compileDec (Deploy src dst kind) = do
     outof <- gets state_outof_prefix
     into <- gets state_into
 
-    let alternates = map normalise . resolvePrefix $ outof ++ [sources src]
-    let destination = normalise $ into </> dst
+    let alternates = resolvePrefix $ outof ++ [sources src]
+    let destination = into </> dst
 
     addDeployment $ Put alternates destination resultKind
 
 
-compileDec (SparkOff st) = addCardRef st
+compileDec (SparkOff cr) = addCardRef cr
 
 
 compileDec (IntoDir dir) = do
