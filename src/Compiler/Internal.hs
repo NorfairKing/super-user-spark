@@ -5,9 +5,30 @@ import           Compiler.Utils
 import           Parser.Types
 import           System.FilePath (normalise, (</>))
 import           Types
+import           Utils
 
-preCompileChecks :: Card -> PureCompiler ()
-preCompileChecks _ = return ()
+preCompileChecks :: Card -> [PreCompileError]
+preCompileChecks c = runIdentity $ execWriterT $ cleanCardCheck c
+
+dirty :: String -> Precompiler ()
+dirty s = tell ["Precompilation check failed: " ++ s]
+
+cleanCardCheck :: Card -> Precompiler ()
+cleanCardCheck (Card name d) = do
+    cleanCardNameCheck name
+    cleanDeclarationCheck d
+
+cleanCardNameCheck :: CardName -> Precompiler ()
+cleanCardNameCheck _ = return ()
+
+cleanDeclarationCheck :: Declaration -> Precompiler ()
+cleanDeclarationCheck _ = return ()
+
+cleanFilePathCheck :: FilePath -> Precompiler ()
+cleanFilePathCheck [] = dirty "Empty filepath"
+cleanFilePathCheck fp
+    | containsNewline fp = dirty $ "Filepath contains newline character(s): " ++ fp
+    | otherwise = return ()
 
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
 compileUnit card = do
@@ -27,8 +48,6 @@ compileDec (Deploy src dst _)
         "Source of deployment with destination " ++ dst ++ " contains newline characters."
     | containsNewline dst = throwError $
         "Destination of deployment with source " ++ src ++ " contains newline characters."
-  where
-    containsNewline f = any (\c -> elem c f) ['\n', '\r']
 compileDec (Deploy src dst kind) = do
     override <- gets state_deployment_kind_override
     superOverride <- asks conf_compile_override

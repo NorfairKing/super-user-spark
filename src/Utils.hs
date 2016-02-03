@@ -32,3 +32,7 @@ notImplementedYet = throwError $ UnpredictedError "This feature is not implement
 
 die :: String -> IO a
 die err = hPutStrLn stderr err >> exitFailure
+
+containsNewline :: String -> Bool
+containsNewline f = any (\c -> elem c f) ['\n', '\r']
+

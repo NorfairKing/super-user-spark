@@ -3,6 +3,7 @@ module Compiler where
 import           Codec.Compression.GZip     (bestCompression, compressLevel,
                                              compressWith, decompress,
                                              defaultCompressParams)
+import           Control.Monad              (when)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode)
@@ -30,12 +31,18 @@ compileJob (CardFileReference fp mcn) = do
                         Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
                         Just cu -> return cu
 
-    (deps, crfs) <- embedPureCompiler $ do
-        preCompileChecks unit
-        compileUnit unit
+    -- Precompile checks
+    let pces = preCompileChecks unit
+    when (not . null $ pces) $ throwError $ PreCompileError pces
+
+    -- Compile this unit
+    (deps, crfs) <- embedPureCompiler $ compileUnit unit
+
+    -- Compile the rest of the units
     restDeps <- fmap concat
                 $ mapM compileCardReference
                 $ map (resolveCardReferenceRelativeTo fp) crfs
+
     return $ deps ++ restDeps
 
   where

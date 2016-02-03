@@ -15,12 +15,14 @@ runSparker conf func = runReaderT (runExceptT func) conf
 
 
 data SparkError = ParseError ParseError
+                | PreCompileError [PreCompileError]
                 | CompileError CompileError
                 | DeployError DeployError
                 | UnpredictedError String
     deriving Show
 
 type CompileError = String
+type PreCompileError = String
 data DeployError = PreDeployError [String]
                  | DuringDeployError [String]
                  | PostDeployError [String]

@@ -20,8 +20,43 @@ import           Types
 
 spec :: Spec
 spec = parallel $ do
-    singleCompileDec
+    singleCompileDecSpec
+    precompileSpec
     compilerBlackBoxTests
+
+
+precompileSpec :: Spec
+precompileSpec = describe "pre-compilation" $ do
+    cleanContentCheckSpec
+
+cleanContentCheckSpec :: Spec
+cleanContentCheckSpec = do
+    let c = defaultConfig
+    let run = runPreCompiler
+
+    let nonNull = arbitrary `suchThat` (not . null)
+
+    describe "cleanCardCheck" $ do
+        pend
+
+    describe "cleanCardNameCheck" $ do
+        pend
+
+    describe "cleanDeclarationCheck" $ do
+        pend -- forAll cleanFilePath $ \fp
+
+    describe "cleanFilePathCheck" $ do
+        it "reports empty an filepath" $ do
+            filePathDirty []
+        it "reports filepaths with newlines" $ do
+            forAll (nonNull `suchThat` containsNewlineCharacter) filePathDirty
+
+        let c = filePathClean
+        it "doesn't report these valid filepaths" $ do
+            c ".bashrc"
+            c "file.txt"
+            c "Some file with spaces.doc"
+
 
 defaultCompilerState :: CompilerState
 defaultCompilerState = CompilerState
@@ -30,8 +65,8 @@ defaultCompilerState = CompilerState
     , state_outof_prefix = []
     }
 
-singleCompileDec :: Spec
-singleCompileDec = describe "compileDec" $ do
+singleCompileDecSpec :: Spec
+singleCompileDecSpec = describe "compileDec" $ do
     let s = defaultCompilerState
     let c = defaultConfig
     let sc = singleShouldCompileTo c s

@@ -90,7 +90,10 @@ data CompilerState = CompilerState
     ,   state_outof_prefix             :: CompilerPrefix
     } deriving (Show, Eq)
 
+type PrecompileError = String
+
 type ImpureCompiler = ExceptT CompileError (ReaderT SparkConfig IO)
 type PureCompiler = ExceptT CompileError (ReaderT SparkConfig Identity)
+type Precompiler = WriterT [PrecompileError] Identity
 type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
 
