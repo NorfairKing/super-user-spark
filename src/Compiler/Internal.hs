@@ -26,7 +26,7 @@ cleanDeclarationCheck (Deploy src dst _) = do
 cleanDeclarationCheck (SparkOff cr) = cleanCardReferenceCheck cr
 cleanDeclarationCheck (IntoDir dir) = cleanFilePathCheck dir
 cleanDeclarationCheck (OutofDir dir) = cleanFilePathCheck dir
-cleanDeclarationCheck (DeployKindOverride _) = return ()
+cleanDeclarationCheck (DeployKindOverride _) = return () -- Nothing can go wrong.
 cleanDeclarationCheck (Alternatives fs) = mapM_ cleanFilePathCheck fs
 cleanDeclarationCheck (Block ds) = mapM_ cleanDeclarationCheck ds
 
@@ -45,7 +45,9 @@ cleanCardNameReferenceCheck :: CardNameReference -> Precompiler ()
 cleanCardNameReferenceCheck (CardNameReference cn) = cleanCardNameCheck cn
 
 cleanCardNameCheck :: CardName -> Precompiler ()
-cleanCardNameCheck _ = return ()
+cleanCardNameCheck n
+    | containsNewline n = dirty $ "Card name contains newline character(s): " ++ n
+    | otherwise = return ()
 
 cleanFilePathCheck :: FilePath -> Precompiler ()
 cleanFilePathCheck [] = dirty "Empty filepath"

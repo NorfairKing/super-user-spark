@@ -10,6 +10,7 @@ import           System.FilePath.Posix ((</>))
 import           CoreTypes
 --import           Compiler.TestUtils
 import           Compiler
+import           Compiler.Gen
 import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
@@ -34,33 +35,107 @@ cleanContentCheckSpec :: Spec
 cleanContentCheckSpec = do
     let c = defaultConfig
     let run = runPreCompiler
+    let validFp = arbitrary `suchThat` cleanBy cleanFilePathCheck
 
     describe "cleanCardCheck" $ do
-        pend
+        it "doesn't report any card with valid content and a valid name" $ do
+            forAll (arbitrary `suchThat` cleanBy cleanCardNameCheck) $ \cn ->
+              forAll (arbitrary `suchThat` cleanBy cleanDeclarationCheck) $ \cc ->
+                Card cn cc `shouldSatisfy` cleanBy cleanCardCheck
 
     describe "cleanCardNameCheck" $ do
         pend
 
+        it "doesn't report an emty card name" $ do
+            "" `shouldSatisfy` cleanBy cleanCardNameCheck
+
+        it "reports card names with newlines" $ do
+            forAll (arbitrary `suchThat` containsNewlineCharacter) $ \s ->
+                s `shouldNotSatisfy` cleanBy cleanCardNameCheck
+
     describe "cleanDeclarationCheck" $ do
         describe "Deploy" $ do
+            it "doesn't report Deploy declarations with valid filepaths" $ do
+                forAll validFp $ \src ->
+                  forAll validFp $ \dst ->
+                    forAll arbitrary $ \kind ->
+                      Deploy src dst kind `shouldSatisfy` cleanBy cleanDeclarationCheck
+
+            it "reports Deploy declarations with an invalid source" $ do
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \src ->
+                  forAll validFp $ \dst ->
+                    forAll arbitrary $ \kind ->
+                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "reports Deploy declarations with an invalid destination" $ do
+                forAll validFp $ \src ->
+                  forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \dst ->
+                    forAll arbitrary $ \kind ->
+                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "SparkOff" $ do
+            it "reports SparkOff declarations with an invalid card reference" $ do
+                forAll (arbitrary `suchThat` (not . cleanBy cleanCardReferenceCheck)) $ \cr ->
+                  SparkOff cr `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "doesn't report SparkOff declarations with a valid card reference" $ do
+                forAll (arbitrary `suchThat` cleanBy cleanCardReferenceCheck) $ \cr ->
+                  SparkOff cr `shouldSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "IntoDir" $ do
+            it "reports IntoDir declarations with an invalid filepath" $ do
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
+                  IntoDir fp `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "doesn't report IntoDir declarations with a valid filepath" $ do
+                forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
+                  IntoDir fp `shouldSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "OutofDir" $ do
+            it "reports OutofDir declarations with an invalid filepath" $ do
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
+                  OutofDir fp `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "doesn't report OutofDir declarations with a valid filepath" $ do
+                forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
+                  OutofDir fp `shouldSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "DeployKindOverride" $ do
+            it "doesn't report any deployment kind override declarations" $ do
+                forAll arbitrary $ \kind ->
+                    DeployKindOverride kind `shouldSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "Alternatives" $ do
+            it "reports alternatives declarations with as much as a single invalid filepath" $ do
+                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanFilePathCheck)) $ \fs ->
+                    Alternatives fs `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "doesn't report alternatives declarations with valid filepaths" $ do
+                forAll (arbitrary `suchThat` (all $ cleanBy cleanFilePathCheck)) $ \fs ->
+                    Alternatives fs `shouldSatisfy` cleanBy cleanDeclarationCheck
+
             pend
 
         describe "Block" $ do
+            it "reports block declarations with as much as a single invalid declaration inside" $ do
+                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanDeclarationCheck)) $ \ds ->
+                    Block ds `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+
+            it "doesn't report any block declarations with valid declarations inside" $ do
+                forAll (arbitrary `suchThat` (all $ cleanBy cleanDeclarationCheck)) $ \ds ->
+                    Block ds `shouldSatisfy` cleanBy cleanDeclarationCheck
+
+
             pend
 
     describe "cleanCardReferenceCheck" $ do
@@ -72,17 +147,16 @@ cleanContentCheckSpec = do
     describe "cleanCardNameReferenceCheck" $ do
         pend
 
-    describe "cleanCardNameCheck" $ do
-        pend
-
-    let nonNull = arbitrary `suchThat` (not . null)
-    let withoutNewlines = nonNull `suchThat` (not . containsNewlineCharacter)
 
     describe "cleanFilePathCheck" $ do
         it "reports empty an filepath" $ do
             filePathDirty []
+
+        let nonNull = arbitrary `suchThat` (not . null)
         it "reports filepaths with newlines" $ do
             forAll (nonNull `suchThat` containsNewlineCharacter) filePathDirty
+
+        let withoutNewlines = nonNull `suchThat` (not . containsNewlineCharacter)
         it "reports filepaths with multiple consequtive slashes" $ do
             once $ forAll (withoutNewlines `suchThat` containsMultipleConsequtiveSlashes) filePathDirty
 
