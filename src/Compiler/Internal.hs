@@ -101,7 +101,7 @@ compileDec (OutofDir dir) = do
 
 
 compileDec (DeployKindOverride kind) = do
-     modify (\s -> s { state_deployment_kind_override = Just kind })
+    modify (\s -> s { state_deployment_kind_override = Just kind })
 
 
 compileDec (Block ds) = do

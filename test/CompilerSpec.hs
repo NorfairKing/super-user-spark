@@ -218,6 +218,7 @@ singleCompileDecSpec = describe "compileDec" $ do
     let nonNull = arbitrary `suchThat` (not . null)
     let validFilePath = nonNull `suchThat` (not . containsNewlineCharacter)
     let easyFilePath = validFilePath `suchThat` (not . isPrefixOf ".")
+    let validFp = arbitrary `suchThat` cleanBy cleanFilePathCheck
 
     describe "Deploy" $ do
         it "uses the exact right text in source and destination when given valid filepaths without a leading dot" $ do
@@ -255,23 +256,40 @@ singleCompileDecSpec = describe "compileDec" $ do
 
         pend
 
+    let shouldState = shouldResultInState c s
     describe "IntoDir" $ do
+        it "adds the given directory to the into state" $ do
+            forAll validFp $ \fp ->
+                shouldState (IntoDir fp) $ s { state_into = fp }
+
+        it "compounds with the input state" $ do
+            pendingWith "Change the input state to an explicit list first"
+
         pend
 
     describe "OutofDir" $ do
+        it "adds the given directory to the outof state" $ do
+            forAll validFp $ \fp ->
+                shouldState (OutofDir fp) $ s { state_outof_prefix = [Literal fp] }
+
         pend
 
     describe "DeployKindOverride" $ do
+        it "modifies the internal deployment kind override" $ do
+            property $ \kind -> shouldState (DeployKindOverride kind) $ s { state_deployment_kind_override = Just kind }
+
         pend
 
     describe "Block" $ do
         it "uses a separate scope for its sub-compilation" $ do
-            pendingWith "first we need an arbitrary instance for declarations"
+            property $ \ds -> shouldState (Block ds) s
+
+        pend
 
     describe "Alternatives" $ do
         it "adds an alternatives prefix to the outof prefix in the compiler state" $ do
             forAll (listOf validFilePath) $ \fps ->
-                shouldResultInState c s (Alternatives fps) $ s { state_outof_prefix = [Alts fps] }
+                shouldState (Alternatives fps) $ s { state_outof_prefix = [Alts fps] }
 
         pend
 

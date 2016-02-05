@@ -14,15 +14,26 @@ instance Arbitrary Card where
     arbitrary = Card <$> arbitrary <*> arbitrary
 
 instance Arbitrary Declaration where
-    arbitrary = oneof
-        [ SparkOff <$> arbitrary
-        , Deploy <$> arbitrary <*> arbitrary <*> arbitrary
-        , IntoDir <$> arbitrary
-        , OutofDir <$> arbitrary
-        , DeployKindOverride <$> arbitrary
-        , Alternatives <$> arbitrary
-        , Block <$> arbitrary
-        ]
+    arbitrary = resize 5 $ sized go
+      where
+        go 0 = oneof
+            [ SparkOff <$> arbitrary
+            , Deploy <$> arbitrary <*> arbitrary <*> arbitrary
+            , IntoDir <$> arbitrary
+            , OutofDir <$> arbitrary
+            , DeployKindOverride <$> arbitrary
+            , Alternatives <$> arbitrary
+            , Block <$> arbitrary
+            ]
+        go n = oneof
+            [ SparkOff <$> arbitrary
+            , Deploy <$> arbitrary <*> arbitrary <*> arbitrary
+            , IntoDir <$> arbitrary
+            , OutofDir <$> arbitrary
+            , DeployKindOverride <$> arbitrary
+            , Alternatives <$> arbitrary
+            , Block <$> listOf (go $ n - 1)
+            ]
 
 instance Arbitrary DeploymentKind where
     arbitrary = elements [LinkDeployment, CopyDeployment]
