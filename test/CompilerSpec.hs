@@ -139,12 +139,43 @@ cleanContentCheckSpec = do
             pend
 
     describe "cleanCardReferenceCheck" $ do
-        pend
+        it "works the same as cleanCardNameCheck separately" $ do
+            forAll arbitrary $ \cnr ->
+                cleanBy cleanCardNameReferenceCheck cnr === cleanBy cleanCardReferenceCheck (CardName cnr)
 
-    describe "cleanCardFileReferenceCheck" $ do
+        it "works the same as cleanCardFileCheck separately" $ do
+            forAll arbitrary $ \cfr ->
+                cleanBy cleanCardFileReferenceCheck cfr === cleanBy cleanCardReferenceCheck (CardFile cfr)
+
         pend
 
     describe "cleanCardNameReferenceCheck" $ do
+        it "reports card name references with an invalid card name" $ do
+            forAll (arbitrary `suchThat` (not . cleanBy cleanCardNameCheck)) $ \cn ->
+                CardNameReference cn `shouldNotSatisfy` cleanBy cleanCardNameReferenceCheck
+
+        it "doesn't report card name references with a valid card name" $ do
+            forAll (arbitrary `suchThat` cleanBy cleanCardNameCheck) $ \cn ->
+                CardNameReference cn `shouldSatisfy` cleanBy cleanCardNameReferenceCheck
+
+        pend
+
+    describe "cleanCardFileReferenceCheck" $ do
+        it "reports card file references with an invalid filepath" $ do
+            forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
+                forAll arbitrary $ \cn ->
+                    CardFileReference fp cn `shouldNotSatisfy` cleanBy cleanCardFileReferenceCheck
+
+        it "reports card file references with an invalid card name" $ do
+            forAll arbitrary $ \fp ->
+                forAll (arbitrary `suchThat` (not . cleanBy cleanCardNameReferenceCheck)) $ \cn ->
+                    CardFileReference fp (Just cn) `shouldNotSatisfy` cleanBy cleanCardFileReferenceCheck
+
+        it "doesn't report card file references with a valid card name reference and valid filepath" $ do
+            forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
+                forAll (arbitrary `suchThat` cleanBy cleanCardNameReferenceCheck) $ \cn ->
+                    CardFileReference fp (Just cn) `shouldSatisfy` cleanBy cleanCardFileReferenceCheck
+
         pend
 
 
@@ -169,6 +200,7 @@ cleanContentCheckSpec = do
             c "some/relative/filepath.file"
 
 
+-- TODO(syd) Use the default config to generate this!
 defaultCompilerState :: CompilerState
 defaultCompilerState = CompilerState
     { state_deployment_kind_override = Nothing
