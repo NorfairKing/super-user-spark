@@ -25,7 +25,6 @@ compileJob cr@(CardFileReference root _) = go "" cr
     go :: FilePath -> CompilerCardReference -> Sparker [Deployment]
     go base (CardFileReference fp mcn) = do
         sf <- parseFile fp
-        traceShow sf $ return ()
         let scope = sparkFileCards sf
         unit <- case mcn of
                 Nothing -> case headMay scope of
@@ -44,7 +43,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
         when (not . null $ pces) $ throwError $ PreCompileError pces
 
         -- Compile this unit
-        (deps, crfs) <- embedPureCompiler $ compileUnit $ traceShowId injected
+        (deps, crfs) <- embedPureCompiler $ compileUnit injected
 
         -- Compile the rest of the units
         restDeps <- fmap concat

@@ -5,7 +5,7 @@ import           Test.QuickCheck
 
 import           Data.Either           (isLeft, isRight)
 import           Data.List             (intercalate, isPrefixOf)
-import           System.FilePath.Posix ((</>))
+import           System.FilePath.Posix (takeExtension, (<.>), (</>))
 
 import           CoreTypes
 --import           Compiler.TestUtils
@@ -25,6 +25,7 @@ spec = parallel $ do
     singleCompileDecSpec
     precompileSpec
     hopTests
+    exactTests
     compilerBlackBoxTests
 
 
@@ -332,6 +333,25 @@ hopTests = do
                 , Put ["hop1dir/hop2dir/y/gamma"] "c/two" LinkDeployment
                 , Put ["hop1dir/hop2dir/hop3dir/z/delta"] "d/three" LinkDeployment
                 ]
+
+exactTests :: Spec
+exactTests = do
+    let runJsonSparker :: Sparker a -> IO (Either SparkError a)
+        runJsonSparker func = flip runReaderT (defaultConfig {conf_compile_format = FormatJson}) $ runExceptT func
+
+    describe "exact tests" $ do
+        let dir = "test_resources/exact_compile_test_src"
+        forFileInDirss [dir] $ \fp ->
+            if takeExtension fp == ".res"
+            then return ()
+            else do
+                it fp $ do
+                    let orig = fp
+                    let result = fp <.> "res"
+                    ads <- runDefaultSparker $ compileJob $ CardFileReference orig Nothing
+                    eds <- runJsonSparker $ inputCompiled result
+                    ads `shouldBe` eds
+
 
 
 compilerBlackBoxTests :: Spec

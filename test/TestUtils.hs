@@ -4,30 +4,32 @@ module TestUtils (
     ) where
 
 import           Test.Hspec
+import           Test.Hspec.Core.Spec
 import           Test.QuickCheck
 
 import           Debug.Trace
 
-import           Control.Monad         (filterM, forM, forM_)
+import           Control.Monad         (filterM, forM, forM_, when)
 
 import           System.Directory      (doesDirectoryExist, doesFileExist,
                                         getDirectoryContents)
 import           System.FilePath.Posix ((<.>), (</>))
 
 concerningContents :: (FilePath -> String -> SpecWith a) -> (FilePath -> SpecWith a)
-concerningContents func file = runIO (readFile file) >>= func file
+concerningContents func file = (runIO $ readFile file) >>= func file
 
 forFileInDirss :: [FilePath] -> (FilePath -> SpecWith a) -> SpecWith a
-forFileInDirss dirs func = do
-    allFiles <- fmap concat $ forM dirs $ \dir -> do
-        exists <- runIO $ doesDirectoryExist dir
-        if exists
-        then do
-            files <- runIO $ getDirectoryContents dir
-            let ffiles = filter (`notElem` [".", ".."]) files
-            runIO $ filterM doesFileExist $ map (dir </>) ffiles
-        else return []
-    forM_ allFiles func
+forFileInDirss [] _ = return ()
+forFileInDirss dirs func = forM_ dirs $ \dir -> do
+    exists <- runIO $ doesDirectoryExist dir
+    when exists $ do
+        files <- runIO $ getDirectoryContents dir
+        let ffiles = filter (`notElem` [".", ".."]) files
+        let fullFiles = map (dir </>) ffiles
+        fs <- runIO $ filterM doesFileExist fullFiles
+        forM_ fs func
+        recdirs <- runIO $ filterM doesDirectoryExist fullFiles
+        forFileInDirss recdirs func
 
 pend = it "is still missing some tests" pending
 

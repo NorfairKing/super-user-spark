@@ -1,0 +1,6 @@
+card alternatives {
+  alternatives 1 2 3 4
+  alternatives a b c d
+  
+  file
+}

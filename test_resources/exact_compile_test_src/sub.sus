@@ -1,0 +1,8 @@
+card sub {
+  spark file sub/subfile.sus
+  spark card other
+}
+
+card other {
+  file.txt
+}
