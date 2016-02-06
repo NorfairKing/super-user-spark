@@ -1,0 +1,6 @@
+card hop3 {
+  into d
+  outof z
+  
+  delta -> three
+}

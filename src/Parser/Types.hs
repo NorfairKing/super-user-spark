@@ -6,7 +6,7 @@ import           CoreTypes
 data SparkFile = SparkFile
     { sparkFilePath  :: FilePath
     , sparkFileCards :: [Card]
-    }
+    } deriving (Show, Eq)
 
 
 -- * Cards

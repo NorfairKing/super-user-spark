@@ -8,7 +8,8 @@ import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode)
 import qualified Data.ByteString.Lazy.Char8 as BS
-import           Data.List                  (find)
+import           Data.List                  (find, stripPrefix)
+import           Safe                       (headMay)
 import           System.FilePath            (takeDirectory, (</>))
 
 import           Compiler.Internal
@@ -19,36 +20,58 @@ import           Types
 import           Utils
 
 compileJob :: CompilerCardReference -> Sparker [Deployment]
-compileJob (CardFileReference fp mcn) = do
-    sf <- parseFile fp
-    let scope = sparkFileCards sf
-    unit <- case mcn of
-            Nothing -> if null scope
-                        then throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
-                        else return $ head scope
-            Just (CardNameReference name) -> do
-                case find (\c -> card_name c == name) scope of
-                        Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
-                        Just cu -> return cu
-
-    -- Precompile checks
-    let pces = preCompileChecks unit
-    when (not . null $ pces) $ throwError $ PreCompileError pces
-
-    -- Compile this unit
-    (deps, crfs) <- embedPureCompiler $ compileUnit unit
-
-    -- Compile the rest of the units
-    restDeps <- fmap concat
-                $ mapM compileCardReference
-                $ map (resolveCardReferenceRelativeTo fp) crfs
-
-    return $ deps ++ restDeps
-
+compileJob cr@(CardFileReference root _) = go "" cr
   where
-    compileCardReference :: CardReference -> Sparker [Deployment]
-    compileCardReference (CardFile cfr) = compileJob cfr
-    compileCardReference (CardName cnr) = compileJob (CardFileReference fp $ Just cnr)
+    go :: FilePath -> CompilerCardReference -> Sparker [Deployment]
+    go base (CardFileReference fp mcn) = do
+        sf <- parseFile fp
+        traceShow sf $ return ()
+        let scope = sparkFileCards sf
+        unit <- case mcn of
+                Nothing -> case headMay scope of
+                    Nothing -> throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
+                    Just first -> return first
+                Just (CardNameReference name) -> do
+                    case find (\c -> card_name c == name) scope of
+                            Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
+                            Just cu -> return cu
+
+        -- Inject base outofDir
+        let injected = injectBase unit
+
+        -- Precompile checks
+        let pces = preCompileChecks injected
+        when (not . null $ pces) $ throwError $ PreCompileError pces
+
+        -- Compile this unit
+        (deps, crfs) <- embedPureCompiler $ compileUnit $ traceShowId injected
+
+        -- Compile the rest of the units
+        restDeps <- fmap concat
+                    $ mapM compileCardReference
+                    $ map (resolveCardReferenceRelativeTo fp) crfs
+
+        return $ deps ++ restDeps
+      where
+
+        injectBase :: Card -> Card
+        injectBase c@(Card name s) | null base = c
+                                   | otherwise = Card name $ Block [OutofDir base, s]
+
+        stripRoot :: FilePath -> FilePath
+        stripRoot orig = case stripPrefix (takeDirectory root) orig of
+            Nothing -> orig
+            Just ('/':new) -> new
+            Just new -> new
+
+        composeBases :: FilePath -> FilePath -> FilePath
+        composeBases base [] = base
+        composeBases _ base2 = takeDirectory (stripRoot base2)
+
+
+        compileCardReference :: CardReference -> Sparker [Deployment]
+        compileCardReference (CardFile cfr@(CardFileReference base2 _)) = go (composeBases base base2) cfr
+        compileCardReference (CardName cnr) = go base (CardFileReference fp $ Just cnr)
 
 resolveCardReferenceRelativeTo :: FilePath -> CardReference -> CardReference
 resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) = CardFile $ CardFileReference (takeDirectory fp </> cfp) mcn

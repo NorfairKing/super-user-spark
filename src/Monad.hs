@@ -19,7 +19,7 @@ data SparkError = ParseError ParseError
                 | CompileError CompileError
                 | DeployError DeployError
                 | UnpredictedError String
-    deriving Show
+    deriving (Show, Eq)
 
 type CompileError = String
 type PreCompileError = String

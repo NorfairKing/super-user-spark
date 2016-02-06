@@ -1,0 +1,7 @@
+card hop2 {
+  into c
+  outof y
+  
+  gamma -> two
+  spark file hop3dir/hop3.sus
+}

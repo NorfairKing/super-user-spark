@@ -8,9 +8,9 @@ import           Test.QuickCheck
 
 import           Debug.Trace
 
-import           Control.Monad         (forM, forM_)
+import           Control.Monad         (filterM, forM, forM_)
 
-import           System.Directory      (doesDirectoryExist,
+import           System.Directory      (doesDirectoryExist, doesFileExist,
                                         getDirectoryContents)
 import           System.FilePath.Posix ((<.>), (</>))
 
@@ -25,7 +25,7 @@ forFileInDirss dirs func = do
         then do
             files <- runIO $ getDirectoryContents dir
             let ffiles = filter (`notElem` [".", ".."]) files
-            return $ map (dir </>) ffiles
+            runIO $ filterM doesFileExist $ map (dir </>) ffiles
         else return []
     forM_ allFiles func
 

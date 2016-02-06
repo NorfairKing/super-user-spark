@@ -24,6 +24,7 @@ spec :: Spec
 spec = parallel $ do
     singleCompileDecSpec
     precompileSpec
+    hopTests
     compilerBlackBoxTests
 
 
@@ -293,22 +294,60 @@ singleCompileDecSpec = describe "compileDec" $ do
 
         pend
 
+runDefaultSparker :: Sparker a -> IO (Either SparkError a)
+runDefaultSparker func = flip runReaderT defaultConfig $ runExceptT $ func
+
+hopTests :: Spec
+hopTests = do
+    describe "hop test" $ do
+        let dir = "test_resources/hop_test"
+        let root = dir </> "root.sus"
+        let hop1 = dir </> "hop1dir" </> "hop1.sus"
+        let hop2 = dir </> "hop1dir" </> "hop2dir" </> "hop2.sus"
+        let hop3 = dir </> "hop1dir" </> "hop2dir" </> "hop3dir" </> "hop3.sus"
+        it "compiles hop3 correctly" $ do
+            r <- runDefaultSparker $ compileJob $ CardFileReference hop3 Nothing
+            r `shouldBe` Right [Put ["z/delta"] "d/three" LinkDeployment]
+
+        it "compiles hop2 correctly" $ do
+            r <- runDefaultSparker $ compileJob $ CardFileReference hop2 Nothing
+            r `shouldBe` Right
+                [ Put ["y/gamma"] "c/two" LinkDeployment
+                , Put ["hop3dir/z/delta"] "d/three" LinkDeployment
+                ]
+
+        it "compiles hop1 correctly" $ do
+            r <- runDefaultSparker $ compileJob $ CardFileReference hop1 Nothing
+            r `shouldBe` Right
+                [ Put ["x/beta"] "b/one" LinkDeployment
+                , Put ["hop2dir/y/gamma"] "c/two" LinkDeployment
+                , Put ["hop2dir/hop3dir/z/delta"] "d/three" LinkDeployment
+                ]
+
+        it "compiles root correctly" $ do
+            r <- runDefaultSparker $ compileJob $ CardFileReference root Nothing
+            r `shouldBe` Right
+                [ Put ["u/alpha"] "a/zero" LinkDeployment
+                , Put ["hop1dir/x/beta"] "b/one" LinkDeployment
+                , Put ["hop1dir/hop2dir/y/gamma"] "c/two" LinkDeployment
+                , Put ["hop1dir/hop2dir/hop3dir/z/delta"] "d/three" LinkDeployment
+                ]
+
 
 compilerBlackBoxTests :: Spec
 compilerBlackBoxTests = do
-
     let tr = "test_resources"
     describe "Correct succesful compile examples" $ do
-        let dirs = map (tr </>) ["shouldCompile"]
+        let dirs = map (tr </>) ["shouldCompile", "hop_test"]
         forFileInDirss dirs $ concerningContents $ \f contents -> do
             it f $ do
-                r <- flip runReaderT defaultConfig $ runExceptT $ compileJob $ CardFileReference f Nothing
+                r <- runDefaultSparker $ compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isRight
 
     describe "Correct unsuccesfull compile examples" $ do
         let dirs = map (tr </>) ["shouldNotParse", "shouldNotCompile"]
         forFileInDirss dirs $ concerningContents $ \f contents -> do
             it f $ do
-                r <- flip runReaderT defaultConfig $ runExceptT $ compileJob $ CardFileReference f Nothing
+                r <- runDefaultSparker $ compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isLeft
 
