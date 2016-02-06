@@ -7,6 +7,7 @@ spark
 dist
 cabal-dev
 *.o
+*.tix
 *.hi
 *.chi
 *.chs.h
