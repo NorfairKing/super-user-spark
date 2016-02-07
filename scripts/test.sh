@@ -1,2 +1,2 @@
 source scripts/lib.sh
-check "Test" make test
+check "Test" make -B test

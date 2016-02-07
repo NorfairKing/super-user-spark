@@ -1,40 +1,12 @@
-NAME = spark
-SRC = $(SRC_DIR)/Main.hs
-BIN = $(NAME)
+all: build test
 
-SRC_DIR = src
-TEST_DIR = test
-
-GHC = ghc
-GHC_OPTIMISATION = -O2
-
-GHC_FLAGS = \
-	-fwarn-unused-imports \
-	-fwarn-incomplete-patterns \
-	-Wall \
-	-fno-warn-unused-do-bind \
-	-fno-warn-name-shadowing
-GHC_SRC_DIRS = \
-	-i$(SRC_DIR) \
-	-ibenchmarks \
-	-i$(TEST_DIR)
-GHC_OPTIONS = \
-	-threaded \
-	$(GHC_OPTIMISATION) \
-	$(GHC_FLAGS) \
-	$(GHC_SRC_DIRS)
-
-
-
-all: bin test
-
-build:
+build: FORCE
 	stack build
 
-test:
+test: FORCE
 	stack test --test-arguments="--seed=42" # No flaky tests!
 
-install:
+install: FORCE
 	stack install
 
 pedantic:
@@ -59,6 +31,8 @@ love:
 	@echo "not war"
 	
 DIRTY_EXT = *.o *.hi *.bin
+
+FORCE:
 
 clean:
 	rm -f $(BIN) $(DIRTY_EXT)
