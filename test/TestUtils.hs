@@ -3,17 +3,14 @@ module TestUtils (
     , module Debug.Trace
     ) where
 
-import           Test.Hspec
-import           Test.Hspec.Core.Spec
-import           Test.QuickCheck
-
-import           Debug.Trace
-
 import           Control.Monad         (filterM, forM, forM_, when)
-
+import           Debug.Trace
 import           System.Directory      (doesDirectoryExist, doesFileExist,
                                         getDirectoryContents)
 import           System.FilePath.Posix ((<.>), (</>))
+import           Test.Hspec
+import           Test.Hspec.Core.Spec
+import           Test.QuickCheck
 
 concerningContents :: (FilePath -> String -> SpecWith a) -> (FilePath -> SpecWith a)
 concerningContents func file = (runIO $ readFile file) >>= func file

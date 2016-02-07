@@ -1,11 +1,10 @@
 module Compiler.Gen where
 
+import           CoreTypes
+import           Language.Types
+import           Parser.Gen
 import           Test.Hspec
 import           Test.QuickCheck
-
-import           CoreTypes
-import           Parser.Gen
-import           Parser.Types
 
 instance Arbitrary SparkFile where
     arbitrary = SparkFile <$> arbitrary <*> arbitrary

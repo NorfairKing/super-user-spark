@@ -28,11 +28,11 @@ executable spark
                   , Dispatch
                   , Dispatch.Types
                   , Formatter
+                  , Language.Types
                   , Main
                   , Monad
                   , Parser
                   , Parser.Internal
-                  , Parser.Types
                   , Types
                   , Utils
   ghc-options:      -Wall

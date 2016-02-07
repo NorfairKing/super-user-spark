@@ -1,17 +1,14 @@
 module Deployer.Types where
 
+import           Language.Types
 import           Monad
 import           System.Directory      (Permissions (..))
 import           System.FilePath.Posix (takeExtension)
-
-import           Parser.Types
 import           Types
 
-
-type CheckerCardReference = DeployerCardReference
-
-data DeployerCardReference = DeployerCardCompiled CompiledCardReference
-                           | DeployerCardUncompiled CardFileReference
+data DeployerCardReference
+    = DeployerCardCompiled FilePath
+    | DeployerCardUncompiled CardFileReference
     deriving (Show, Eq)
 
 instance Read DeployerCardReference where

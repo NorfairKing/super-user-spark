@@ -1,13 +1,11 @@
 module Compiler.TestUtils where
 
-import           Test.Hspec
-import           Test.QuickCheck
-
-import           Data.Either       (isLeft, isRight)
-
 import           Compiler.Internal
 import           Compiler.Types
-import           Parser.Types
+import           Data.Either       (isLeft, isRight)
+import           Language.Types
+import           Test.Hspec
+import           Test.QuickCheck
 import           Types
 
 runPreCompiler :: Precompiler () -> [PrecompileError]

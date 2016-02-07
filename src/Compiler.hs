@@ -14,14 +14,14 @@ import           System.FilePath            (takeDirectory, (</>))
 
 import           Compiler.Internal
 import           Compiler.Types
+import           Language.Types
 import           Parser
-import           Parser.Types
 import           Types
 
-compileJob :: CompilerCardReference -> Sparker [Deployment]
+compileJob :: CardFileReference -> Sparker [Deployment]
 compileJob cr@(CardFileReference root _) = go "" cr
   where
-    go :: FilePath -> CompilerCardReference -> Sparker [Deployment]
+    go :: FilePath -> CardFileReference -> Sparker [Deployment]
     go base (CardFileReference fp mcn) = do
         sf <- parseFile fp
         let scope = sparkFileCards sf
@@ -30,7 +30,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
                     Nothing -> throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
                     Just first -> return first
                 Just (CardNameReference name) -> do
-                    case find (\c -> card_name c == name) scope of
+                    case find (\c -> cardName c == name) scope of
                             Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
                             Just cu -> return cu
 

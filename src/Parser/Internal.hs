@@ -1,13 +1,11 @@
 module Parser.Internal where
 
+import           Constants
+import           Data.List          (isSuffixOf)
+import           Deployer.Types
+import           Language.Types
 import           Text.Parsec
 import           Text.Parsec.String
-
-import           Data.List          (isSuffixOf)
-
-import           Constants
-import           Deployer.Types
-import           Parser.Types
 import           Types
 
 
@@ -42,7 +40,7 @@ card = do
     whitespace
     skip $ string keywordCard
     whitespace
-    name <- cardName
+    name <- cardNameP
     whitespace
     b <- block
     whitespace
@@ -77,7 +75,7 @@ sparkOff = do
     return $ SparkOff ref
     <?> "sparkoff"
 
-compilerCardReference :: Parser CompilerCardReference
+compilerCardReference :: Parser CardFileReference
 compilerCardReference = unprefixedCardFileReference
 
 deployerCardReference :: Parser DeployerCardReference
@@ -86,12 +84,11 @@ deployerCardReference = goComp <|> goUncomp
     goComp = compiledCardReference >>= return . DeployerCardCompiled
     goUncomp = unprefixedCardFileReference >>= return . DeployerCardUncompiled
 
-compiledCardReference :: Parser CompiledCardReference
+compiledCardReference :: Parser FilePath
 compiledCardReference = do
     skip $ string "compiled"
     skip linespace
-    fp <- filepath
-    return fp
+    filepath
 
 cardReference :: Parser CardReference
 cardReference = try goName <|> try goFile <?> "card reference"
@@ -103,12 +100,12 @@ cardNameReference :: Parser CardNameReference
 cardNameReference = do
     skip $ string keywordCard
     linespace
-    name <- cardName
+    name <- cardNameP
     return $ CardNameReference name
     <?> "card name reference"
 
-cardName :: Parser CardName
-cardName = identifier <?> "card name"
+cardNameP :: Parser CardName
+cardNameP = identifier <?> "card name"
 
 cardFileReference :: Parser CardFileReference
 cardFileReference = do
@@ -120,7 +117,7 @@ unprefixedCardFileReference :: Parser CardFileReference
 unprefixedCardFileReference = do
     fp <- filepath
     linespace
-    mn <- optionMaybe $ try cardName
+    mn <- optionMaybe $ try cardNameP
     return $ case mn of
         Nothing -> CardFileReference fp Nothing
         Just cn  -> CardFileReference fp (Just $ CardNameReference cn)

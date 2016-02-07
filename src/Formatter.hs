@@ -6,7 +6,7 @@ import           Data.Maybe     (catMaybes)
 import           Compiler.Types
 import           Constants
 import           Deployer.Types
-import           Parser.Types
+import           Language.Types
 import           Types
 
 formatSparkFile :: SparkFile -> Sparker String

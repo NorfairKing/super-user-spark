@@ -1,10 +1,8 @@
-module Parser (
-      parseFile
-    ) where
+module Parser where
 
 import           Control.Exception (try)
+import           Language.Types
 import           Parser.Internal
-import           Parser.Types
 import           Types
 
 

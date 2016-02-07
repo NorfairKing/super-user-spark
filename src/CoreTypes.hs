@@ -7,6 +7,8 @@ import           Data.Aeson    (FromJSON (..), ToJSON (..), Value (..))
 import           Data.Binary   (Binary (..), Get)
 import qualified Data.Binary   as B
 
+type Directory = FilePath
+
 -- | The kind of a deployment
 data DeploymentKind = LinkDeployment
                     | CopyDeployment

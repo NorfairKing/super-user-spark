@@ -15,8 +15,8 @@ import           Data.ByteString.Char8 (pack, unpack)
 
 import           Constants
 import           CoreTypes
+import           Language.Types
 import           Monad
-import           Parser.Types
 import           Types
 
 data Deployment = Put
@@ -85,9 +85,9 @@ data PrefixPart = Literal String
     deriving (Show, Eq)
 
 data CompilerState = CompilerState
-    {   state_deployment_kind_override :: Maybe DeploymentKind
-    ,   state_into                     :: Directory
-    ,   state_outof_prefix             :: CompilerPrefix
+    { state_deployment_kind_override :: Maybe DeploymentKind
+    , state_into                     :: Directory
+    , state_outof_prefix             :: CompilerPrefix
     } deriving (Show, Eq)
 
 type PrecompileError = String

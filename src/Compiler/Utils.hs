@@ -1,7 +1,7 @@
 module Compiler.Utils where
 
 import           Compiler.Types
-import           Parser.Types
+import           Language.Types
 import           System.FilePath ((</>))
 import           Types
 

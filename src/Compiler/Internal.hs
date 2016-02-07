@@ -2,7 +2,7 @@ module Compiler.Internal where
 
 import           Compiler.Types
 import           Compiler.Utils
-import           Parser.Types
+import           Language.Types
 import           System.FilePath ((</>))
 import           Types
 import           Utils
@@ -61,7 +61,7 @@ cleanFilePathCheck fp
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
 compileUnit card = do
     initSt <- initialState
-    execWriterT $ evalStateT (compileDecs [card_content card]) initSt
+    execWriterT $ evalStateT (compileDecs [cardContent card]) initSt
 
 compileDecs :: [Declaration] -> InternalCompiler ()
 compileDecs = mapM_ compileDec

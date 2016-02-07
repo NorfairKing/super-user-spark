@@ -1,15 +1,12 @@
 module Parser.TestUtils where
 
+import           Data.Either        (isLeft, isRight)
+import           Language.Types
+import           Parser.Internal
 import           Test.Hspec
 import           Test.QuickCheck
-
-import           Data.Either        (isLeft, isRight)
-
 import           Text.Parsec
 import           Text.Parsec.String
-
-import           Parser.Internal
-import           Parser.Types
 
 shouldSucceed :: (Show a, Eq a) => Parser a -> String -> IO ()
 shouldSucceed parser input = input `shouldSatisfy` succeeds parser
