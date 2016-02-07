@@ -17,7 +17,6 @@ import           Compiler.Types
 import           Parser
 import           Parser.Types
 import           Types
-import           Utils
 
 compileJob :: CompilerCardReference -> Sparker [Deployment]
 compileJob cr@(CardFileReference root _) = go "" cr
@@ -101,8 +100,6 @@ outputCompiled deps = do
             case out of
                 Nothing -> liftIO $ BS.putStrLn bs
                 Just fp -> liftIO $ BS.writeFile fp bs
-
-        FormatStandalone -> notImplementedYet
   where
     compressionParams = defaultCompressParams {compressLevel = bestCompression}
 
@@ -123,7 +120,5 @@ inputCompiled fp = do
             case eitherDecode bs of
                 Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data: " ++ err
                 Right ds        -> return ds
-
-        FormatStandalone -> throwError $ CompileError "You're not supposed to use standalone compiled deployments in any other way than by executing it."
 
 

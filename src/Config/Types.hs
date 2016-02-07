@@ -23,14 +23,12 @@ data SparkConfig = Config {
 data CompileFormat = FormatBinary
                    | FormatText
                    | FormatJson
-                   | FormatStandalone
     deriving (Show, Eq)
 
 instance Read CompileFormat where
     readsPrec _ "binary"     = [(FormatBinary,"")]
     readsPrec _ "text"       = [(FormatText,"")]
     readsPrec _ "json"       = [(FormatJson,"")]
-    readsPrec _ "standalone" = [(FormatStandalone,"")]
     readsPrec _ _ = []
 
 data CheckThoroughness = ThoroughnessName
