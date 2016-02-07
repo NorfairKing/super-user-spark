@@ -9,7 +9,6 @@ import           Data.Aeson.Encode.Pretty   (encodePretty)
 import           Data.Binary                (decodeOrFail, encode)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, stripPrefix)
-import           Safe                       (headMay)
 import           System.FilePath            (takeDirectory, (</>))
 
 import           Compiler.Internal
@@ -26,9 +25,9 @@ compileJob cr@(CardFileReference root _) = go "" cr
         sf <- parseFile fp
         let scope = sparkFileCards sf
         unit <- case mcn of
-                Nothing -> case headMay scope of
-                    Nothing -> throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
-                    Just first -> return first
+                Nothing -> case scope of
+                    [] -> throwError $ CompileError $ "No cards found for compilation in file:" ++ fp
+                    (first:_) -> return first
                 Just (CardNameReference name) -> do
                     case find (\c -> cardName c == name) scope of
                             Nothing   -> throwError $ CompileError $ unwords ["Card", name, "not found for compilation."]
