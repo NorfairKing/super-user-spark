@@ -20,14 +20,10 @@ data SparkConfig = Config {
     } deriving (Show, Eq)
 
 
-data CompileFormat = FormatBinary
-                   | FormatText
-                   | FormatJson
+data CompileFormat = FormatJson
     deriving (Show, Eq)
 
 instance Read CompileFormat where
-    readsPrec _ "binary"     = [(FormatBinary,"")]
-    readsPrec _ "text"       = [(FormatText,"")]
     readsPrec _ "json"       = [(FormatJson,"")]
     readsPrec _ _ = []
 

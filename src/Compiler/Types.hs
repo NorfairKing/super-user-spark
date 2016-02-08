@@ -1,20 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Compiler.Types where
 
-import           Control.Monad         (mzero)
-
-import           Data.Aeson            (FromJSON (..), ToJSON (..), Value (..),
-                                        object, (.:), (.=))
-
-
-import           Data.Binary           (Binary (..), Get)
-import qualified Data.Binary           as B
-
-import           Data.ByteString       (ByteString)
-import           Data.ByteString.Char8 (pack, unpack)
-
 import           Constants
+import           Control.Monad  (mzero)
 import           CoreTypes
+import           Data.Aeson     (FromJSON (..), ToJSON (..), Value (..), object,
+                                 (.:), (.=))
 import           Language.Types
 import           Monad
 import           Types
@@ -24,36 +15,6 @@ data Deployment = Put
     ,   deployment_dst  :: FilePath
     ,   deployment_kind :: DeploymentKind
     } deriving Eq
-
-instance Binary Deployment where
-    put depl = do
-        B.put $ map pack $ deployment_srcs depl
-        B.put $ deployment_kind depl
-        B.put $ pack $ deployment_dst depl
-    get = do
-        bsrcs <- B.get :: Get [ByteString]
-        kind <- B.get :: Get DeploymentKind
-        dst <- B.get :: Get ByteString
-        return $ Put {
-                deployment_srcs = map unpack bsrcs
-            ,   deployment_kind = kind
-            ,   deployment_dst = unpack dst
-            }
-
-instance Read Deployment where
-    readsPrec _ str = [(Put {
-                deployment_srcs = srcs
-            ,   deployment_dst = dst
-            ,   deployment_kind = kind
-            }, "")]
-      where
-          srcs = (map unquote . reverse . drop 2 . reverse) ws
-          kind = case lookup (last $ init ws) [(linkKindSymbol, LinkDeployment), (copyKindSymbol, CopyDeployment)] of
-                    Nothing -> error "unrecognised deployment kind symbol"
-                    Just k  -> k
-          dst = last ws
-          ws = words str
-          unquote = tail . init
 
 instance Show Deployment where
     show dep = unwords $ srcs ++ [k,dst]

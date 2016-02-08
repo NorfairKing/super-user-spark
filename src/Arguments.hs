@@ -149,9 +149,9 @@ parseGlobalOptions = GlobalOptions
     <*> option auto
       ( long "format"
         <> short 'f'
-        <> value FormatText
+        <> value FormatJson
         <> metavar "FORMAT"
-        <> help "Compilation format" )
+        <> help "Compilation format default: json" )
     <*> option (Just <$> auto)
       ( long "kind"
         <> short 'k'

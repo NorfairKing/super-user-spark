@@ -7,16 +7,10 @@ extra-deps:
 - QuickCheck-2.8.2
 - aeson-0.8.1.1
 - aeson-pretty-0.7.2
-- bifunctors-5.2
 - cmdargs-0.10.13
-- comonad-5
 - constraints-0.6
-- contravariant-1.4
-- distributive-0.5.0.2
 - enclosed-exceptions-1.0.1.1
 - exceptions-0.8.1
-- free-4.12.4
-- hierarchy-0.3.1
 - hspec-2.2.1
 - hspec-core-2.2.1
 - hspec-discover-2.2.1
@@ -24,18 +18,8 @@ extra-deps:
 - lifted-async-0.8.0
 - lifted-base-0.2.3.6
 - monad-control-1.0.0.4
-- nats-1.1
 - optparse-applicative-0.11.0.2
-- pipes-4.1.8
-- pipes-files-0.1.1
-- pipes-safe-2.2.3
-- posix-paths-0.2.1.0
-- profunctors-5.2
 - quickcheck-io-0.1.2
-- regex-base-0.93.2
-- regex-posix-0.95.2
-- semigroupoids-5.0.1
-- semigroups-0.16.2.2
 - setenv-0.1.1.3
 - shelly-1.6.5
 - system-fileio-0.3.16.3
@@ -43,5 +27,9 @@ extra-deps:
 - tf-random-0.5
 - transformers-base-0.4.4
 - transformers-compat-0.4.0.4
-- void-0.7.1
+- haskell-src-exts-1.16.0.1
+- cpphs-1.19.3
+- polyparse-1.11
+
+
 resolver: ghc-7.10.3

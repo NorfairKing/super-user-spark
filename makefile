@@ -1,4 +1,4 @@
-all: build test
+aGll: build test
 
 build: FORCE
 	stack build
@@ -24,6 +24,7 @@ pedantic:
         -fwarn-incomplete-patterns \
         -fwarn-unused-do-bind \
         -fno-warn-name-shadowing \
+        -fno-warn-overlapping-patterns \
         -fno-warn-orphans"
 
 
