@@ -33,6 +33,7 @@ executable spark
                   , Monad
                   , Parser
                   , Parser.Internal
+                  , Seed
                   , Types
                   , Utils
   ghc-options:      -Wall
