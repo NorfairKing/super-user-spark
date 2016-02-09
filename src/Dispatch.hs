@@ -25,17 +25,17 @@ dispatch (DispatchCompile cfr) = do
     outputCompiled deployments
 
 dispatch (DispatchCheck ccr) = do
-    deps <- deployCompiledCardRef ccr
+    deps <- compileDeployerCardRef ccr
     seeded <- seedByCompiledCardRef ccr deps
     pdps <- check seeded
     liftIO $ putStr $ formatPreDeployments $ zip seeded pdps
 
 dispatch (DispatchDeploy dcr) = do
-    deps <- deployCompiledCardRef dcr
+    deps <- compileDeployerCardRef dcr
     seeded <- seedByCompiledCardRef dcr deps
     deploy seeded
 
 
-deployCompiledCardRef :: DeployerCardReference -> Sparker [Deployment]
-deployCompiledCardRef (DeployerCardCompiled fp) = inputCompiled fp
-deployCompiledCardRef (DeployerCardUncompiled cfr) = compileJob cfr
+compileDeployerCardRef :: DeployerCardReference -> Sparker [Deployment]
+compileDeployerCardRef (DeployerCardCompiled fp) = inputCompiled fp
+compileDeployerCardRef (DeployerCardUncompiled cfr) = compileJob cfr
