@@ -63,6 +63,8 @@ test-suite spark-tests
   main-is:          MainTest.hs
   hs-source-dirs:   src, test
   other-modules:    ParserSpec
+                  , CompilerSpec
+                  , SeedSpec
   build-depends:    base                  >= 4.6   && < 4.9
                   , hspec                 >= 2.2   && < 2.3
                   , hspec-core            >= 2.2   && < 2.3

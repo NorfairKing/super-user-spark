@@ -1,5 +1,6 @@
 module Compiler.Gen where
 
+import           Compiler.Types
 import           CoreTypes
 import           Language.Types
 import           Parser.Gen
@@ -49,3 +50,6 @@ instance Arbitrary CardReference where
         [ CardFile <$> arbitrary
         , CardName <$> arbitrary
         ]
+
+instance Arbitrary Deployment where
+    arbitrary = Put <$> arbitrary <*> arbitrary <*> arbitrary

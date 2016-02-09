@@ -1,19 +1,18 @@
 module CompilerSpec where
 
-import           CoreTypes
-import           Data.Either           (isLeft, isRight)
-import           Data.List             (intercalate, isPrefixOf)
-import           System.FilePath.Posix (takeExtension, (<.>), (</>))
-import           Test.Hspec
-import           Test.QuickCheck
---import           Compiler.TestUtils
 import           Compiler
 import           Compiler.Gen
 import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
 import           Config
+import           CoreTypes
+import           Data.Either           (isLeft, isRight)
+import           Data.List             (intercalate, isPrefixOf)
 import           Language.Types
+import           System.FilePath.Posix (takeExtension, (<.>), (</>))
+import           Test.Hspec
+import           Test.QuickCheck
 import           TestUtils
 import           Types
 import           Utils
