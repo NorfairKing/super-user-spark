@@ -26,7 +26,10 @@ pedantic:
         -fno-warn-name-shadowing \
         -fno-warn-overlapping-patterns \
         -fno-warn-orphans" \
-		--test
+		--test \
+		--test-arguments="\
+			--dry-run \
+			"\
 
 love:
 	@echo "not war"
