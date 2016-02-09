@@ -1,0 +1,18 @@
+card complex {
+  into ~
+  outof complex
+  {
+    into a
+    outof x
+    {
+      into b
+      outof y
+      {
+        into c
+        outof z
+
+        file
+      }
+    }
+  }
+}

@@ -1,4 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module Types
     (
       module Types
@@ -12,40 +15,35 @@ module Types
     , module Control.Monad.State
     , module Control.Monad.Writer
     , module Control.Monad.Trans
+    , module Control.Monad.Identity
     , module Text.Parsec
+
+    , module Debug.Trace
     ) where
 
-import           Control.Monad.Except   (ExceptT, runExceptT, throwError)
-import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ReaderT, ask, asks, runReaderT)
-import           Control.Monad.State    (StateT, get, gets, modify, put,
+import           Control.Monad.Except   (ExceptT, mapExceptT, runExceptT,
+                                         throwError, withExceptT)
+import           Control.Monad.Identity (Identity, runIdentity)
+import           Control.Monad.IO.Class (MonadIO (..), liftIO)
+import           Control.Monad.Reader   (MonadReader (..), ReaderT, ask, asks,
+                                         mapReaderT, runReaderT)
+import           Control.Monad.State    (MonadState (..), StateT, evalStateT,
+                                         execStateT, get, gets, modify, put,
                                          runStateT)
 import           Control.Monad.Trans    (lift)
-import           Control.Monad.Writer   (WriterT, runWriterT, tell)
+import           Control.Monad.Writer   (MonadWriter (..), WriterT, execWriterT,
+                                         runWriterT, tell)
+import           Debug.Trace
 
 import           Text.Parsec            (ParseError)
 
 import           Config.Types
 import           CoreTypes
 import           Monad
-import           Parser.Types
-
----[ Card References ]--
-type CompilerCardReference = CardFileReference
-
-type CompiledCardReference = FilePath
-
-instance Read CardFileReference where
-    readsPrec _ fp = case length (words fp) of
-                      1 -> [(CardFileReference fp Nothing ,"")]
-                      2 -> let [f, c] = words fp
-                            in [(CardFileReference f (Just $ CardNameReference c), "")]
-                      _ -> []
 
 ---[ Options ]---
-
-data GlobalOptions = GlobalOptions {
-      opt_lineUp              :: Bool
+data GlobalOptions = GlobalOptions
+    { opt_lineUp              :: Bool
     , opt_indent              :: Int
     , opt_trailingNewline     :: Bool
     , opt_alwaysQuote         :: Bool
@@ -65,14 +63,12 @@ data GlobalOptions = GlobalOptions {
 ---[ Pretty Types ]---
 
 type SparkFormatter = StateT FormatterState (WriterT String Sparker)
-data FormatterState = FormatterState {
-        state_current_indent        :: Int
-    ,   state_longest_src           :: Int
-    ,   state_newline_before_deploy :: Bool
-    }
-    deriving (Show, Eq)
+data FormatterState = FormatterState
+    { state_current_indent        :: Int
+    , state_longest_src           :: Int
+    , state_newline_before_deploy :: Bool
+    } deriving (Show, Eq)
 
 runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
 runSparkFormatter state func = runWriterT (runStateT func state)
-
 

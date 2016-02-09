@@ -1,0 +1,7 @@
+card root {
+  into a
+  outof u
+
+  alpha -> zero
+  spark file hop1dir/hop1.sus
+}

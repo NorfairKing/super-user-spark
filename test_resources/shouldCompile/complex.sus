@@ -1,0 +1,34 @@
+card main {
+  spark card configs
+  spark card poems
+}
+
+card configs {
+  spark file bash.sus bash
+
+  alternatives super-laptop shared
+  into ~
+
+  {
+    outof zsh
+
+    .zshrc
+    .zshenv
+    .zlogin
+  }
+
+  vim -> .vim
+}
+
+card poems {
+  outof poems
+  into poems
+  {
+    kind copy
+
+    "A windows file with spaces.txt" -> clean
+  }
+  {
+    kind link
+  }
+}

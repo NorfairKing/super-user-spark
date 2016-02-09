@@ -3,6 +3,7 @@ module Arguments where
 import           Options.Applicative
 import           System.Environment  (getArgs)
 
+import           Config
 import           Dispatch.Types
 import           Types
 import           Utils
@@ -21,7 +22,7 @@ transformOptions (dispatch, go) = (,) <$> pure dispatch <*> configFromOptions go
 configFromOptions :: GlobalOptions -> Either String SparkConfig
 configFromOptions go = Right conf
   where
-    conf = Config {
+    conf = defaultConfig {
               conf_format_lineUp              = if opt_compress go then False else opt_lineUp go
             , conf_format_indent              = if opt_compress go then 0     else opt_indent go
             , conf_format_trailingNewline     = if opt_compress go then False else opt_trailingNewline go
@@ -32,8 +33,8 @@ configFromOptions go = Right conf
             , conf_compile_kind               = opt_kind go
             , conf_compile_override           = opt_overrride go
             , conf_check_thoroughness         = opt_thoroughness go
-            , conf_deploy_replace_links       = opt_replace_links go || opt_replace go
-            , conf_deploy_replace_files       = opt_replace_files go || opt_replace go
+            , conf_deploy_replace_links       = opt_replace_links go       || opt_replace go
+            , conf_deploy_replace_files       = opt_replace_files go       || opt_replace go
             , conf_deploy_replace_directories = opt_replace_directories go || opt_replace go
             , conf_debug                      = opt_debug go
           }
@@ -47,11 +48,11 @@ getOptions = do
 runOptionsParser :: [String] -> ParserResult Options
 runOptionsParser strs = execParserPure prefs optionsParser strs
   where prefs = ParserPrefs {
-            prefMultiSuffix = "SPARK"  -- ^ metavar suffix for multiple options
-          , prefDisambiguate = True    -- ^ automatically disambiguate abbreviations (default: False)
-          , prefShowHelpOnError = True -- ^ always show help text on parse errors (default: False)
-          , prefBacktrack = True       -- ^ backtrack to parent parser when a subcommand fails (default: True)
-          , prefColumns = 80           -- ^ number of columns in the terminal, used to format the help page (default: 80)
+            prefMultiSuffix = "SPARK"  -- metavar suffix for multiple options
+          , prefDisambiguate = True    -- automatically disambiguate abbreviations (default: False)
+          , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
+          , prefBacktrack = True       -- backtrack to parent parser when a subcommand fails (default: True)
+          , prefColumns = 80           -- number of columns in the terminal, used to format the help page (default: 80)
         }
 
 optionsParser :: ParserInfo Options
@@ -148,9 +149,9 @@ parseGlobalOptions = GlobalOptions
     <*> option auto
       ( long "format"
         <> short 'f'
-        <> value FormatText
+        <> value FormatJson
         <> metavar "FORMAT"
-        <> help "Compilation format" )
+        <> help "Compilation format default: json" )
     <*> option (Just <$> auto)
       ( long "kind"
         <> short 'k'
@@ -188,4 +189,5 @@ parseGlobalOptions = GlobalOptions
       )
     <*> switch
       ( long "debug"
-        <> help "Show al debug information." )
+        <> help "Show al debug information."
+      )

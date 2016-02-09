@@ -1,26 +1,17 @@
 module ParserSpec where
 
-import           Debug.Trace
-
-import           Test.Hspec
-import           Test.QuickCheck
-
+import           CoreTypes
 import           Data.Either           (isLeft, isRight)
 import           Data.List             (intercalate)
-
-import           Text.Parsec
-import           Text.Parsec.String
-
-import           System.FilePath.Posix ((</>))
-
-import           CoreTypes
-import           Parser
+import           Language.Types
 import           Parser.Gen
 import           Parser.Internal
-import           Parser.Types
-
 import           Parser.TestUtils
+import           System.FilePath.Posix ((</>))
+import           Test.Hspec
+import           Test.QuickCheck
 import           TestUtils
+import           Text.Parsec
 
 spec :: Spec
 spec = parallel $ do
@@ -270,7 +261,7 @@ declarationParserTests :: Spec
 declarationParserTests = do
     describe "cardName" $ do
         it "succeeds on every card name that we generate" $ do
-            forAll generateCardName $ \(a, e) -> parseShouldSucceedAs cardName a e
+            forAll generateCardName $ \(a, e) -> parseShouldSucceedAs cardNameP a e
 
     describe "card" $ do
         let pc = parseShouldSucceedAs card
@@ -418,7 +409,7 @@ declarationParserTests = do
                   forAll generateQuotedIdentifier $ \(fp1,fp1a) ->
                     forAll generateQuotedIdentifier $ \(fp2,fp2a) ->
                       case parseWithoutSource deploymentKind dks of
-                        Left err -> fail "There was a problem with parsing the deployment kind"
+                        Left _   -> fail "There was a problem with parsing the deployment kind"
                         Right dk -> parseShouldSucceedAs longDeployment (fp1 ++ ls1 ++ dks ++ ls2 ++ fp2) (Deploy fp1a fp2a dk)
 
         it "succeeds for single-space-separated long deployments with gerenated plain identifiers" $ do

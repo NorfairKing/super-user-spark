@@ -1,0 +1,27 @@
+card one {
+  spark card two
+  spark card five
+}
+
+card two {
+  two
+  spark card three
+  spark card four
+}
+
+card three {
+  three
+}
+
+card four {
+  four
+}
+
+card five {
+  five
+  spark card six
+}
+
+card six {
+  six
+}

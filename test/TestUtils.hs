@@ -1,28 +1,31 @@
-module TestUtils where
+module TestUtils (
+      module TestUtils
+    , module Debug.Trace
+    ) where
 
-import           Test.Hspec
-import           Test.QuickCheck
-
-import           Control.Monad         (forM, forM_)
-
-import           System.Directory      (doesDirectoryExist,
+import           Control.Monad         (filterM, forM_, when)
+import           Debug.Trace
+import           System.Directory      (doesDirectoryExist, doesFileExist,
                                         getDirectoryContents)
-import           System.FilePath.Posix ((<.>), (</>))
+import           System.FilePath.Posix ((</>))
+import           Test.Hspec
 
 concerningContents :: (FilePath -> String -> SpecWith a) -> (FilePath -> SpecWith a)
-concerningContents func file = runIO (readFile file) >>= func file
+concerningContents func file = (runIO $ readFile file) >>= func file
 
 forFileInDirss :: [FilePath] -> (FilePath -> SpecWith a) -> SpecWith a
-forFileInDirss dirs func = do
-    allFiles <- fmap concat $ forM dirs $ \dir -> do
-        exists <- runIO $ doesDirectoryExist dir
-        if exists
-        then do
-            files <- runIO $ getDirectoryContents dir
-            let ffiles = filter (`notElem` [".", ".."]) files
-            return $ map (dir </>) ffiles
-        else return []
-    forM_ allFiles func
+forFileInDirss [] _ = return ()
+forFileInDirss dirs func = forM_ dirs $ \dir -> do
+    exists <- runIO $ doesDirectoryExist dir
+    when exists $ do
+        files <- runIO $ getDirectoryContents dir
+        let ffiles = filter (`notElem` [".", ".."]) files
+        let fullFiles = map (dir </>) ffiles
+        fs <- runIO $ filterM doesFileExist fullFiles
+        forM_ fs func
+        recdirs <- runIO $ filterM doesDirectoryExist fullFiles
+        forFileInDirss recdirs func
 
-pend = it "has no tests yet" pending
+pend :: SpecWith ()
+pend = it "is still missing some tests" pending
 
