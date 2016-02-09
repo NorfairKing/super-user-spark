@@ -1,15 +1,14 @@
 module CompilerSpec where
 
 import           Compiler
-import           Compiler.Gen
 import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
 import           Config
 import           CoreTypes
 import           Data.Either           (isLeft, isRight)
-import           Data.List             (intercalate, isPrefixOf)
-import           Language.Gen
+import           Data.List             (isPrefixOf)
+import           Language.Gen          ()
 import           Language.Types
 import           System.FilePath.Posix (takeExtension, (<.>), (</>))
 import           Test.Hspec
@@ -33,8 +32,6 @@ precompileSpec = describe "pre-compilation" $ do
 
 cleanContentCheckSpec :: Spec
 cleanContentCheckSpec = do
-    let c = defaultConfig
-    let run = runPreCompiler
     let validFp = arbitrary `suchThat` cleanBy cleanFilePathCheck
 
     describe "cleanCardCheck" $ do
@@ -213,7 +210,6 @@ singleCompileDecSpec = describe "compileDec" $ do
     let s = defaultCompilerState
     let c = defaultConfig
     let sc = singleShouldCompileTo c s
-    let sf = singleShouldFail c s
 
     let nonNull = arbitrary `suchThat` (not . null)
     let validFilePath = nonNull `suchThat` (not . containsNewlineCharacter)
@@ -357,14 +353,14 @@ compilerBlackBoxTests = do
     let tr = "test_resources"
     describe "Correct succesful compile examples" $ do
         let dirs = map (tr </>) ["shouldCompile", "hop_test"]
-        forFileInDirss dirs $ concerningContents $ \f contents -> do
+        forFileInDirss dirs $ \f -> do
             it f $ do
                 r <- runDefaultSparker $ compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isRight
 
     describe "Correct unsuccesfull compile examples" $ do
         let dirs = map (tr </>) ["shouldNotParse", "shouldNotCompile"]
-        forFileInDirss dirs $ concerningContents $ \f contents -> do
+        forFileInDirss dirs $ \f -> do
             it f $ do
                 r <- runDefaultSparker $ compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isLeft

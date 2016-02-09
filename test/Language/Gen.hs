@@ -1,10 +1,7 @@
 module Language.Gen where
 
-import           Compiler.Types
 import           CoreTypes
 import           Language.Types
-import           Parser.Gen
-import           Test.Hspec
 import           Test.QuickCheck
 
 instance Arbitrary SparkFile where

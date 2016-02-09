@@ -3,9 +3,7 @@ module ParserSpec where
 import           CoreTypes
 import           Data.Either           (isLeft, isRight)
 import           Data.List             (intercalate)
-import           Debug.Trace
 import           Language.Types
-import           Parser
 import           Parser.Gen
 import           Parser.Internal
 import           Parser.TestUtils
@@ -14,7 +12,6 @@ import           Test.Hspec
 import           Test.QuickCheck
 import           TestUtils
 import           Text.Parsec
-import           Text.Parsec.String
 
 spec :: Spec
 spec = parallel $ do
@@ -412,7 +409,7 @@ declarationParserTests = do
                   forAll generateQuotedIdentifier $ \(fp1,fp1a) ->
                     forAll generateQuotedIdentifier $ \(fp2,fp2a) ->
                       case parseWithoutSource deploymentKind dks of
-                        Left err -> fail "There was a problem with parsing the deployment kind"
+                        Left _   -> fail "There was a problem with parsing the deployment kind"
                         Right dk -> parseShouldSucceedAs longDeployment (fp1 ++ ls1 ++ dks ++ ls2 ++ fp2) (Deploy fp1a fp2a dk)
 
         it "succeeds for single-space-separated long deployments with gerenated plain identifiers" $ do

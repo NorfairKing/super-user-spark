@@ -1,20 +1,14 @@
 module SeedSpec where
 
-import           Compiler
-import           Compiler.Gen
+import           Compiler.Gen          ()
 import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
-import           Config
-import           CoreTypes
-import           Language.Types
 import           Seed
-import           System.FilePath.Posix (isAbsolute, takeExtension, (<.>), (</>))
+import           System.FilePath.Posix (isAbsolute)
 import           Test.Hspec
 import           Test.QuickCheck
 import           TestUtils
-import           Types
-import           Utils
 
 spec :: Spec
 spec = parallel $ do

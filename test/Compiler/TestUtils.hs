@@ -5,7 +5,6 @@ import           Compiler.Types
 import           Data.Either       (isLeft, isRight)
 import           Language.Types
 import           Test.Hspec
-import           Test.QuickCheck
 import           Types
 
 runPreCompiler :: Precompiler () -> [PrecompileError]
@@ -99,4 +98,5 @@ shouldResultInState c s d es = do
 
 
 -- Filepath utils
+containsNewlineCharacter :: String -> Bool
 containsNewlineCharacter f = any (\c -> elem c f) ['\n', '\r']

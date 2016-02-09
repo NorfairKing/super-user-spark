@@ -1,6 +1,5 @@
 module Parser.Gen where
 
-import           Test.Hspec
 import           Test.QuickCheck
 
 import           Data.List       (isSuffixOf)

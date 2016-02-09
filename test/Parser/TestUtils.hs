@@ -1,10 +1,8 @@
 module Parser.TestUtils where
 
-import           Data.Either        (isLeft, isRight)
-import           Language.Types
+import           Data.Either        (isRight)
 import           Parser.Internal
 import           Test.Hspec
-import           Test.QuickCheck
 import           Text.Parsec
 import           Text.Parsec.String
 

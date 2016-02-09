@@ -25,8 +25,8 @@ pedantic:
         -fwarn-unused-do-bind \
         -fno-warn-name-shadowing \
         -fno-warn-overlapping-patterns \
-        -fno-warn-orphans"
-
+        -fno-warn-orphans" \
+		--test
 
 love:
 	@echo "not war"
