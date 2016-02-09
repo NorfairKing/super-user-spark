@@ -9,6 +9,7 @@ import           Config
 import           CoreTypes
 import           Data.Either           (isLeft, isRight)
 import           Data.List             (intercalate, isPrefixOf)
+import           Language.Gen
 import           Language.Types
 import           System.FilePath.Posix (takeExtension, (<.>), (</>))
 import           Test.Hspec
