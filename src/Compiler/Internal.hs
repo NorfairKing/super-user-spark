@@ -8,50 +8,50 @@ import           Types
 import           Utils
 
 preCompileChecks :: Card -> [PreCompileError]
-preCompileChecks c = runIdentity $ execWriterT $ cleanCardCheck c
+preCompileChecks c = runIdentity $ execWriterT $ cleanCard c
 
 dirty :: String -> Precompiler ()
 dirty s = tell ["Precompilation check failed: " ++ s]
 
-cleanCardCheck :: Card -> Precompiler ()
-cleanCardCheck (Card name d) = do
-    cleanCardNameCheck name
-    cleanDeclarationCheck d
+cleanCard :: Card -> Precompiler ()
+cleanCard (Card name d) = do
+    cleanCardName name
+    cleanDeclaration d
 
-cleanDeclarationCheck :: Declaration -> Precompiler ()
-cleanDeclarationCheck (Deploy src dst _) = do
-    cleanFilePathCheck src
-    cleanFilePathCheck dst
+cleanDeclaration :: Declaration -> Precompiler ()
+cleanDeclaration (Deploy src dst _) = do
+    cleanFilePath src
+    cleanFilePath dst
 
-cleanDeclarationCheck (SparkOff cr) = cleanCardReferenceCheck cr
-cleanDeclarationCheck (IntoDir dir) = cleanFilePathCheck dir
-cleanDeclarationCheck (OutofDir dir) = cleanFilePathCheck dir
-cleanDeclarationCheck (DeployKindOverride _) = return () -- Nothing can go wrong.
-cleanDeclarationCheck (Alternatives fs) = mapM_ cleanFilePathCheck fs
-cleanDeclarationCheck (Block ds) = mapM_ cleanDeclarationCheck ds
+cleanDeclaration (SparkOff cr) = cleanCardReference cr
+cleanDeclaration (IntoDir dir) = cleanFilePath dir
+cleanDeclaration (OutofDir dir) = cleanFilePath dir
+cleanDeclaration (DeployKindOverride _) = return () -- Nothing can go wrong.
+cleanDeclaration (Alternatives fs) = mapM_ cleanFilePath fs
+cleanDeclaration (Block ds) = mapM_ cleanDeclaration ds
 
-cleanCardReferenceCheck :: CardReference -> Precompiler ()
-cleanCardReferenceCheck (CardFile cfr) = cleanCardFileReferenceCheck cfr
-cleanCardReferenceCheck (CardName cnr) = cleanCardNameReferenceCheck cnr
+cleanCardReference :: CardReference -> Precompiler ()
+cleanCardReference (CardFile cfr) = cleanCardFileReference cfr
+cleanCardReference (CardName cnr) = cleanCardNameReference cnr
 
-cleanCardFileReferenceCheck :: CardFileReference -> Precompiler ()
-cleanCardFileReferenceCheck (CardFileReference fp mcnr) = do
-    cleanFilePathCheck fp
+cleanCardFileReference :: CardFileReference -> Precompiler ()
+cleanCardFileReference (CardFileReference fp mcnr) = do
+    cleanFilePath fp
     case mcnr of
         Nothing -> return ()
-        Just cnr -> cleanCardNameReferenceCheck cnr
+        Just cnr -> cleanCardNameReference cnr
 
-cleanCardNameReferenceCheck :: CardNameReference -> Precompiler ()
-cleanCardNameReferenceCheck (CardNameReference cn) = cleanCardNameCheck cn
+cleanCardNameReference :: CardNameReference -> Precompiler ()
+cleanCardNameReference (CardNameReference cn) = cleanCardName cn
 
-cleanCardNameCheck :: CardName -> Precompiler ()
-cleanCardNameCheck n
+cleanCardName :: CardName -> Precompiler ()
+cleanCardName n
     | containsNewline n = dirty $ "Card name contains newline character(s): " ++ n
     | otherwise = return ()
 
-cleanFilePathCheck :: FilePath -> Precompiler ()
-cleanFilePathCheck [] = dirty "Empty filepath"
-cleanFilePathCheck fp
+cleanFilePath :: FilePath -> Precompiler ()
+cleanFilePath [] = dirty "Empty filepath"
+cleanFilePath fp
     | containsNewline fp =
         dirty $ "Filepath contains newline character(s): " ++ fp
     | containsMultipleConsequtiveSlashes fp =

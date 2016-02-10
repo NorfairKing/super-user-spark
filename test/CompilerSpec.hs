@@ -28,155 +28,155 @@ spec = parallel $ do
 
 precompileSpec :: Spec
 precompileSpec = describe "pre-compilation" $ do
-    cleanContentCheckSpec
+    cleanContentSpec
 
-cleanContentCheckSpec :: Spec
-cleanContentCheckSpec = do
-    let validFp = arbitrary `suchThat` cleanBy cleanFilePathCheck
+cleanContentSpec :: Spec
+cleanContentSpec = do
+    let validFp = arbitrary `suchThat` cleanBy cleanFilePath
 
-    describe "cleanCardCheck" $ do
+    describe "cleanCard" $ do
         it "doesn't report any card with valid content and a valid name" $ do
-            forAll (arbitrary `suchThat` cleanBy cleanCardNameCheck) $ \cn ->
-              forAll (arbitrary `suchThat` cleanBy cleanDeclarationCheck) $ \cc ->
-                Card cn cc `shouldSatisfy` cleanBy cleanCardCheck
+            forAll (arbitrary `suchThat` cleanBy cleanCardName) $ \cn ->
+              forAll (arbitrary `suchThat` cleanBy cleanDeclaration) $ \cc ->
+                Card cn cc `shouldSatisfy` cleanBy cleanCard
 
-    describe "cleanCardNameCheck" $ do
+    describe "cleanCardName" $ do
         pend
 
         it "doesn't report an emty card name" $ do
-            "" `shouldSatisfy` cleanBy cleanCardNameCheck
+            "" `shouldSatisfy` cleanBy cleanCardName
 
         it "reports card names with newlines" $ do
             forAll (arbitrary `suchThat` containsNewlineCharacter) $ \s ->
-                s `shouldNotSatisfy` cleanBy cleanCardNameCheck
+                s `shouldNotSatisfy` cleanBy cleanCardName
 
-    describe "cleanDeclarationCheck" $ do
+    describe "cleanDeclaration" $ do
         describe "Deploy" $ do
             it "doesn't report Deploy declarations with valid filepaths" $ do
                 forAll validFp $ \src ->
                   forAll validFp $ \dst ->
                     forAll arbitrary $ \kind ->
-                      Deploy src dst kind `shouldSatisfy` cleanBy cleanDeclarationCheck
+                      Deploy src dst kind `shouldSatisfy` cleanBy cleanDeclaration
 
             it "reports Deploy declarations with an invalid source" $ do
-                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \src ->
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePath)) $ \src ->
                   forAll validFp $ \dst ->
                     forAll arbitrary $ \kind ->
-                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "reports Deploy declarations with an invalid destination" $ do
                 forAll validFp $ \src ->
-                  forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \dst ->
+                  forAll (arbitrary `suchThat` (not . cleanBy cleanFilePath)) $ \dst ->
                     forAll arbitrary $ \kind ->
-                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                      Deploy src dst kind `shouldNotSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "SparkOff" $ do
             it "reports SparkOff declarations with an invalid card reference" $ do
-                forAll (arbitrary `suchThat` (not . cleanBy cleanCardReferenceCheck)) $ \cr ->
-                  SparkOff cr `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (not . cleanBy cleanCardReference)) $ \cr ->
+                  SparkOff cr `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "doesn't report SparkOff declarations with a valid card reference" $ do
-                forAll (arbitrary `suchThat` cleanBy cleanCardReferenceCheck) $ \cr ->
-                  SparkOff cr `shouldSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` cleanBy cleanCardReference) $ \cr ->
+                  SparkOff cr `shouldSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "IntoDir" $ do
             it "reports IntoDir declarations with an invalid filepath" $ do
-                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
-                  IntoDir fp `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePath)) $ \fp ->
+                  IntoDir fp `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "doesn't report IntoDir declarations with a valid filepath" $ do
-                forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
-                  IntoDir fp `shouldSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` cleanBy cleanFilePath) $ \fp ->
+                  IntoDir fp `shouldSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "OutofDir" $ do
             it "reports OutofDir declarations with an invalid filepath" $ do
-                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
-                  OutofDir fp `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (not . cleanBy cleanFilePath)) $ \fp ->
+                  OutofDir fp `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "doesn't report OutofDir declarations with a valid filepath" $ do
-                forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
-                  OutofDir fp `shouldSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` cleanBy cleanFilePath) $ \fp ->
+                  OutofDir fp `shouldSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "DeployKindOverride" $ do
             it "doesn't report any deployment kind override declarations" $ do
                 forAll arbitrary $ \kind ->
-                    DeployKindOverride kind `shouldSatisfy` cleanBy cleanDeclarationCheck
+                    DeployKindOverride kind `shouldSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "Alternatives" $ do
             it "reports alternatives declarations with as much as a single invalid filepath" $ do
-                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanFilePathCheck)) $ \fs ->
-                    Alternatives fs `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanFilePath)) $ \fs ->
+                    Alternatives fs `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "doesn't report alternatives declarations with valid filepaths" $ do
-                forAll (arbitrary `suchThat` (all $ cleanBy cleanFilePathCheck)) $ \fs ->
-                    Alternatives fs `shouldSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (all $ cleanBy cleanFilePath)) $ \fs ->
+                    Alternatives fs `shouldSatisfy` cleanBy cleanDeclaration
 
             pend
 
         describe "Block" $ do
             it "reports block declarations with as much as a single invalid declaration inside" $ do
-                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanDeclarationCheck)) $ \ds ->
-                    Block ds `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (any $ not . cleanBy cleanDeclaration)) $ \ds ->
+                    Block ds `shouldNotSatisfy` cleanBy cleanDeclaration
 
             it "doesn't report any block declarations with valid declarations inside" $ do
-                forAll (arbitrary `suchThat` (all $ cleanBy cleanDeclarationCheck)) $ \ds ->
-                    Block ds `shouldSatisfy` cleanBy cleanDeclarationCheck
+                forAll (arbitrary `suchThat` (all $ cleanBy cleanDeclaration)) $ \ds ->
+                    Block ds `shouldSatisfy` cleanBy cleanDeclaration
 
 
             pend
 
-    describe "cleanCardReferenceCheck" $ do
-        it "works the same as cleanCardNameCheck separately" $ do
+    describe "cleanCardReference" $ do
+        it "works the same as cleanCardName separately" $ do
             forAll arbitrary $ \cnr ->
-                cleanBy cleanCardNameReferenceCheck cnr === cleanBy cleanCardReferenceCheck (CardName cnr)
+                cleanBy cleanCardNameReference cnr === cleanBy cleanCardReference (CardName cnr)
 
-        it "works the same as cleanCardFileCheck separately" $ do
+        it "works the same as cleanCardFile separately" $ do
             forAll arbitrary $ \cfr ->
-                cleanBy cleanCardFileReferenceCheck cfr === cleanBy cleanCardReferenceCheck (CardFile cfr)
+                cleanBy cleanCardFileReference cfr === cleanBy cleanCardReference (CardFile cfr)
 
         pend
 
-    describe "cleanCardNameReferenceCheck" $ do
+    describe "cleanCardNameReference" $ do
         it "reports card name references with an invalid card name" $ do
-            forAll (arbitrary `suchThat` (not . cleanBy cleanCardNameCheck)) $ \cn ->
-                CardNameReference cn `shouldNotSatisfy` cleanBy cleanCardNameReferenceCheck
+            forAll (arbitrary `suchThat` (not . cleanBy cleanCardName)) $ \cn ->
+                CardNameReference cn `shouldNotSatisfy` cleanBy cleanCardNameReference
 
         it "doesn't report card name references with a valid card name" $ do
-            forAll (arbitrary `suchThat` cleanBy cleanCardNameCheck) $ \cn ->
-                CardNameReference cn `shouldSatisfy` cleanBy cleanCardNameReferenceCheck
+            forAll (arbitrary `suchThat` cleanBy cleanCardName) $ \cn ->
+                CardNameReference cn `shouldSatisfy` cleanBy cleanCardNameReference
 
         pend
 
-    describe "cleanCardFileReferenceCheck" $ do
+    describe "cleanCardFileReference" $ do
         it "reports card file references with an invalid filepath" $ do
-            forAll (arbitrary `suchThat` (not . cleanBy cleanFilePathCheck)) $ \fp ->
+            forAll (arbitrary `suchThat` (not . cleanBy cleanFilePath)) $ \fp ->
                 forAll arbitrary $ \cn ->
-                    CardFileReference fp cn `shouldNotSatisfy` cleanBy cleanCardFileReferenceCheck
+                    CardFileReference fp cn `shouldNotSatisfy` cleanBy cleanCardFileReference
 
         it "reports card file references with an invalid card name" $ do
             forAll arbitrary $ \fp ->
-                forAll (arbitrary `suchThat` (not . cleanBy cleanCardNameReferenceCheck)) $ \cn ->
-                    CardFileReference fp (Just cn) `shouldNotSatisfy` cleanBy cleanCardFileReferenceCheck
+                forAll (arbitrary `suchThat` (not . cleanBy cleanCardNameReference)) $ \cn ->
+                    CardFileReference fp (Just cn) `shouldNotSatisfy` cleanBy cleanCardFileReference
 
         it "doesn't report card file references with a valid card name reference and valid filepath" $ do
-            forAll (arbitrary `suchThat` cleanBy cleanFilePathCheck) $ \fp ->
-                forAll (arbitrary `suchThat` cleanBy cleanCardNameReferenceCheck) $ \cn ->
-                    CardFileReference fp (Just cn) `shouldSatisfy` cleanBy cleanCardFileReferenceCheck
+            forAll (arbitrary `suchThat` cleanBy cleanFilePath) $ \fp ->
+                forAll (arbitrary `suchThat` cleanBy cleanCardNameReference) $ \cn ->
+                    CardFileReference fp (Just cn) `shouldSatisfy` cleanBy cleanCardFileReference
 
         pend
 
 
-    describe "cleanFilePathCheck" $ do
+    describe "cleanFilePath" $ do
         it "reports empty an filepath" $ do
             filePathDirty []
 
@@ -214,7 +214,7 @@ singleCompileDecSpec = describe "compileDec" $ do
     let nonNull = arbitrary `suchThat` (not . null)
     let validFilePath = nonNull `suchThat` (not . containsNewlineCharacter)
     let easyFilePath = validFilePath `suchThat` (not . isPrefixOf ".")
-    let validFp = arbitrary `suchThat` cleanBy cleanFilePathCheck
+    let validFp = arbitrary `suchThat` cleanBy cleanFilePath
 
     describe "Deploy" $ do
         it "uses the exact right text in source and destination when given valid filepaths without a leading dot" $ do

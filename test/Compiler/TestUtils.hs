@@ -14,16 +14,16 @@ cleanBy :: (a -> Precompiler ()) -> a -> Bool
 cleanBy func a = null $ runPreCompiler $ func a
 
 declarationClean :: Declaration -> IO ()
-declarationClean d = d `shouldSatisfy` cleanBy cleanDeclarationCheck
+declarationClean d = d `shouldSatisfy` cleanBy cleanDeclaration
 
 declarationDirty :: Declaration -> IO ()
-declarationDirty d = d `shouldNotSatisfy` cleanBy cleanDeclarationCheck
+declarationDirty d = d `shouldNotSatisfy` cleanBy cleanDeclaration
 
 filePathDirty :: FilePath -> IO ()
-filePathDirty fp = fp `shouldNotSatisfy` cleanBy cleanFilePathCheck
+filePathDirty fp = fp `shouldNotSatisfy` cleanBy cleanFilePath
 
 filePathClean :: FilePath -> IO ()
-filePathClean fp = fp `shouldSatisfy` cleanBy cleanFilePathCheck
+filePathClean fp = fp `shouldSatisfy` cleanBy cleanFilePath
 
 runPureCompiler :: SparkConfig -> PureCompiler a -> Either CompileError a
 runPureCompiler c func = runIdentity $ runReaderT (runExceptT func) c
