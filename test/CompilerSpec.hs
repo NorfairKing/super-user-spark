@@ -1,7 +1,6 @@
 module CompilerSpec where
 
 import           Compiler
-import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
 import           Config
@@ -10,6 +9,7 @@ import           Data.Either           (isLeft, isRight)
 import           Data.List             (isPrefixOf)
 import           Language.Gen          ()
 import           Language.Types
+import           PreCompiler
 import           System.FilePath.Posix (takeExtension, (<.>), (</>))
 import           Test.Hspec
 import           Test.QuickCheck

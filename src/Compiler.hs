@@ -1,16 +1,16 @@
 module Compiler where
 
+import           Compiler.Internal
+import           Compiler.Types
 import           Control.Monad              (when)
 import           Data.Aeson                 (eitherDecode)
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.List                  (find, stripPrefix)
-import           System.FilePath            (takeDirectory, (</>))
-
-import           Compiler.Internal
-import           Compiler.Types
 import           Language.Types
 import           Parser
+import           PreCompiler
+import           System.FilePath            (takeDirectory, (</>))
 import           Types
 
 compileJob :: CardFileReference -> Sparker [Deployment]

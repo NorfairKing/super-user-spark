@@ -1,9 +1,9 @@
 module SeedSpec where
 
 import           Compiler.Gen          ()
-import           Compiler.Internal
 import           Compiler.TestUtils
 import           Compiler.Types
+import           PreCompiler
 import           Seed
 import           System.FilePath.Posix (isAbsolute)
 import           Test.Hspec

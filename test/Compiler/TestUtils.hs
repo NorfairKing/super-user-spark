@@ -4,6 +4,7 @@ import           Compiler.Internal
 import           Compiler.Types
 import           Data.Either       (isLeft, isRight)
 import           Language.Types
+import           PreCompiler
 import           Test.Hspec
 import           Types
 
