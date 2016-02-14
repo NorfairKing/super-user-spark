@@ -2,24 +2,19 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Utils where
 
-import           Data.List   (isInfixOf)
-import           System.Exit (exitFailure)
-import           System.IO   (hPutStrLn, stderr)
+import           Control.Monad (when)
+import           Data.List     (isInfixOf)
+import           System.Exit   (exitFailure)
+import           System.IO     (hPutStrLn, stderr)
 import           Types
 
 debug :: (MonadReader SparkConfig m, MonadIO m) => String -> m ()
-debug str = do
-    v <- asks conf_debug
-    if v
-    then liftIO $ putStrLn str
-    else return ()
+debug str = incase (asks conf_debug) $ liftIO $ putStrLn str
 
 incase :: MonadReader SparkConfig m => (SparkConfig -> Bool) -> m () -> m ()
 incase bf func = do
     b <- asks bf
-    if b
-    then func
-    else return ()
+    when b func
 
 incaseElse :: MonadReader SparkConfig m => (SparkConfig -> Bool) -> m a -> m a -> m a
 incaseElse bf funcif funcelse = do

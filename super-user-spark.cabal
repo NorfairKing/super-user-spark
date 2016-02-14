@@ -21,6 +21,7 @@ executable spark
                   , Compiler.Types
                   , Compiler.Utils
                   , Config.Types
+                  , Config
                   , Constants
                   , CoreTypes
                   , Deployer
@@ -33,6 +34,7 @@ executable spark
                   , Monad
                   , Parser
                   , Parser.Internal
+                  , PreCompiler
                   , Seed
                   , Types
                   , Utils

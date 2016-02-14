@@ -106,7 +106,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
                                                                 if point `filePathEqual` s
                                                                 then done
                                                                 else do
-                                                                    liftIO $ putStrLn $ point ++ " is not equal to " ++ d
+                                                                    liftIO $ putStrLn $ d ++ " is a link but it points to " ++ point ++ " instead of " ++ src
                                                                     incaseElse conf_deploy_replace_links
                                                                         (unlink d >> preDeployment dep)
                                                                         (error ["Destination", d, "already exists and is a symbolic link but not to the source."])
