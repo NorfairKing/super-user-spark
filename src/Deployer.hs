@@ -269,7 +269,7 @@ postdeployments deps predeps = do
 postdeployment :: PreDeployment -> SparkDeployer (Maybe String)
 postdeployment AlreadyDone = return Nothing
 postdeployment (Error _) = throwError $ UnpredictedError "Contact the author if you see this. (postdeployment)"
-postdeployment (Ready src dst kind) = do
+postdeployment (Ready s d kind) = do
     sd <- diagnose src
     dd <- diagnose dst
 
@@ -293,6 +293,9 @@ postdeployment (Ready src dst kind) = do
         _                                                 -> error ["The source", src, "is something weird."]
 
   where
+    src = normalise s
+    dst = normalise d
+
     fine :: SparkDeployer (Maybe String)
     fine = return Nothing
 
