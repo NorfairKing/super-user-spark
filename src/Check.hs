@@ -3,10 +3,10 @@ module Check where
 import           Check.Types
 import           Types
 
-checkDeployment :: DiagnosedDeployment -> CheckResult
+checkDeployment :: DiagnosedDeployment -> DeploymentCheckResult
 checkDeployment (Diagnosed [] (D dst _ _) _)
-    = Dirty $ unwords ["No source for deployment with destination", dst]
-checkDeployment _ = Dirty "Not yet implemented"
+    = Impossible $ unwords ["No source for deployment with destination", dst]
+checkDeployment _ = Impossible "Not yet implemented"
 
 -- | Check a single (@source@, @destination@, @kind@) triple.
 checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult

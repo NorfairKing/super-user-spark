@@ -20,6 +20,13 @@ data DiagnosedFp = D
     } deriving (Show, Eq)
 
 
+data DeploymentCheckResult
+    = DeploymentDone
+    | ReadyToDeploy FilePath FilePath DeploymentKind
+    | DirtySituation String
+    | Impossible String
+    deriving (Show, Eq)
+
 data CheckResult = AlreadyDone
                  | Ready
                  | Dirty String
