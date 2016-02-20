@@ -4,11 +4,14 @@ import           Check
 import           Check.Gen          ()
 import           Check.Internal
 import           Check.Types
+import           Compiler.Types
 import           CoreTypes
+import           Parser.Gen
 import           System.Directory
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
+import           TestUtils
 
 spec :: Spec
 spec = do
@@ -20,48 +23,72 @@ diagnoseSpec = do
     let sandbox = "test_sandbox"
     let setup = createDirectoryIfMissing True sandbox
     let teardown = removeDirectoryRecursive sandbox
-    beforeAll_ setup $ afterAll_ teardown $ describe "diagnoseFp" $ do
-        it "figures out this test file" $ do
-            withCurrentDirectory sandbox $ do
-                let file = "test.txt"
-                writeFile file "This is a test"
-                diagnoseFp file `shouldReturn` IsFile
-                removeFile file
-                diagnoseFp file `shouldReturn` Nonexistent
 
-        it "figures out this test directory" $ do
-            withCurrentDirectory sandbox $ do
-                let dir = "testdir"
-                createDirectory dir
-                diagnoseFp dir `shouldReturn` IsDirectory
-                removeDirectory dir
-                diagnoseFp dir `shouldReturn` Nonexistent
+    beforeAll_ setup $ afterAll_ teardown $ do
+        describe "diagnoseDeployment" $ do
+            it "retains the filepaths and deploymentkind that it diagnoses for very simple filepaths" $ do
+                once $ forAll (resize 5 $ listOf generateWord) $ \srcs -> do
+                    forAll generateWord $ \dst -> do
+                        forAll arbitrary $ \kind -> do
+                            (Diagnosed dsrcs ddst dkind) <- diagnoseDeployment $ Put srcs dst kind
+                            map diagnosedFilePath dsrcs `shouldBe` srcs
+                            diagnosedFilePath ddst `shouldBe` dst
+                            dkind `shouldBe` kind
 
-        it "figures out this test symbolic link with a destination" $ do
-            withCurrentDirectory sandbox $ do
-                let link = "testlink"
-                let file = "testfile"
-                writeFile file "This is a test"
-                createSymbolicLink file link
-                diagnoseFp link `shouldReturn` IsLinkTo file
-                removeLink link
-                removeFile file
-                diagnoseFp link `shouldReturn` Nonexistent
+            pend
 
-        it "figures out this test symbolic link without a destination" $ do
-            withCurrentDirectory sandbox $ do
-                let link = "testlink"
-                let file = "testfile"
-                createSymbolicLink file link
-                diagnoseFp link `shouldReturn` IsLinkTo file
-                removeLink link
-                diagnoseFp link `shouldReturn` Nonexistent
 
-        it "figures out that /dev/null is weird" $ do
-            diagnoseFp "/dev/null" `shouldReturn` IsWeird
+        describe "diagnose" $ do
+            it "retains the filepath that it diagnoses for very simple filepaths" $ do
+                once $ forAll generateWord $ \fp -> do
+                    (D dfp _ _) <- diagnose fp
+                    dfp `shouldBe` fp
 
-        it "figures out that /dev/random is weird" $ do
-            diagnoseFp "/dev/random" `shouldReturn` IsWeird
+            pend
+
+
+        describe "diagnoseFp" $ do
+            it "figures out this test file" $ do
+                withCurrentDirectory sandbox $ do
+                    let file = "test.txt"
+                    writeFile file "This is a test"
+                    diagnoseFp file `shouldReturn` IsFile
+                    removeFile file
+                    diagnoseFp file `shouldReturn` Nonexistent
+
+            it "figures out this test directory" $ do
+                withCurrentDirectory sandbox $ do
+                    let dir = "testdir"
+                    createDirectory dir
+                    diagnoseFp dir `shouldReturn` IsDirectory
+                    removeDirectory dir
+                    diagnoseFp dir `shouldReturn` Nonexistent
+
+            it "figures out this test symbolic link with a destination" $ do
+                withCurrentDirectory sandbox $ do
+                    let link = "testlink"
+                    let file = "testfile"
+                    writeFile file "This is a test"
+                    createSymbolicLink file link
+                    diagnoseFp link `shouldReturn` IsLinkTo file
+                    removeLink link
+                    removeFile file
+                    diagnoseFp link `shouldReturn` Nonexistent
+
+            it "figures out this test symbolic link without a destination" $ do
+                withCurrentDirectory sandbox $ do
+                    let link = "testlink"
+                    let file = "testfile"
+                    createSymbolicLink file link
+                    diagnoseFp link `shouldReturn` IsLinkTo file
+                    removeLink link
+                    diagnoseFp link `shouldReturn` Nonexistent
+
+            it "figures out that /dev/null is weird" $ do
+                diagnoseFp "/dev/null" `shouldReturn` IsWeird
+
+            it "figures out that /dev/random is weird" $ do
+                diagnoseFp "/dev/random" `shouldReturn` IsWeird
 
 checkSpec :: Spec
 checkSpec = parallel $ do

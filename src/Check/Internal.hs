@@ -1,6 +1,7 @@
 module Check.Internal where
 
 import           Check.Types
+import           Compiler.Types
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import           Data.Digest.Pure.MD5
@@ -15,7 +16,11 @@ import           System.Posix.Files         (fileExist, getSymbolicLinkStatus,
 import           System.Process             (system)
 
 
-
+diagnoseDeployment :: Deployment -> IO DiagnosedDeployment
+diagnoseDeployment (Put srcs dst kind) = do
+    dsrcs <- mapM diagnose srcs
+    ddst <- diagnose dst
+    return $ Diagnosed dsrcs ddst kind
 
 diagnose :: FilePath -> IO DiagnosedFp
 diagnose fp = do
@@ -49,6 +54,8 @@ diagnoseFp fp = do
                 point <- readSymbolicLink fp
                 return $ IsLinkTo point
             ExitFailure _ -> return Nonexistent
+
+
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: FilePath -> IO HashDigest

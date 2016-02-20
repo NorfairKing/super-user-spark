@@ -8,6 +8,7 @@ checkDeployment (Diagnosed [] (D dst _ _) _)
     = Dirty $ unwords ["No source for deployment with destination", dst]
 checkDeployment _ = Dirty "Not yet implemented"
 
+-- | Check a single (@source@, @destination@, @kind@) triple.
 checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult
 checkSingle (D src srcd srch) (D dst dstd dsth) kind =
     case (srcd, dstd, kind) of

@@ -13,8 +13,11 @@ data Diagnostics
     | IsWeird
     deriving (Show, Eq)
 
-data DiagnosedFp = D FilePath Diagnostics HashDigest
-    deriving (Show, Eq)
+data DiagnosedFp = D
+    { diagnosedFilePath    :: FilePath
+    , diagnosedDiagnostics :: Diagnostics
+    , diagnosedHashDigest  :: HashDigest
+    } deriving (Show, Eq)
 
 
 data CheckResult = AlreadyDone
