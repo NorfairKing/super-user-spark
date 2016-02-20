@@ -96,20 +96,51 @@ checkSpec = parallel $ do
     checkDeploymentSpec
 
 checkDeploymentSpec :: Spec
-checkDeploymentSpec = describe "checkDeployment" $ do
-    it "says 'impossible' for deployments with an empty list of sources" $ do
-        forAll arbitrary $ \dst ->
-            forAll arbitrary $ \kind ->
-                shouldBeImpossible [] dst kind
+checkDeploymentSpec = do
+    describe "checkDeployment" $ do
+        it "says 'impossible' for deployments with an empty list of sources" $ do
+            forAll arbitrary $ \dst ->
+                forAll arbitrary $ \kind ->
+                    shouldBeImpossible' $ Diagnosed [] dst kind
+
+        it "says 'impossible' for deployments where all singles are impossible" $ do
+            forAll (arbitrary `suchThat` (\(Diagnosed srcs dst kind) -> all (\src -> isImpossible $ checkSingle src dst kind) srcs)) $ \dd ->
+                shouldBeImpossible' dd
+
+
+        it "gives the same result as bestResult (just with a better error for empty lists)" $ do
+            property $ \dd@(Diagnosed srcs dst kind) ->
+                case (bestResult (map (\src -> checkSingle src dst kind) srcs), checkDeployment dd) of
+                    (ImpossibleDeployment r1, ImpossibleDeployment r2) -> length r1 `shouldSatisfy` (<= (length r2))
+                    (r1, r2) -> r1 `shouldBe` r2
+
+    describe "bestResult" $ do
+        it "says 'impossible' if all checkresults are impossible" $ do
+            forAll (arbitrary `suchThat` all isImpossible) shouldBeImpossibleDeployment
+
+        it "says 'done' if the first non-impossible in 'done'" $ do
+            forAll (arbitrary `suchThat` (any (not . isImpossible)
+                                     &&& (isDone . head . dropWhile isImpossible)))
+              $ \dd -> bestResult dd `shouldSatisfy` deploymentIsDone
+
+        it "says 'dirty' if the first non-impossible in 'dirty'" $ do
+            forAll (arbitrary `suchThat` (any (not . isImpossible)
+                                     &&& (isDirty . head . dropWhile isImpossible)))
+              $ \dd -> bestResult dd `shouldSatisfy` dirtyDeployment
+
+        it "says 'ready' if the first non-impossible in 'ready'" $ do
+            forAll (arbitrary `suchThat` (any (not . isImpossible)
+                                     &&& (isReady . head . dropWhile isImpossible)))
+              $ \dd -> bestResult dd `shouldSatisfy` readyDeployment
 
 
 checkSingleSpec :: Spec
 checkSingleSpec = describe "checkSingle" $ do
-    it "says 'dirty' if the source does not exist" $ do
+    it "says 'impossible' if the source does not exist" $ do
         forAll (arbitraryWith Nonexistent) $ \src ->
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \kind ->
-                    shouldBeDirty src dst kind
+                    shouldBeImpossible src dst kind
 
     it "says 'ready' if the source is a file and the destination does not exist" $ do
         forAll (arbitraryWith IsFile) $ \src ->
@@ -210,20 +241,20 @@ checkSingleSpec = describe "checkSingle" $ do
             forAll (arbitraryWith $ IsLinkTo l) $ \src ->
                 forAll arbitrary $ \dst ->
                     forAll arbitrary $ \kind ->
-                        shouldBeDirty src dst kind
+                        shouldBeImpossible src dst kind
 
 
     it "says 'dirty' for a weird source" $ do
         forAll (arbitraryWith IsWeird) $ \src ->
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \kind ->
-                    shouldBeDirty src dst kind
+                    shouldBeImpossible src dst kind
 
     it "says 'dirty' for a weird destination" $ do
         forAll arbitrary $ \src ->
             forAll (arbitraryWith IsWeird) $ \dst ->
                 forAll arbitrary $ \kind ->
-                    shouldBeDirty src dst kind
+                    shouldBeImpossible src dst kind
 
     it "works for these unit tests" $ do
         pending

@@ -6,13 +6,27 @@ import           Data.Digest.Pure.MD5
 import           Language.Gen         ()
 import           Test.QuickCheck
 
+instance Arbitrary CheckResult where
+    arbitrary = oneof
+        [ pure AlreadyDone
+        , Ready <$> arbitrary
+        , Dirty <$> arbitrary <*> arbitrary
+        , Impossible <$> arbitrary
+        ]
+
+instance Arbitrary Instruction where
+    arbitrary = Instruction <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance Arbitrary DiagnosedDeployment where
+    arbitrary = Diagnosed <$> arbitrary <*> arbitrary <*> arbitrary
+
 instance Arbitrary Diagnostics where
     arbitrary = oneof
-        [ return Nonexistent
-        , return IsFile
-        , return IsDirectory
+        [ pure Nonexistent
+        , pure IsFile
+        , pure IsDirectory
         , IsLinkTo <$> arbitrary
-        , return IsWeird
+        , pure IsWeird
         ]
 
 instance Arbitrary DiagnosedFp where

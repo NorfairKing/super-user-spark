@@ -19,17 +19,21 @@ data DiagnosedFp = D
     , diagnosedHashDigest  :: HashDigest
     } deriving (Show, Eq)
 
-
-data DeploymentCheckResult
-    = DeploymentDone
-    | ReadyToDeploy FilePath FilePath DeploymentKind
-    | DirtySituation String
-    | Impossible String
+data Instruction = Instruction FilePath FilePath DeploymentKind
     deriving (Show, Eq)
 
-data CheckResult = AlreadyDone
-                 | Ready
-                 | Dirty String
+data DeploymentCheckResult
+    = DeploymentDone                        -- ^ Done already
+    | ReadyToDeploy Instruction             -- ^ Immediately possible
+    | DirtySituation String Instruction     -- ^ Possible after cleanup of destination
+    | ImpossibleDeployment [String]         -- ^ Entirely impossible
+    deriving (Show, Eq)
+
+data CheckResult
+    = AlreadyDone                           -- ^ Done already
+    | Ready Instruction                     -- ^ Immediately possible
+    | Dirty String Instruction              -- ^ Possible after cleanup
+    | Impossible String                     -- ^ Entirely impossible
     deriving (Show, Eq)
 
 data DiagnosedDeployment = Diagnosed

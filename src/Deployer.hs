@@ -3,19 +3,17 @@
 module Deployer where
 
 import           Control.Monad      (void)
-import           Data.List          (isPrefixOf, sort)
 import           Data.Maybe         (catMaybes)
 import           Data.Text          (pack)
+import           Deployer.Internal
 import           Prelude            hiding (error)
 import           Shelly             (cp_r, fromText, shelly)
 import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
-                                     getDirectoryContents, getHomeDirectory,
-                                     getPermissions, removeDirectoryRecursive,
-                                     removeFile)
-import           System.Posix.Env   (getEnv, getEnvironment)
+                                     getDirectoryContents, getPermissions,
+                                     removeDirectoryRecursive, removeFile)
 
 import           System.Exit        (ExitCode (..))
-import           System.FilePath    (dropFileName, normalise, (</>))
+import           System.FilePath    (dropFileName, normalise)
 import           System.Posix.Files (createSymbolicLink, fileExist,
                                      getSymbolicLinkStatus, isBlockDevice,
                                      isCharacterDevice, isDirectory,
@@ -38,11 +36,11 @@ deploy dps = do
     _ <- runSparkDeployer state $ deployAll dps
     return ()
 
-check :: [Deployment] -> Sparker [PreDeployment]
-check dps = do
-    state <- initialState dps
-    (pdps, _) <- runSparkDeployer state $ predeployments dps
-    return pdps
+-- check :: [Deployment] -> Sparker [PreDeployment]
+-- check dps = do
+--     state <- initialState dps
+--     (pdps, _) <- runSparkDeployer state $ predeployments dps
+--     return pdps
 
 
 initialState :: [Deployment] -> Sparker DeployerState
@@ -77,8 +75,8 @@ predeployments dps = do
 preDeployment :: Deployment -> SparkDeployer PreDeployment
 preDeployment (Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
 preDeployment dep@(Put (src:ss) dst kind) = do
-    s  <- complete src
-    d  <- complete dst
+    s  <- liftIO $ complete src
+    d  <- liftIO $ complete dst
     sd <- diagnose s
     dd <- diagnose d
 
@@ -321,37 +319,3 @@ postdeployment (Ready s d kind) = do
 
 filePathEqual :: FilePath -> FilePath -> Bool
 filePathEqual f g = (normalise f) == (normalise g)
-
-complete :: FilePath -> SparkDeployer FilePath
-complete fp = do
-    let ids = parseId fp
-    strs <- mapM replaceId ids
-    completed <- mapM replaceHome strs
-    return $ concat completed
-
-parseId :: FilePath -> [ID]
-parseId [] = [Plain ""]
-parseId ('$':'(':rest) = (Var id):(parseId next)
-  where (id, (')':next)) = break (\c -> c == ')') rest
-parseId (s:ss) = case parseId ss of
-                    (Plain str):r   -> (Plain (s:str)):r
-                    r               -> (Plain [s]):r
-
-
-replaceId :: ID -> SparkDeployer FilePath
-replaceId (Plain str) = return str
-replaceId (Var str) = do
-    e <- liftIO $ getEnv str
-    case e of -- TODO fix this to fit nicely with the other errors.
-        Nothing -> do
-            env <- liftIO $ getEnvironment
-            throwError $ DeployError $ PreDeployError $ return $ unwords ["variable", str, "could not be resolved from environment:\n", unlines . map show $ sort env]
-        Just fp -> return fp
-
-replaceHome :: FilePath -> SparkDeployer FilePath
-replaceHome path = do
-    home <- liftIO $ getHomeDirectory
-    return $ if "~" `isPrefixOf` path
-        then home </> drop 2 path
-        else path
-
