@@ -227,9 +227,9 @@ formatDeployments ds = unlines $ map (formatDeployment lens) ds
 formatDeployment :: [Int] -> Deployment -> String
 formatDeployment ms (Put srcs dst k) = unwords $
     [
-        padded ms srcs
-    ,   kindSymbol k
-    ,   dst
+      padded ms srcs
+    , kindSymbol k
+    , dst
     ]
   where
     kindSymbol LinkDeployment = linkKindSymbol
@@ -245,16 +245,6 @@ formatPreDeployments :: [(Deployment, PreDeployment)] -> String
 formatPreDeployments pdps
     = if null output then "Deployment is done already\n" else unlines output
     where output = catMaybes $ map formatPreDeployment pdps
-
-{-
-formatPreDeployments :: [(Deployment, PreDeployment)] -> String
-formatPreDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms
-  where
-    ms = map formatPreDeployment predeps
-
-    dests = map (deployment_dst . fst) ds
-    predeps = map snd ds
--}
 
 formatPostDeployments :: [(Deployment, Maybe String)] -> String
 formatPostDeployments ds = unlines $ zipStrs dests $ map (": " ++) ms

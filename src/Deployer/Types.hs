@@ -31,10 +31,7 @@ data Diagnostics = NonExistent
                  | IsFile Permissions
                  | IsDirectory Permissions
                  | IsLink Permissions
-                 | IsPipe
-                 | IsSocket
-                 | IsCharDevice
-                 | IsBlockDevice
+                 | IsWeird
     deriving (Show, Eq)
 
 data PreDeployment = Ready FilePath FilePath DeploymentKind

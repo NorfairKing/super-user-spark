@@ -186,23 +186,17 @@ diagnose fp = do
     if e
     then do
         s <- liftIO $ getSymbolicLinkStatus fp
-        if isBlockDevice s
-        then return IsBlockDevice
-        else if isCharacterDevice s
-            then return IsCharDevice
-            else if isSocket s
-                then return IsSocket
-                else if isNamedPipe s
-                    then return IsPipe
-                    else do
-                        p <- liftIO $ getPermissions fp
-                        if isSymbolicLink s
-                        then return $ IsLink p
-                        else if isDirectory s
-                            then return $ IsDirectory p
-                            else if isRegularFile s
-                                then return $ IsFile p
-                                else throwError $ UnpredictedError "Contact the author if you see this"
+        if isBlockDevice s || isCharacterDevice s || isSocket s || isNamedPipe s
+        then return IsWeird
+        else do
+            p <- liftIO $ getPermissions fp
+            if isSymbolicLink s
+            then return $ IsLink p
+            else if isDirectory s
+                then return $ IsDirectory p
+                else if isRegularFile s
+                    then return $ IsFile p
+                    else throwError $ UnpredictedError "Contact the author if you see this"
     else do
         -- Because if a link exists, but it points to something that doesn't exist, it is considered as non-existent by `fileExist`
         es <- liftIO $ system $ unwords ["test", "-L", fp]
