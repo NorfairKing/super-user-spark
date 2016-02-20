@@ -3,7 +3,7 @@ module Check.Gen where
 import           Check.Types
 import qualified Data.ByteString.Lazy as LB
 import           Data.Digest.Pure.MD5
-import           Language.Gen
+import           Language.Gen         ()
 import           Test.QuickCheck
 
 instance Arbitrary Diagnostics where

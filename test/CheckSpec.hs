@@ -1,18 +1,14 @@
 module CheckSpec where
 
 import           Check
-import           Check.Gen
+import           Check.Gen          ()
 import           Check.Internal
 import           Check.Types
 import           CoreTypes
-import           Language.Gen
 import           System.Directory
-import           System.FilePath       (dropFileName, normalise, (</>))
-import           System.FilePath.Posix (isAbsolute)
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
-import           TestUtils
 
 spec :: Spec
 spec = do
@@ -88,7 +84,13 @@ checkSingleSpec = describe "checkSingle" $ do
     let arbitraryWith :: Diagnostics -> Gen DiagnosedFp
         arbitraryWith d = D <$> arbitrary <*> pure d <*> arbitrary
 
-    it "says 'ready' for an existing source file and a nonexistent destination" $ do
+    it "says 'error' if the source does not exist" $ do
+        forAll (arbitraryWith Nonexistent) $ \src ->
+            forAll arbitrary $ \dst ->
+                forAll arbitrary $ \kind ->
+                    shouldBeDirty src dst kind
+
+    it "says 'ready' if the source is a file and the destination does not exist" $ do
         forAll (arbitraryWith IsFile) $ \src ->
             forAll (arbitraryWith Nonexistent) $ \dst ->
                 forAll arbitrary $ \kind ->
@@ -135,7 +137,7 @@ checkSingleSpec = describe "checkSingle" $ do
                 forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
                     shouldBeDirty src dst CopyDeployment
 
-    it "says 'ready' for an existing source directory and a nonexistent destination" $ do
+    it "says 'ready' if the source is a directory and the destination does not exist" $ do
         forAll (arbitraryWith IsDirectory) $ \src ->
             forAll (arbitraryWith Nonexistent) $ \dst ->
                 forAll arbitrary $ \kind ->
@@ -146,6 +148,11 @@ checkSingleSpec = describe "checkSingle" $ do
             forAll (arbitraryWith IsFile) $ \dst ->
                 forAll arbitrary $ \kind ->
                     shouldBeDirty src dst kind
+
+    it "says 'error' if both the source and destination are directories for a link deployment" $ do
+        forAll (arbitraryWith IsDirectory) $ \src ->
+            forAll (arbitraryWith IsDirectory) $ \dst ->
+                shouldBeDirty src dst LinkDeployment
 
     it "says 'done' if both the source and destination are directories and it's a copy deployment and the directories are equal" $ do
         forAll arbitrary $ \src ->
@@ -171,6 +178,12 @@ checkSingleSpec = describe "checkSingle" $ do
             forAll (arbitraryWith $ IsLinkTo srcp) $ \dst ->
                 shouldBeDone src dst LinkDeployment
 
+    it "says 'done' if the source is a directory and the destination is a link for a copy deployment" $ do
+        forAll (arbitraryWith IsDirectory) $ \src ->
+            forAll arbitrary $ \l ->
+                forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
+                    shouldBeDirty src dst CopyDeployment
+
     it "says 'error' if the source is a link" $ do
         forAll arbitrary $ \l ->
             forAll (arbitraryWith $ IsLinkTo l) $ \src ->
@@ -191,5 +204,7 @@ checkSingleSpec = describe "checkSingle" $ do
                 forAll arbitrary $ \kind ->
                     shouldBeDirty src dst kind
 
+    it "works for these unit tests" $ do
+        pending
 
 

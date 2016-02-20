@@ -1,15 +1,13 @@
 module Check.Internal where
 
 import           Check.Types
-import           Control.Monad              (mapM)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import           Data.Digest.Pure.MD5
 import           System.Directory           (getDirectoryContents)
 import           System.Exit                (ExitCode (..))
-import           System.FilePath            (dropFileName, normalise, (</>))
-import           System.Posix.Files         (createSymbolicLink, fileExist,
-                                             getSymbolicLinkStatus,
+import           System.FilePath            ((</>))
+import           System.Posix.Files         (fileExist, getSymbolicLinkStatus,
                                              isBlockDevice, isCharacterDevice,
                                              isDirectory, isNamedPipe,
                                              isRegularFile, isSocket,

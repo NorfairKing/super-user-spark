@@ -1,7 +1,7 @@
 module Check.Types where
 
 import           CoreTypes
-import           Data.Digest.Pure.MD5 (MD5Digest (..))
+import           Data.Digest.Pure.MD5 (MD5Digest)
 
 type HashDigest = MD5Digest
 
