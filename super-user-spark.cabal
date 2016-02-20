@@ -57,6 +57,7 @@ executable spark
                   , text                  >= 1.2   && < 1.3
                   , transformers          >= 0.4   && < 0.5
                   , unix                  >= 2.7   && < 2.8
+                  , pureMD5               >= 2.1   && < 2.2
   default-language: Haskell2010
   
 
@@ -85,5 +86,6 @@ test-suite spark-tests
                   , text                  >= 1.2   && < 1.3
                   , transformers          >= 0.4   && < 0.5
                   , unix                  >= 2.7   && < 2.8
+                  , pureMD5               >= 2.1   && < 2.2
   default-language:  Haskell2010
   

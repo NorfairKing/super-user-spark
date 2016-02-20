@@ -1,5 +1,6 @@
 module Check where
 
+import           Check.Types
 import           Language.Types
 import           Monad
 import           System.Directory   (Permissions (..))
@@ -13,40 +14,26 @@ import           System.Posix.Files (createSymbolicLink, fileExist,
 import           System.Process     (system)
 import           Types
 
+checkDeployment :: DiagnosedDeployment -> CheckResult
+checkDeployment (Diagnosed [] (D dst _ _) _)
+    = Dirty $ unwords ["No source for deployment with destination", dst]
+checkDeployment dd = Dirty "Not yet implemented"
 
+checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult
+checkSingle (D src srcd srch) (D dst dstd dsth) kind =
+    case (srcd, dstd, kind) of
 
-data Diagnostics
-    = Nonexistent
-    | IsFile
-    | IsDirectory
-    | IsLink
-    | IsWeird
-    deriving (Show, Eq)
+        (IsWeird, IsWeird, _)
+            -> e ["Both the source:", src, "and the destination", dst, "are weird"]
 
+        (IsWeird, _, _)
+            -> e ["The source:", src, "is weird"]
 
+        (_, IsWeird, _)
+            -> e ["The destination:", dst, "is weird"]
 
-diagnose :: FilePath -> IO Diagnostics
-diagnose fp = do
-    e <- liftIO $ fileExist fp
-    if e
-    then do
-        s <- liftIO $ getSymbolicLinkStatus fp
-        if isBlockDevice s || isCharacterDevice s || isSocket s || isNamedPipe s
-        then return IsWeird
-        else do
-            if isSymbolicLink s
-            then return IsLink
-            else if isDirectory s
-                then return IsDirectory
-                else if isRegularFile s
-                    then return IsFile
-                    else error $ "File " ++ fp ++ " was neither a block device, a character device, a socket, a named pipe, a symbolic link, a directory or a regular file"
-    else do
-        -- If a link exists, but it points to something that doesn't exist, it is considered as non-existent by `fileExist`
-        es <- liftIO $ system $ unwords ["test", "-L", fp]
-        case es of
-            ExitSuccess -> return IsLink
-            ExitFailure _ -> return Nonexistent
-
+        _ -> undefined
+  where
+    e = Dirty . unwords
 
 
