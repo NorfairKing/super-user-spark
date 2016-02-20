@@ -15,23 +15,6 @@ import           System.Posix.Files         (fileExist, getSymbolicLinkStatus,
 import           System.Process             (system)
 
 
-hashFilePath :: FilePath -> IO HashDigest
-hashFilePath fp = do
-    d <- diagnoseFp fp
-    case d of
-        IsFile -> hashFile fp
-        _ -> undefined
-
-hashFile :: FilePath -> IO HashDigest
-hashFile fp = md5 <$> LB.readFile fp
-
-hashDirectory :: FilePath -> IO HashDigest
-hashDirectory fp = do
-    rawContents <- getDirectoryContents fp
-    let contents = map (fp </>) . filter (\f -> not $ f == "." || f == "..") $ rawContents
-    hashes <- mapM hashFilePath contents
-    let hashbs = map (LBC.pack . show) hashes
-    return $ md5 $ LB.concat hashbs
 
 
 diagnose :: FilePath -> IO DiagnosedFp
@@ -67,3 +50,24 @@ diagnoseFp fp = do
                 return $ IsLinkTo point
             ExitFailure _ -> return Nonexistent
 
+-- | Hash a filepath so that two filepaths with the same contents have the same hash
+hashFilePath :: FilePath -> IO HashDigest
+hashFilePath fp = do
+    d <- diagnoseFp fp
+    case d of
+        IsFile -> hashFile fp
+        IsDirectory -> hashDirectory fp
+        IsLinkTo _ -> return $ md5 LB.empty
+        IsWeird -> return $ md5 LB.empty
+        Nonexistent -> return $ md5 LB.empty
+
+hashFile :: FilePath -> IO HashDigest
+hashFile fp = md5 <$> LB.readFile fp
+
+hashDirectory :: FilePath -> IO HashDigest
+hashDirectory fp = do
+    rawContents <- getDirectoryContents fp
+    let contents = map (fp </>) . filter (\f -> not $ f == "." || f == "..") $ rawContents
+    hashes <- mapM hashFilePath contents
+    let hashbs = map (LBC.pack . show) hashes
+    return $ md5 $ LB.concat hashbs
