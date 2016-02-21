@@ -10,7 +10,7 @@ import           Deployer.Internal
 
 check :: [Deployment] -> IO [DeploymentCheckResult]
 check ds = do
-    completed <- mapM completeDeployment ds
+    completed <- completeDeployments ds
     diagnosed <- mapM (diagnoseDeployment) completed
     return $ map checkDeployment diagnosed
 

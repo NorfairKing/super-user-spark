@@ -2,58 +2,53 @@ module Deployer.Internal where
 
 import           Check.Types
 import           Compiler.Types
-import           Data.List             (isPrefixOf)
 import           Data.Text             (pack)
 import           Deployer.Types
 import           Shelly                (cp_r, fromText, shelly)
-import           System.Directory      (getHomeDirectory,
-                                        removeDirectoryRecursive, removeFile)
-import           System.FilePath       (normalise, (</>))
+import           System.Directory      (removeDirectoryRecursive, removeFile)
+import           System.Environment    (getEnvironment)
+import           System.FilePath       (normalise)
 import           System.FilePath.Posix (dropFileName)
-import           System.Posix.Env      (getEnv)
 import           System.Posix.Files    (createSymbolicLink, removeLink)
 import           Types
 import           Utils
 
--- FIXME(kerckhove) seperate the pure part from the impure part with a Reader over the environment
-completeDeployment :: Deployment -> IO Deployment
-completeDeployment (Put srcs dst kind) = do
-    csrcs <- mapM complete srcs
-    cdst <- complete dst
+completeDeployments :: [Deployment] -> IO [Deployment]
+completeDeployments ds = do
+    env <- getEnvironment
+    case mapM (completeDeployment env) ds of
+        Left err -> die err
+        Right fp -> return fp
+
+completeDeployment :: Environment -> Deployment -> Either String Deployment
+completeDeployment env (Put srcs dst kind) = do
+    csrcs <- mapM (complete env) srcs
+    cdst <- complete env dst
     return $ Put csrcs cdst kind
 
-complete :: FilePath -> IO FilePath
-complete fp = do
+complete :: Environment -> FilePath -> Either String FilePath
+complete env fp = do
     let ids = parseId fp
-    strs <- mapM replaceId ids
-    completed <- mapM replaceHome strs
-    return $ normalise $ concat completed
+    strs <- mapM (replaceId env) ids
+    return $ normalise $ concat strs
+
+type Environment = [(String, String)]
 
 parseId :: FilePath -> [ID]
-parseId [] = [Plain ""]
+parseId [] = []
 parseId ('$':'(':rest) = (Var id):(parseId next)
   where (id, (')':next)) = break (\c -> c == ')') rest
 parseId (s:ss) = case parseId ss of
                     (Plain str):r   -> (Plain (s:str)):r
                     r               -> (Plain [s]):r
 
-replaceId :: ID -> IO FilePath
-replaceId (Plain str) = return str
-replaceId (Var str) = do
-    e <- getEnv str
-    case e of
+replaceId :: Environment -> ID -> Either String FilePath
+replaceId _ (Plain str) = return str
+replaceId e (Var str) = do
+    case lookup str e of
         -- FIXME(kerckhove) make this total instead
-        Nothing -> fail $ unwords ["variable", str, "could not be resolved from environment."]
-        Just fp -> return fp
-
-replaceHome :: FilePath -> IO FilePath
-replaceHome path = do
-    home <- getHomeDirectory
-    return $ if "~" `isPrefixOf` path
-        then home </> drop 2 path
-        else path
-
-
+        Nothing -> Left $ unwords ["variable", str, "could not be resolved from environment."]
+        Just fp -> Right fp
 
 performClean :: CleanupInstruction -> Sparker ()
 performClean (CleanFile fp)         = incase conf_deploy_replace_files       $ rmFile fp

@@ -4,15 +4,20 @@ import           Check.Internal
 import           Check.Types
 import           Config
 import           Config.Types
+import           Data.Either        (isLeft)
+import           Data.Maybe         (isNothing)
 import           Deployer.Internal
+import           Deployer.Types
 import           Monad
 import           System.Directory
 import           System.Posix.Files
 import           Test.Hspec
+import           Test.QuickCheck
 
 spec :: Spec
 spec = do
     cleanSpec
+    completionSpec
 
 cleanSpec :: Spec
 cleanSpec = do
@@ -105,3 +110,32 @@ cleanSpec = do
                     clean c $ CleanLink link
                     diagnoseFp link `shouldReturn` Nonexistent
                     diagnoseFp file `shouldReturn` Nonexistent
+
+completionSpec :: Spec
+completionSpec = do
+    describe "parseId" $ do
+        it "Works for these cases" $ do
+            parseId "" `shouldBe` []
+            parseId "file" `shouldBe` [Plain "file"]
+            parseId "something$(with)variable" `shouldBe` [Plain "something", Var "with", Plain "variable"]
+            parseId "$(one)$(two)$(three)" `shouldBe` [Var "one", Var "two", Var "three"]
+
+    describe "replaceId" $ do
+        it "leaves plain ID's unchanged in any environment" $ do
+            forAll arbitrary $ \env ->
+                forAll arbitrary $ \s ->
+                    replaceId env (Plain s) `shouldBe` Right s
+
+        it "returns Left if a variable is not in the environment" $ do
+            forAll arbitrary $ \var ->
+                forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env ->
+                    replaceId env (Var var) `shouldSatisfy` isLeft
+
+        it "replaces a variable if it's in the environment" $ do
+            forAll arbitrary $ \var ->
+                forAll arbitrary $ \val ->
+                    forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env1 ->
+                        forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env2 ->
+                            replaceId (env1 ++ [(var, val)] ++ env2) (Var var) `shouldBe` Right val
+
+
