@@ -9,20 +9,22 @@ import           Data.Maybe         (isNothing)
 import           Deployer.Internal
 import           Deployer.Types
 import           Monad
-import           System.Directory
+import           System.Directory   hiding (createDirectoryIfMissing)
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
+import           Utils
 
 spec :: Spec
 spec = do
     cleanSpec
+    deploymentSpec
     completionSpec
 
 cleanSpec :: Spec
 cleanSpec = do
     let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing True sandbox
+    let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
 
     let clean :: SparkConfig -> CleanupInstruction -> IO ()
@@ -55,7 +57,7 @@ cleanSpec = do
                 let c = defaultConfig { conf_deploy_replace_directories = False }
                 withCurrentDirectory sandbox $ do
                     let dir = "testdirectory"
-                    createDirectoryIfMissing True dir
+                    createDirectoryIfMissing dir
                     diagnoseFp dir `shouldReturn` IsDirectory
                     clean c $ CleanDirectory dir
                     diagnoseFp dir `shouldReturn` IsDirectory
@@ -66,7 +68,7 @@ cleanSpec = do
                 let c = defaultConfig { conf_deploy_replace_directories = True }
                 withCurrentDirectory sandbox $ do
                     let dir = "testdirectory"
-                    createDirectoryIfMissing True dir
+                    createDirectoryIfMissing dir
                     diagnoseFp dir `shouldReturn` IsDirectory
                     clean c $ CleanDirectory dir
                     diagnoseFp dir `shouldReturn` Nonexistent
@@ -110,6 +112,116 @@ cleanSpec = do
                     clean c $ CleanLink link
                     diagnoseFp link `shouldReturn` Nonexistent
                     diagnoseFp file `shouldReturn` Nonexistent
+
+deploymentSpec :: Spec
+deploymentSpec = do
+    let sandbox = "test_sandbox"
+    let setup = createDirectoryIfMissing sandbox
+    let teardown = removeDirectoryRecursive sandbox
+
+    beforeAll_ setup $ afterAll_ teardown $ do
+        describe "copy" $ do
+            it "succcesfully copies this file" $ do
+                withCurrentDirectory sandbox $ do
+                    let src = "testfile"
+                    let dst = "testcopy"
+                    writeFile src "This is a file."
+
+                    diagnoseFp src `shouldReturn` IsFile
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    -- Under test
+                    copy src dst
+
+                    diagnoseFp src `shouldReturn` IsFile
+                    diagnoseFp dst `shouldReturn` IsFile
+
+                    dsrc <- diagnose src
+                    ddst <- diagnose dst
+                    diagnosedHashDigest ddst `shouldBe` diagnosedHashDigest dsrc
+
+                    removeFile src
+                    removeFile dst
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+            it "succcesfully copies this directory" $ do
+                withCurrentDirectory sandbox $ do
+                    let src = "testdir"
+                    let dst = "testcopy"
+                    createDirectoryIfMissing src
+
+                    diagnoseFp src `shouldReturn` IsDirectory
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    -- Under test
+                    copy src dst
+
+                    diagnoseFp src `shouldReturn` IsDirectory
+                    diagnoseFp dst `shouldReturn` IsDirectory
+
+                    dsrc <- diagnose src
+                    ddst <- diagnose dst
+                    diagnosedHashDigest ddst `shouldBe` diagnosedHashDigest dsrc
+
+                    removeDirectoryRecursive src
+                    removeDirectoryRecursive dst
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+        describe "link" $ do
+            it "successfully links this file" $ do
+                withCurrentDirectory sandbox $ do
+                    let src = "testfile"
+                    let dst = "testlink"
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    writeFile src "This is a test."
+
+                    diagnoseFp src `shouldReturn` IsFile
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    -- Under test
+                    link src dst
+
+                    diagnoseFp src `shouldReturn` IsFile
+                    diagnoseFp dst `shouldReturn` IsLinkTo src
+
+                    removeFile src
+                    removeLink dst
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+            it "successfully links this directory" $ do
+                withCurrentDirectory sandbox $ do
+                    let src = "testdir"
+                    let dst = "testlink"
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    createDirectoryIfMissing src
+
+                    diagnoseFp src `shouldReturn` IsDirectory
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
+                    -- Under test
+                    link src dst
+
+                    diagnoseFp src `shouldReturn` IsDirectory
+                    diagnoseFp dst `shouldReturn` IsLinkTo src
+
+                    removeDirectoryRecursive src
+                    removeLink dst
+
+                    diagnoseFp src `shouldReturn` Nonexistent
+                    diagnoseFp dst `shouldReturn` Nonexistent
+
 
 completionSpec :: Spec
 completionSpec = do
