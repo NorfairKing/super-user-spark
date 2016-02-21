@@ -29,7 +29,7 @@ dispatch (DispatchCheck ccr) = do
     deps <- compileDeployerCardRef ccr
     seeded <- seedByCompiledCardRef ccr deps
     dcrs <- liftIO $ check seeded
-    liftIO $ putStr $ formatDeploymentChecks $ zip seeded dcrs
+    liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded dcrs
 
 dispatch (DispatchDeploy dcr) = do
     deps <- compileDeployerCardRef dcr

@@ -4,19 +4,20 @@ import           Check.Types
 import           Compiler.Types
 import           Constants
 import           CoreTypes
-import qualified Data.ByteString.Lazy       as LB
-import qualified Data.ByteString.Lazy.Char8 as LBC
-import           Data.Digest.Pure.MD5
-import           Data.Maybe                 (catMaybes)
-import           System.Directory           (getDirectoryContents)
-import           System.Exit                (ExitCode (..))
-import           System.FilePath            ((</>))
-import           System.Posix.Files         (fileExist, getSymbolicLinkStatus,
-                                             isBlockDevice, isCharacterDevice,
-                                             isDirectory, isNamedPipe,
-                                             isRegularFile, isSocket,
-                                             isSymbolicLink, readSymbolicLink)
-import           System.Process             (readProcess, system)
+import qualified Data.ByteString       as SB
+import qualified Data.ByteString.Char8 as SBC
+import qualified Data.ByteString.Lazy  as LB
+import qualified Data.Digest.Pure.MD5  as H (md5)
+import           Data.Maybe            (catMaybes)
+import           System.Directory      (getDirectoryContents)
+import           System.Exit           (ExitCode (..))
+import           System.FilePath       ((</>))
+import           System.Posix.Files    (fileExist, getSymbolicLinkStatus,
+                                        isBlockDevice, isCharacterDevice,
+                                        isDirectory, isNamedPipe, isRegularFile,
+                                        isSocket, isSymbolicLink,
+                                        readSymbolicLink)
+import           System.Process        (readProcess, system)
 
 checkDeployment :: DiagnosedDeployment -> DeploymentCheckResult
 checkDeployment (Diagnosed [] (D dst _ _) _)
@@ -34,9 +35,14 @@ bestResult cs
             Ready i             -> ReadyToDeploy i
             Dirty s i           -> DirtySituation s i
             Impossible _        -> error "Cannot be the case"
-  where
-    impossible (Impossible _) = True
-    impossible _ = False
+
+impossible :: CheckResult -> Bool
+impossible (Impossible _) = True
+impossible _ = False
+
+impossibleDeployment :: DeploymentCheckResult -> Bool
+impossibleDeployment (ImpossibleDeployment _) = True
+impossibleDeployment _ = False
 
 -- | Check a single (@source@, @destination@, @kind@) triple.
 checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult
@@ -145,6 +151,8 @@ diagnoseFp fp = do
             ExitFailure _ -> return Nonexistent
 
 
+md5 :: SB.ByteString -> HashDigest
+md5 bs = H.md5 $! LB.fromStrict bs
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: FilePath -> IO HashDigest
@@ -153,25 +161,30 @@ hashFilePath fp = do
     case d of
         IsFile -> hashFile fp
         IsDirectory -> hashDirectory fp
-        IsLinkTo _ -> return $ md5 LB.empty
-        IsWeird -> return $ md5 LB.empty
-        Nonexistent -> return $ md5 LB.empty
+        IsLinkTo _ -> return $ md5 SB.empty
+        IsWeird -> return $ md5 SB.empty
+        Nonexistent -> return $ md5 SB.empty
 
 hashFile :: FilePath -> IO HashDigest
-hashFile fp = md5 <$> LB.readFile fp
+hashFile fp = md5 <$> SB.readFile fp
 
 hashDirectory :: FilePath -> IO HashDigest
 hashDirectory fp = do
     rawContents <- getDirectoryContents fp
     let contents = map (fp </>) . filter (\f -> not $ f == "." || f == "..") $ rawContents
     hashes <- mapM hashFilePath contents
-    let hashbs = map (LBC.pack . show) hashes
-    return $ md5 $ LB.concat hashbs
+    let hashbs = map (SBC.pack . show) hashes
+    return $ md5 $ SB.concat hashbs
 
 
 formatDeploymentChecks :: [(Deployment, DeploymentCheckResult)] -> String
 formatDeploymentChecks dss
-    = if null output then "Deployment is done already\n" else unlines output
+    = if null output
+        then "Deployment is done already."
+        else unlines output ++
+            if all (impossibleDeployment . snd) dss
+             then "Deployment is impossible."
+             else "Deployment is possible."
     where output = catMaybes $ map formatDeploymentCheck dss
 
 
