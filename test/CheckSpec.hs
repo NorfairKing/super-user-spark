@@ -73,9 +73,13 @@ diagnoseSpec = do
                     let file = "testfile"
                     writeFile file "This is a test"
                     createSymbolicLink file link
+
+                    diagnoseFp file `shouldReturn` IsFile
                     diagnoseFp link `shouldReturn` IsLinkTo file
+
                     removeLink link
                     removeFile file
+
                     diagnoseFp link `shouldReturn` Nonexistent
 
             it "figures out this test symbolic link without a destination" $ do
@@ -83,8 +87,13 @@ diagnoseSpec = do
                     let link = "testlink"
                     let file = "testfile"
                     createSymbolicLink file link
+
+                    diagnoseFp file `shouldReturn` Nonexistent
                     diagnoseFp link `shouldReturn` IsLinkTo file
+
                     removeLink link
+
+                    diagnoseFp file `shouldReturn` Nonexistent
                     diagnoseFp link `shouldReturn` Nonexistent
 
             it "figures out that /dev/null is weird" $ do

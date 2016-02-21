@@ -2,33 +2,34 @@
 
 module Deployer where
 
-import           Control.Monad      (void)
-import           Data.Maybe         (catMaybes)
-import           Data.Text          (pack)
-import           Deployer.Internal
-import           Prelude            hiding (error)
-import           Shelly             (cp_r, fromText, shelly)
-import           System.Directory   (createDirectoryIfMissing, emptyPermissions,
-                                     getDirectoryContents, getPermissions,
-                                     removeDirectoryRecursive, removeFile)
-
-import           System.Exit        (ExitCode (..))
-import           System.FilePath    (dropFileName, normalise)
-import           System.Posix.Files (createSymbolicLink, fileExist,
-                                     getSymbolicLinkStatus, isBlockDevice,
-                                     isCharacterDevice, isDirectory,
-                                     isNamedPipe, isRegularFile, isSocket,
-                                     isSymbolicLink, readSymbolicLink)
-import           System.Process     (system)
-
-import           Compiler.Types
-import           Deployer.Types
-import           Formatter          (formatPostDeployments,
-                                     formatPreDeployments)
+import           Check.Types
 import           Monad
+import           Prelude            hiding (error)
+import           System.Directory   (removeDirectoryRecursive, removeFile)
+import           System.Posix.Files (removeLink)
 import           Types
 import           Utils
 
+
+deploy :: [DeploymentCheckResult] -> Sparker [DeploymentCheckResult]
+deploy = undefined
+
+
+performClean :: CleanupInstruction -> Sparker ()
+performClean (CleanFile fp)         = incase conf_deploy_replace_files       $ rmFile fp
+performClean (CleanDirectory fp)    = incase conf_deploy_replace_directories $ rmDir fp
+performClean (CleanLink fp)         = incase conf_deploy_replace_links       $ unlink fp
+
+unlink :: FilePath -> Sparker ()
+unlink fp = liftIO $ removeLink fp
+
+rmFile :: FilePath -> Sparker ()
+rmFile fp = liftIO $ removeFile fp
+
+rmDir :: FilePath -> Sparker ()
+rmDir fp  = liftIO $ removeDirectoryRecursive fp
+
+{-
 
 deploy :: [Deployment] -> Sparker ()
 deploy deps = do
@@ -162,32 +163,6 @@ compareDirectories d1 d2 = do
         cs <- liftIO $ getDirectoryContents d
         return $ filter (\f -> not $ f == "." || f == "..") cs
 
-diagnose :: FilePath -> Sparker Diagnostics
-diagnose fp = do
-    e <- liftIO $ fileExist fp
-    if e
-    then do
-        s <- liftIO $ getSymbolicLinkStatus fp
-        if isBlockDevice s || isCharacterDevice s || isSocket s || isNamedPipe s
-        then return IsWeird
-        else do
-            p <- liftIO $ getPermissions fp
-            if isSymbolicLink s
-            then return $ IsLink p
-            else if isDirectory s
-                then return $ IsDirectory p
-                else if isRegularFile s
-                    then return $ IsFile p
-                    else throwError $ UnpredictedError "Contact the author if you see this"
-    else do
-        -- Because if a link exists, but it points to something that doesn't exist, it is considered as non-existent by `fileExist`
-        es <- liftIO $ system $ unwords ["test", "-L", fp]
-        case es of
-            ExitSuccess -> return $ IsLink emptyPermissions
-            ExitFailure _ -> return NonExistent
-
-
-
 deployments :: [PreDeployment] -> Sparker [Maybe String]
 deployments = mapM deployment
 
@@ -214,26 +189,6 @@ link src dst = do
     liftIO $ createSymbolicLink src dst
   where upperDir = dropFileName dst
 
-
--- TODO these dont catch errors
-unlink :: FilePath -> Sparker ()
-unlink fp = do
-    es <- liftIO $ system $ unwords $ ["/usr/bin/unlink", fp]
-    case es of
-        ExitSuccess -> debug $ unwords ["unlinked", fp]
-        ExitFailure _ -> throwError $ DeployError $ PreDeployError ["Something went wrong while unlinking " ++ fp ++ "."]
-
-rmFile :: FilePath -> Sparker ()
-rmFile fp = do
-    liftIO $ removeFile fp
-    debug $ unwords ["removed", fp]
-
-rmDir :: FilePath -> Sparker ()
-rmDir fp = do
-    liftIO $ removeDirectoryRecursive fp
-    debug $ unwords ["removed", fp]
-
-
 postdeployments :: [Deployment] -> [PreDeployment] -> Sparker ()
 postdeployments deps predeps = do
     pdps <- mapM postdeployment predeps
@@ -246,8 +201,8 @@ postdeployment :: PreDeployment -> Sparker (Maybe String)
 postdeployment AlreadyDone = return Nothing
 postdeployment (Error _) = throwError $ UnpredictedError "Contact the author if you see this. (postdeployment)"
 postdeployment (Ready s d kind) = do
-    sd <- diagnose src
-    dd <- diagnose dst
+    sd <- diagnoseFp src
+    dd <- diagnoseFp dst
 
     case (sd, dd, kind) of
         (NonExistent    , _             , _             ) -> error ["The source", src, "is somehow missing after deployment."]
@@ -303,3 +258,5 @@ postdeployment (Ready s d kind) = do
 
 filePathEqual :: FilePath -> FilePath -> Bool
 filePathEqual f g = (normalise f) == (normalise g)
+
+-}
