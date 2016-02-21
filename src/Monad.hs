@@ -23,8 +23,5 @@ data SparkError = ParseError ParseError
 
 type CompileError = String
 type PreCompileError = String
-data DeployError = PreDeployError [String]
-                 | DuringDeployError [String]
-                 | PostDeployError [String]
-    deriving (Show, Eq)
+type DeployError = String
 

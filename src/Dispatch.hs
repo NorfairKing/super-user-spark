@@ -35,8 +35,7 @@ dispatch (DispatchDeploy dcr) = do
     deps <- compileDeployerCardRef dcr
     seeded <- seedByCompiledCardRef dcr deps
     dcrs <- liftIO $ check seeded
-    pdcs <- deploy dcrs
-    liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded pdcs
+    deploy $ zip seeded dcrs
 
 compileDeployerCardRef :: DeployerCardReference -> Sparker [Deployment]
 compileDeployerCardRef (DeployerCardCompiled fp) = inputCompiled fp

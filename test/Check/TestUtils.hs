@@ -8,31 +8,11 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 -- * Test utils for checkDeployment
-
-isImpossibleDeployment :: DeploymentCheckResult -> Bool
-isImpossibleDeployment (ImpossibleDeployment _) = True
-isImpossibleDeployment _ = False
-
-deploymentIsDone :: DeploymentCheckResult -> Bool
-deploymentIsDone DeploymentDone = True
-deploymentIsDone _ = False
-
-dirtyDeployment :: DeploymentCheckResult -> Bool
-dirtyDeployment (DirtySituation _ _ _) = True
-dirtyDeployment _ = False
-
-readyDeployment :: DeploymentCheckResult -> Bool
-readyDeployment (ReadyToDeploy _) = True
-readyDeployment _ = False
-
--- shouldBeImpossible :: [DiagnosedFp] -> DiagnosedFp -> CoreTypes.DeploymentKind -> Expectation
--- shouldBeImpossible srcs dst kind = checkDeployment (Diagnosed srcs dst kind) `shouldSatisfy` isImpossibleDeployment
-
 shouldBeImpossible' :: DiagnosedDeployment -> Expectation
-shouldBeImpossible' dd = checkDeployment dd `shouldSatisfy` isImpossibleDeployment
+shouldBeImpossible' dd = checkDeployment dd `shouldSatisfy` impossibleDeployment
 
 shouldBeImpossibleDeployment :: [CheckResult] -> Expectation
-shouldBeImpossibleDeployment dd = bestResult dd `shouldSatisfy` isImpossibleDeployment
+shouldBeImpossibleDeployment dd = bestResult dd `shouldSatisfy` impossibleDeployment
 
 
 -- * Test utils for checkSingle

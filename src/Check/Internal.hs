@@ -44,6 +44,19 @@ impossibleDeployment :: DeploymentCheckResult -> Bool
 impossibleDeployment (ImpossibleDeployment _) = True
 impossibleDeployment _ = False
 
+dirtyDeployment :: DeploymentCheckResult -> Bool
+dirtyDeployment (DirtySituation _ _ _) = True
+dirtyDeployment _ = False
+
+deploymentReadyToDeploy :: DeploymentCheckResult -> Bool
+deploymentReadyToDeploy (ReadyToDeploy _) = True
+deploymentReadyToDeploy _ = False
+
+deploymentIsDone :: DeploymentCheckResult -> Bool
+deploymentIsDone DeploymentDone = True
+deploymentIsDone _ = False
+
+
 -- | Check a single (@source@, @destination@, @kind@) triple.
 checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult
 checkSingle (D src srcd srch) (D dst dstd dsth) kind =
@@ -194,7 +207,7 @@ formatDeploymentChecks dss
 
 
 formatDeploymentCheck :: (Deployment, DeploymentCheckResult) -> Maybe String
-formatDeploymentCheck (_, (ReadyToDeploy is))         = Just $ "ready to deploy: " ++ formatInstruction is
+formatDeploymentCheck (_, (ReadyToDeploy is))         = Just $ "READY: " ++ formatInstruction is
 formatDeploymentCheck (_, DeploymentDone)             = Nothing
 formatDeploymentCheck (d, ImpossibleDeployment ds)
     = Just $ "IMPOSSIBLE: "
@@ -211,6 +224,7 @@ formatDeploymentCheck (d, (DirtySituation str is c))
     ++ "\n"
     ++ "cleanup needed:\n"
     ++ formatCleanupInstruction c
+    ++ "\n"
 
 formatInstruction :: Instruction -> String
 formatInstruction (Instruction src dst k) = unwords $

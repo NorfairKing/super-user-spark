@@ -14,6 +14,7 @@ import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
 import           TestUtils
+import           Utils
 
 spec :: Spec
 spec = do
@@ -143,7 +144,7 @@ checkDeploymentSpec = do
         it "says 'ready' if the first non-impossible in 'ready'" $ do
             forAll (arbitrary `suchThat` (any (not . isImpossible)
                                      &&& (isReady . head . dropWhile isImpossible)))
-              $ \dd -> bestResult dd `shouldSatisfy` readyDeployment
+              $ \dd -> bestResult dd `shouldSatisfy` deploymentReadyToDeploy
 
 
 checkSingleSpec :: Spec

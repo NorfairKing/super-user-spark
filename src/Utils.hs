@@ -35,3 +35,10 @@ containsNewline f = any (\c -> elem c f) ['\n', '\r']
 containsMultipleConsequtiveSlashes :: String -> Bool
 containsMultipleConsequtiveSlashes = isInfixOf "//"
 
+(&&&) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(&&&) f g = \a -> f a && g a
+
+(|||) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(|||) f g = \a -> f a || g a
+
+
