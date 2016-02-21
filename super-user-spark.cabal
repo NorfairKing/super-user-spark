@@ -1,5 +1,5 @@
 name:                super-user-spark
-version:             0.2.0.3
+version:             0.3.0.0
 license:             MIT
 license-file:        LICENSE
 description:         Configure your dotfile deployment with a DSL.
@@ -11,11 +11,12 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-
-executable spark
-  main-is:          Main.hs
+library
   hs-source-dirs:   src
-  other-modules:    Arguments
+  exposed-modules:  Arguments
+                  , Check
+                  , Check.Internal
+                  , Check.Types
                   , Compiler
                   , Compiler.Internal
                   , Compiler.Types
@@ -26,23 +27,26 @@ executable spark
                   , CoreTypes
                   , Deployer
                   , Deployer.Types
+                  , Deployer.Internal
                   , Dispatch
                   , Dispatch.Types
                   , Formatter
                   , Language.Types
-                  , Main
                   , Monad
                   , Parser
                   , Parser.Internal
                   , PreCompiler
                   , Seed
+                  , Spark
                   , Types
                   , Utils
+
   ghc-options:      -Wall
                     -fwarn-unused-imports
                     -fwarn-incomplete-patterns
                     -fno-warn-unused-do-bind
                     -fno-warn-name-shadowing
+
   build-depends:    base                  >= 4.6   && < 4.9
                   , aeson                 >= 0.8   && < 0.11
                   , aeson-pretty          >= 0.7   && < 0.8
@@ -59,6 +63,19 @@ executable spark
                   , transformers          >= 0.4   && < 0.5
                   , unix                  >= 2.7   && < 2.8
   default-language: Haskell2010
+
+executable spark
+  main-is:          Main.hs
+  hs-source-dirs:   app
+  ghc-options:      -Wall
+                    -fwarn-unused-imports
+                    -fwarn-incomplete-patterns
+                    -fno-warn-unused-do-bind
+                    -fno-warn-name-shadowing
+                    -threaded -rtsopts -with-rtsopts=-N
+  build-depends:    base                  >= 4.6   && < 4.9
+                  , super-user-spark
+  default-language: Haskell2010
   
 
 test-suite spark-tests
@@ -69,6 +86,7 @@ test-suite spark-tests
                   , CompilerSpec
                   , SeedSpec
   build-depends:    base                  >= 4.6   && < 4.9
+                  , super-user-spark
                   , hspec                 >= 2.2   && < 2.3
                   , hspec-core            >= 2.2   && < 2.3
                   , HUnit                 >= 1.2   && < 1.3
