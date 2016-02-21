@@ -22,18 +22,24 @@ data DiagnosedFp = D
 data Instruction = Instruction FilePath FilePath DeploymentKind
     deriving (Show, Eq)
 
+data CleanupInstruction
+    = CleanFile FilePath
+    | CleanDirectory FilePath
+    | CleanLink FilePath
+    deriving (Show, Eq)
+
 data DeploymentCheckResult
-    = DeploymentDone                        -- ^ Done already
-    | ReadyToDeploy Instruction             -- ^ Immediately possible
-    | DirtySituation String Instruction     -- ^ Possible after cleanup of destination
-    | ImpossibleDeployment [String]         -- ^ Entirely impossible
+    = DeploymentDone                                        -- ^ Done already
+    | ReadyToDeploy Instruction                             -- ^ Immediately possible
+    | DirtySituation String Instruction CleanupInstruction  -- ^ Possible after cleanup of destination
+    | ImpossibleDeployment [String]                         -- ^ Entirely impossible
     deriving (Show, Eq)
 
 data CheckResult
-    = AlreadyDone                           -- ^ Done already
-    | Ready Instruction                     -- ^ Immediately possible
-    | Dirty String Instruction              -- ^ Possible after cleanup
-    | Impossible String                     -- ^ Entirely impossible
+    = AlreadyDone                                   -- ^ Done already
+    | Ready Instruction                             -- ^ Immediately possible
+    | Dirty String Instruction CleanupInstruction   -- ^ Possible after cleanup
+    | Impossible String                             -- ^ Entirely impossible
     deriving (Show, Eq)
 
 data DiagnosedDeployment = Diagnosed

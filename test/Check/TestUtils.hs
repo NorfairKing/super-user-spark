@@ -18,7 +18,7 @@ deploymentIsDone DeploymentDone = True
 deploymentIsDone _ = False
 
 dirtyDeployment :: DeploymentCheckResult -> Bool
-dirtyDeployment (DirtySituation _ _) = True
+dirtyDeployment (DirtySituation _ _ _) = True
 dirtyDeployment _ = False
 
 readyDeployment :: DeploymentCheckResult -> Bool
@@ -38,7 +38,7 @@ shouldBeImpossibleDeployment dd = bestResult dd `shouldSatisfy` isImpossibleDepl
 -- * Test utils for checkSingle
 
 isDirty :: CheckResult -> Bool
-isDirty (Dirty _ _) = True
+isDirty (Dirty _ _ _) = True
 isDirty _ = False
 
 isReady :: CheckResult -> Bool
@@ -53,8 +53,17 @@ isImpossible :: CheckResult -> Bool
 isImpossible (Impossible _) = True
 isImpossible _ = False
 
-shouldBeDirty :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> Expectation
-shouldBeDirty src dst kind = checkSingle src dst kind `shouldSatisfy` isDirty
+shouldBeDirty :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CleanupInstruction -> Expectation
+shouldBeDirty src dst kind eci
+    = case checkSingle src dst kind of
+        Dirty _
+              (Instruction isrc idst ikind)
+              ci -> do
+                 isrc `shouldBe` diagnosedFilePath src
+                 idst `shouldBe` diagnosedFilePath dst
+                 ikind `shouldBe` kind
+                 ci `shouldBe` eci
+        t -> expectationFailure $ unlines ["checkSingle", show src, show dst, show kind, "should be dirty but is", show t]
 
 shouldBeReady :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> Expectation
 shouldBeReady src dst kind = checkSingle src dst kind `shouldSatisfy` isReady

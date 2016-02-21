@@ -33,7 +33,7 @@ bestResult cs
         = case head $ dropWhile impossible cs of
             AlreadyDone         -> DeploymentDone
             Ready i             -> ReadyToDeploy i
-            Dirty s i           -> DirtySituation s i
+            Dirty s i c         -> DirtySituation s i c
             Impossible _        -> error "Cannot be the case"
 
 impossible :: CheckResult -> Bool
@@ -108,7 +108,12 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
     ins = Instruction src dst kind
     ready = Ready ins
     i = Impossible . unlines
-    e s = Dirty (unlines s) ins
+    e s = Dirty (unlines s) ins cins
+    cins = case dstd of
+            IsFile -> CleanFile dst
+            IsLinkTo _ -> CleanLink dst
+            IsDirectory -> CleanDirectory dst
+            _ -> error "should not occur"
 
 diagnoseDeployment :: Deployment -> IO DiagnosedDeployment
 diagnoseDeployment (Put srcs dst kind) = do
@@ -189,10 +194,23 @@ formatDeploymentChecks dss
 
 
 formatDeploymentCheck :: (Deployment, DeploymentCheckResult) -> Maybe String
-formatDeploymentCheck (_, (ReadyToDeploy is))       = Just $ "ready to deploy: " ++ formatInstruction is
-formatDeploymentCheck (_, DeploymentDone)           = Nothing
-formatDeploymentCheck (d, ImpossibleDeployment ds)  = Just $ "IMPOSSIBLE: " ++ deployment_dst d ++ " cannot be deployed:\n" ++ unlines ds ++ "\n"
-formatDeploymentCheck (d, (DirtySituation str is))  = Just $ "DIRTY: " ++ deployment_dst d ++ "\n" ++ str ++ "planned: " ++ formatInstruction is ++ "\n"
+formatDeploymentCheck (_, (ReadyToDeploy is))         = Just $ "ready to deploy: " ++ formatInstruction is
+formatDeploymentCheck (_, DeploymentDone)             = Nothing
+formatDeploymentCheck (d, ImpossibleDeployment ds)
+    = Just $ "IMPOSSIBLE: "
+    ++ deployment_dst d
+    ++ " cannot be deployed:\n"
+    ++ unlines ds ++ "\n"
+formatDeploymentCheck (d, (DirtySituation str is c))
+    = Just $ "DIRTY: "
+    ++ deployment_dst d
+    ++ "\n"
+    ++ str
+    ++ "planned: "
+    ++ formatInstruction is
+    ++ "\n"
+    ++ "cleanup needed:\n"
+    ++ formatCleanupInstruction c
 
 formatInstruction :: Instruction -> String
 formatInstruction (Instruction src dst k) = unwords $
@@ -203,5 +221,10 @@ formatInstruction (Instruction src dst k) = unwords $
   where
     kindSymbol LinkDeployment = linkKindSymbol
     kindSymbol CopyDeployment = copyKindSymbol
+
+formatCleanupInstruction :: CleanupInstruction -> String
+formatCleanupInstruction (CleanFile fp)         = "remove file " ++ fp
+formatCleanupInstruction (CleanDirectory dir)   = "remove directory " ++ dir
+formatCleanupInstruction (CleanLink link)       = "remove link " ++ link
 
 
