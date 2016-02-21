@@ -31,23 +31,7 @@ import           Utils
 
 
 deploy :: [Deployment] -> Sparker ()
-deploy dps = do
-    state <- initialState dps
-    _ <- runSparkDeployer state $ deployAll dps
-    return ()
-
--- check :: [Deployment] -> Sparker [PreDeployment]
--- check dps = do
---     state <- initialState dps
---     (pdps, _) <- runSparkDeployer state $ predeployments dps
---     return pdps
-
-
-initialState :: [Deployment] -> Sparker DeployerState
-initialState _ = return DeployerState
-
-deployAll :: [Deployment] -> SparkDeployer ()
-deployAll deps = do
+deploy deps = do
     pdps <- predeployments deps
 
     case catErrors pdps of
@@ -65,14 +49,14 @@ catErrors (s:ss) = case s of
                     Error str   -> str : catErrors ss
 
 
-predeployments :: [Deployment] -> SparkDeployer [PreDeployment]
+predeployments :: [Deployment] -> Sparker [PreDeployment]
 predeployments dps = do
     pdps <- mapM preDeployment dps
     lift $ debug $ formatPreDeployments $ zip dps pdps
     return pdps
 
 
-preDeployment :: Deployment -> SparkDeployer PreDeployment
+preDeployment :: Deployment -> Sparker PreDeployment
 preDeployment (Put [] dst _) = return $ Error $ unwords ["No source for deployment with destination:", dst]
 preDeployment dep@(Put (src:ss) dst kind) = do
     s  <- liftIO $ complete src
@@ -80,7 +64,7 @@ preDeployment dep@(Put (src:ss) dst kind) = do
     sd <- diagnose s
     dd <- diagnose d
 
-    let ready = return (Ready s d kind) :: SparkDeployer PreDeployment
+    let ready = return (Ready s d kind) :: Sparker PreDeployment
 
     case (sd, dd, kind) of
         (NonExistent    , _             , _             )   -> preDeployment (Put ss d kind)
@@ -142,15 +126,15 @@ preDeployment dep@(Put (src:ss) dst kind) = do
 
 
   where
-    done :: SparkDeployer PreDeployment
+    done :: Sparker PreDeployment
     done = return $ AlreadyDone
 
 
-    error :: [String] -> SparkDeployer PreDeployment
+    error :: [String] -> Sparker PreDeployment
     error strs = return $ Error $ unwords strs
 
 
-cmpare :: FilePath -> FilePath -> SparkDeployer Bool
+cmpare :: FilePath -> FilePath -> Sparker Bool
 cmpare f1 f2 = do
     d1 <- diagnose f1
     d2 <- diagnose f2
@@ -161,13 +145,13 @@ cmpare f1 f2 = do
         IsDirectory _   -> compareDirectories f1 f2
         _           -> return True
 
-compareFiles :: FilePath -> FilePath -> SparkDeployer Bool
+compareFiles :: FilePath -> FilePath -> Sparker Bool
 compareFiles f1 f2 = do
     s1 <- liftIO $ readFile f1
     s2 <- liftIO $ readFile f2
     return $ s1 == s2
 
-compareDirectories :: FilePath -> FilePath -> SparkDeployer Bool
+compareDirectories :: FilePath -> FilePath -> Sparker Bool
 compareDirectories d1 d2 = do
     dc1 <- contents d1
     dc2 <- contents d2
@@ -178,7 +162,7 @@ compareDirectories d1 d2 = do
         cs <- liftIO $ getDirectoryContents d
         return $ filter (\f -> not $ f == "." || f == "..") cs
 
-diagnose :: FilePath -> SparkDeployer Diagnostics
+diagnose :: FilePath -> Sparker Diagnostics
 diagnose fp = do
     e <- liftIO $ fileExist fp
     if e
@@ -204,10 +188,10 @@ diagnose fp = do
 
 
 
-deployments :: [PreDeployment] -> SparkDeployer [Maybe String]
+deployments :: [PreDeployment] -> Sparker [Maybe String]
 deployments = mapM deployment
 
-deployment :: PreDeployment -> SparkDeployer (Maybe String)
+deployment :: PreDeployment -> Sparker (Maybe String)
 deployment AlreadyDone = return Nothing
 deployment (Error str) = return $ Just str
 deployment (Ready src dst kind) = do
@@ -216,14 +200,14 @@ deployment (Ready src dst kind) = do
         CopyDeployment -> copy src dst
     return Nothing
 
-copy :: FilePath -> FilePath -> SparkDeployer ()
+copy :: FilePath -> FilePath -> Sparker ()
 copy src dst = do
     debug $ unwords ["Copying:", src, "c->", dst]
     liftIO $ createDirectoryIfMissing True upperDir
     liftIO $ shelly $ cp_r (fromText $ pack src) (fromText $ pack dst)
   where upperDir = dropFileName dst
 
-link :: FilePath -> FilePath -> SparkDeployer ()
+link :: FilePath -> FilePath -> Sparker ()
 link src dst = do
     debug $ unwords ["Linking:", src, "l->", dst]
     liftIO $ createDirectoryIfMissing True upperDir
@@ -232,25 +216,25 @@ link src dst = do
 
 
 -- TODO these dont catch errors
-unlink :: FilePath -> SparkDeployer ()
+unlink :: FilePath -> Sparker ()
 unlink fp = do
     es <- liftIO $ system $ unwords $ ["/usr/bin/unlink", fp]
     case es of
         ExitSuccess -> debug $ unwords ["unlinked", fp]
         ExitFailure _ -> throwError $ DeployError $ PreDeployError ["Something went wrong while unlinking " ++ fp ++ "."]
 
-rmFile :: FilePath -> SparkDeployer ()
+rmFile :: FilePath -> Sparker ()
 rmFile fp = do
     liftIO $ removeFile fp
     debug $ unwords ["removed", fp]
 
-rmDir :: FilePath -> SparkDeployer ()
+rmDir :: FilePath -> Sparker ()
 rmDir fp = do
     liftIO $ removeDirectoryRecursive fp
     debug $ unwords ["removed", fp]
 
 
-postdeployments :: [Deployment] -> [PreDeployment] -> SparkDeployer ()
+postdeployments :: [Deployment] -> [PreDeployment] -> Sparker ()
 postdeployments deps predeps = do
     pdps <- mapM postdeployment predeps
     lift $ debug $ formatPostDeployments $ zip deps pdps
@@ -258,7 +242,7 @@ postdeployments deps predeps = do
         [] -> return ()
         es -> throwError $ DeployError $ PostDeployError es
 
-postdeployment :: PreDeployment -> SparkDeployer (Maybe String)
+postdeployment :: PreDeployment -> Sparker (Maybe String)
 postdeployment AlreadyDone = return Nothing
 postdeployment (Error _) = throwError $ UnpredictedError "Contact the author if you see this. (postdeployment)"
 postdeployment (Ready s d kind) = do
@@ -288,27 +272,27 @@ postdeployment (Ready s d kind) = do
     src = normalise s
     dst = normalise d
 
-    fine :: SparkDeployer (Maybe String)
+    fine :: Sparker (Maybe String)
     fine = return Nothing
 
-    error :: [String] -> SparkDeployer (Maybe String)
+    error :: [String] -> Sparker (Maybe String)
     error err = return $ Just $ unwords err
 
-    compareFile :: SparkDeployer (Maybe String)
+    compareFile :: Sparker (Maybe String)
     compareFile = do
         equal <- compareFiles src dst
         if equal
         then fine
         else error ["The source and destination files are somehow still not equal."]
 
-    compareDir :: SparkDeployer (Maybe String)
+    compareDir :: Sparker (Maybe String)
     compareDir = do
         equal <- compareDirectories src dst
         if equal
         then fine
         else error ["The source and destination directories are somehow still not equal."]
 
-    compareLink :: SparkDeployer (Maybe String)
+    compareLink :: Sparker (Maybe String)
     compareLink = do
         point <- liftIO $ readSymbolicLink dst
         if point `filePathEqual` src

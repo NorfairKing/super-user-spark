@@ -24,9 +24,6 @@ instance Read DeployerCardReference where
 type SparkDeployer = StateT DeployerState Sparker
 data DeployerState = DeployerState
 
-runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
-runSparkDeployer state func = runStateT func state
-
 data Diagnostics = NonExistent
                  | IsFile Permissions
                  | IsDirectory Permissions
