@@ -17,7 +17,7 @@ spec = parallel $ do
 pureSeedSpec :: Spec
 pureSeedSpec = describe "seed" $ do
     it "ensures that sources are absolute if the seed is an absolute path" $ do
-        forAll (arbitrary `suchThat` cleanBy cleanFilePath `suchThat` isAbsolute) $ \fp ->
+        once $ forAll (arbitrary `suchThat` cleanBy cleanFilePath `suchThat` isAbsolute) $ \fp ->
             forAll arbitrary $ \ds ->
                 all (\d -> all (isAbsolute) $ deployment_srcs d) $ seed fp ds
 

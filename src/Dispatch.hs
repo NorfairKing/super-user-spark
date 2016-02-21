@@ -1,5 +1,6 @@
 module Dispatch (dispatch) where
 
+import           Check
 import           Compiler
 import           Compiler.Types
 import           Control.Monad  (void)
@@ -27,8 +28,8 @@ dispatch (DispatchCompile cfr) = do
 dispatch (DispatchCheck ccr) = do
     deps <- compileDeployerCardRef ccr
     seeded <- seedByCompiledCardRef ccr deps
-    pdps <- check seeded
-    liftIO $ putStr $ formatPreDeployments $ zip seeded pdps
+    dcrs <- liftIO $ check seeded
+    liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded dcrs
 
 dispatch (DispatchDeploy dcr) = do
     deps <- compileDeployerCardRef dcr

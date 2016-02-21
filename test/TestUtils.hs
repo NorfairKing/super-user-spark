@@ -29,3 +29,9 @@ forFileInDirss dirs func = forM_ dirs $ \dir -> do
 pend :: SpecWith ()
 pend = it "is still missing some tests" pending
 
+(&&&) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(&&&) f g = \a -> f a && g a
+
+(|||) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(|||) f g = \a -> f a && g a
+

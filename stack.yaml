@@ -9,7 +9,10 @@ extra-deps:
 - aeson-pretty-0.7.2
 - cmdargs-0.10.13
 - constraints-0.6
+- crypto-api-0.13.2
+- directory-1.2.5.1
 - enclosed-exceptions-1.0.1.1
+- entropy-0.3.7
 - exceptions-0.8.1
 - hspec-2.2.1
 - hspec-core-2.2.1
@@ -19,6 +22,8 @@ extra-deps:
 - lifted-base-0.2.3.6
 - monad-control-1.0.0.4
 - optparse-applicative-0.11.0.2
+- process-1.2.3.0
+- pureMD5-2.1.2.1
 - quickcheck-io-0.1.2
 - setenv-0.1.1.3
 - shelly-1.6.5
@@ -27,9 +32,4 @@ extra-deps:
 - tf-random-0.5
 - transformers-base-0.4.4
 - transformers-compat-0.4.0.4
-- haskell-src-exts-1.16.0.1
-- cpphs-1.19.3
-- polyparse-1.11
-
-
 resolver: ghc-7.10.3
