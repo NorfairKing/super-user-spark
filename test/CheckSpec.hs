@@ -5,7 +5,9 @@ import           Check.Internal
 import           Check.TestUtils
 import           Check.Types
 import           Compiler.Types
+import           Control.Monad      (forM_)
 import           CoreTypes
+import qualified Data.ByteString    as SB
 import           Parser.Gen
 import           System.Directory
 import           System.Posix.Files
@@ -17,6 +19,7 @@ spec :: Spec
 spec = do
     diagnoseSpec
     checkSpec
+    hashSpec
 
 diagnoseSpec :: Spec
 diagnoseSpec = do
@@ -258,5 +261,27 @@ checkSingleSpec = describe "checkSingle" $ do
 
     it "works for these unit tests" $ do
         pending
+
+
+
+hashSpec :: Spec
+hashSpec = do
+    tooManyFilesTest
+
+tooManyFilesTest :: Spec
+tooManyFilesTest = do
+    let sandbox = "test_sandbox"
+    let setup = createDirectoryIfMissing True sandbox
+    let teardown = removeDirectoryRecursive sandbox
+    let aLot = 20000 :: Int
+    let setupALotOfFiles = do
+          forM_ [1..aLot] $ \i ->
+            writeFile (sandbox ++ "/file" ++ show i) $ "This is file " ++ show i ++ ".\n"
+
+    beforeAll_ setup $ afterAll_ teardown $ do
+        describe "hashFilePath" $ do
+            beforeAll_ setupALotOfFiles $ do
+                it ("has no problem with hashing a directory of " ++ show aLot ++ " files") $ do
+                    hashFilePath "test_sandbox" `shouldNotReturn` md5 SB.empty
 
 

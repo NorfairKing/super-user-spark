@@ -152,7 +152,7 @@ diagnoseFp fp = do
 
 
 md5 :: SB.ByteString -> HashDigest
-md5 bs = H.md5 $! LB.fromStrict bs
+md5 bs = H.md5 $ LB.fromStrict bs
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: FilePath -> IO HashDigest
