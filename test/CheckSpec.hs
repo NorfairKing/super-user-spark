@@ -9,7 +9,8 @@ import           Control.Monad      (forM_)
 import           CoreTypes
 import qualified Data.ByteString    as SB
 import           Parser.Gen
-import           System.Directory
+import           System.Directory   (removeDirectoryRecursive, removeFile,
+                                     withCurrentDirectory)
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
@@ -25,7 +26,7 @@ spec = do
 diagnoseSpec :: Spec
 diagnoseSpec = do
     let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing True sandbox
+    let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
 
     beforeAll_ setup $ afterAll_ teardown $ do
@@ -63,9 +64,9 @@ diagnoseSpec = do
             it "figures out this test directory" $ do
                 withCurrentDirectory sandbox $ do
                     let dir = "testdir"
-                    createDirectory dir
+                    createDirectoryIfMissing dir
                     diagnoseFp dir `shouldReturn` IsDirectory
-                    removeDirectory dir
+                    removeDirectoryRecursive dir
                     diagnoseFp dir `shouldReturn` Nonexistent
 
             it "figures out this test symbolic link with a destination" $ do
@@ -281,7 +282,7 @@ hashSpec = do
 tooManyFilesTest :: Spec
 tooManyFilesTest = do
     let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing True sandbox
+    let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
     let aLot = 20000 :: Int
     let setupALotOfFiles = do

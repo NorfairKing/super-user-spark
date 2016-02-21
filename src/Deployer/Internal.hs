@@ -1,11 +1,19 @@
 module Deployer.Internal where
 
+import           Check.Types
 import           Compiler.Types
-import           Data.List        (isPrefixOf)
+import           Data.List             (isPrefixOf)
+import           Data.Text             (pack)
 import           Deployer.Types
-import           System.Directory (getHomeDirectory)
-import           System.FilePath  (normalise, (</>))
-import           System.Posix.Env (getEnv)
+import           Shelly                (cp_r, fromText, shelly)
+import           System.Directory      (getHomeDirectory,
+                                        removeDirectoryRecursive, removeFile)
+import           System.FilePath       (normalise, (</>))
+import           System.FilePath.Posix (dropFileName)
+import           System.Posix.Env      (getEnv)
+import           System.Posix.Files    (createSymbolicLink, removeLink)
+import           Types
+import           Utils
 
 -- FIXME(kerckhove) seperate the pure part from the impure part with a Reader over the environment
 completeDeployment :: Deployment -> IO Deployment
@@ -45,4 +53,36 @@ replaceHome path = do
         then home </> drop 2 path
         else path
 
+
+
+performClean :: CleanupInstruction -> Sparker ()
+performClean (CleanFile fp)         = incase conf_deploy_replace_files       $ rmFile fp
+performClean (CleanDirectory fp)    = incase conf_deploy_replace_directories $ rmDir fp
+performClean (CleanLink fp)         = incase conf_deploy_replace_links       $ unlink fp
+
+unlink :: FilePath -> Sparker ()
+unlink fp = liftIO $ removeLink fp
+
+rmFile :: FilePath -> Sparker ()
+rmFile fp = liftIO $ removeFile fp
+
+rmDir :: FilePath -> Sparker ()
+rmDir fp  = liftIO $ removeDirectoryRecursive fp
+
+
+performDeployment :: Instruction -> IO ()
+performDeployment (Instruction source destination LinkDeployment) = link source destination
+performDeployment (Instruction source destination CopyDeployment) = copy source destination
+
+copy :: FilePath -> FilePath -> IO ()
+copy src dst = do
+    createDirectoryIfMissing upperDir
+    shelly $ cp_r (fromText $ pack src) (fromText $ pack dst)
+  where upperDir = dropFileName dst
+
+link :: FilePath -> FilePath -> IO ()
+link src dst = do
+    createDirectoryIfMissing upperDir
+    createSymbolicLink src dst
+  where upperDir = dropFileName dst
 

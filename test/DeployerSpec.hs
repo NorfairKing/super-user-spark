@@ -4,7 +4,7 @@ import           Check.Internal
 import           Check.Types
 import           Config
 import           Config.Types
-import           Deployer
+import           Deployer.Internal
 import           Monad
 import           System.Directory
 import           System.Posix.Files
