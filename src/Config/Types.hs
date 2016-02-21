@@ -12,7 +12,6 @@ data SparkConfig = Config {
     ,   conf_compile_format             :: CompileFormat
     ,   conf_compile_kind               :: Maybe DeploymentKind
     ,   conf_compile_override           :: Maybe DeploymentKind
-    ,   conf_check_thoroughness         :: CheckThoroughness
     ,   conf_deploy_replace_links       :: Bool
     ,   conf_deploy_replace_files       :: Bool
     ,   conf_deploy_replace_directories :: Bool

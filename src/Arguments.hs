@@ -32,7 +32,6 @@ configFromOptions go = Right conf
             , conf_compile_format             = opt_format go
             , conf_compile_kind               = opt_kind go
             , conf_compile_override           = opt_overrride go
-            , conf_check_thoroughness         = opt_thoroughness go
             , conf_deploy_replace_links       = opt_replace_links go       || opt_replace go
             , conf_deploy_replace_files       = opt_replace_files go       || opt_replace go
             , conf_deploy_replace_directories = opt_replace_directories go || opt_replace go
@@ -164,12 +163,6 @@ parseGlobalOptions = GlobalOptions
         <> value Nothing
         <> metavar "KIND"
         <> help "Override every deployment to be of the given kind" )
-    <*> option auto
-      ( long "thoroughness"
-        <> short 't'
-        <> value ThoroughnessContent
-        <> metavar "THOROUGHNESS"
-        <> help "How thoroughly to check whether the source and destination are equal" )
     <*> switch
       ( long "replace-links"
         <> help "Replace links at deploy destinations."

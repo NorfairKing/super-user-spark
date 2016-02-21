@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE UndecidableInstances  #-}
 module Types
     (
       module Types
@@ -52,7 +48,6 @@ data GlobalOptions = GlobalOptions
     , opt_format              :: CompileFormat
     , opt_kind                :: Maybe DeploymentKind
     , opt_overrride           :: Maybe DeploymentKind
-    , opt_thoroughness        :: CheckThoroughness
     , opt_replace_links       :: Bool
     , opt_replace_files       :: Bool
     , opt_replace_directories :: Bool
