@@ -2,10 +2,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Utils where
 
-import           Control.Monad (when)
-import           Data.List     (isInfixOf)
-import           System.Exit   (exitFailure)
-import           System.IO     (hPutStrLn, stderr)
+import           Control.Monad    (when)
+import           Data.List        (isInfixOf)
+import qualified System.Directory as D (createDirectoryIfMissing)
+import           System.Exit      (exitFailure)
+import           System.IO        (hPutStrLn, stderr)
 import           Types
 
 debug :: (MonadReader SparkConfig m, MonadIO m) => String -> m ()
@@ -23,9 +24,6 @@ incaseElse bf funcif funcelse = do
     then funcif
     else funcelse
 
-notImplementedYet :: Sparker ()
-notImplementedYet = throwError $ UnpredictedError "This feature is not implemented yet, it will be in the future, so be sure to check back in a newer version."
-
 die :: String -> IO a
 die err = hPutStrLn stderr err >> exitFailure
 
@@ -34,4 +32,13 @@ containsNewline f = any (\c -> elem c f) ['\n', '\r']
 
 containsMultipleConsequtiveSlashes :: String -> Bool
 containsMultipleConsequtiveSlashes = isInfixOf "//"
+
+(&&&) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(&&&) f g = \a -> f a && g a
+
+(|||) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+(|||) f g = \a -> f a || g a
+
+createDirectoryIfMissing :: FilePath -> IO ()
+createDirectoryIfMissing = D.createDirectoryIfMissing True
 

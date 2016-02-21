@@ -129,10 +129,6 @@ $ spark check path/to/compiled/card
 Remember, when using compiled data, if you used a specific `--format`, you have to use that option again.
 Don't use the `.sus` extension for compiled cards or `spark` will interpret them as uncompiled card files.
 
-#### Check options
-
-- `--thoroughness OPTION`: How far to go in checking whether files and directories are already deployed. (Options for `OPTION`: `name`, `checksum` `content`(default)) *(NYI)*
-
 ### Deployment
 Deployment doesn't require any special commands, just a card reference.
 

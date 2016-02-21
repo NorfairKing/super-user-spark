@@ -19,8 +19,4 @@ showError (ParseError err) = show err
 showError (PreCompileError errs) = unlines errs
 showError (CompileError err) = err
 showError (UnpredictedError err) = "Panic: " ++ err
-showError (DeployError err) =
-    case err of
-        PreDeployError ss -> unlines ss
-        DuringDeployError ss -> unlines ss
-        PostDeployError ss -> unlines ss
+showError (DeployError err) = err

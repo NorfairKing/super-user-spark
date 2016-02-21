@@ -9,11 +9,13 @@ import           Control.Monad      (forM_)
 import           CoreTypes
 import qualified Data.ByteString    as SB
 import           Parser.Gen
-import           System.Directory
+import           System.Directory   (removeDirectoryRecursive, removeFile,
+                                     withCurrentDirectory)
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
 import           TestUtils
+import           Utils
 
 spec :: Spec
 spec = do
@@ -24,7 +26,7 @@ spec = do
 diagnoseSpec :: Spec
 diagnoseSpec = do
     let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing True sandbox
+    let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
 
     beforeAll_ setup $ afterAll_ teardown $ do
@@ -62,9 +64,9 @@ diagnoseSpec = do
             it "figures out this test directory" $ do
                 withCurrentDirectory sandbox $ do
                     let dir = "testdir"
-                    createDirectory dir
+                    createDirectoryIfMissing dir
                     diagnoseFp dir `shouldReturn` IsDirectory
-                    removeDirectory dir
+                    removeDirectoryRecursive dir
                     diagnoseFp dir `shouldReturn` Nonexistent
 
             it "figures out this test symbolic link with a destination" $ do
@@ -73,9 +75,13 @@ diagnoseSpec = do
                     let file = "testfile"
                     writeFile file "This is a test"
                     createSymbolicLink file link
+
+                    diagnoseFp file `shouldReturn` IsFile
                     diagnoseFp link `shouldReturn` IsLinkTo file
+
                     removeLink link
                     removeFile file
+
                     diagnoseFp link `shouldReturn` Nonexistent
 
             it "figures out this test symbolic link without a destination" $ do
@@ -83,8 +89,13 @@ diagnoseSpec = do
                     let link = "testlink"
                     let file = "testfile"
                     createSymbolicLink file link
+
+                    diagnoseFp file `shouldReturn` Nonexistent
                     diagnoseFp link `shouldReturn` IsLinkTo file
+
                     removeLink link
+
+                    diagnoseFp file `shouldReturn` Nonexistent
                     diagnoseFp link `shouldReturn` Nonexistent
 
             it "figures out that /dev/null is weird" $ do
@@ -134,7 +145,7 @@ checkDeploymentSpec = do
         it "says 'ready' if the first non-impossible in 'ready'" $ do
             forAll (arbitrary `suchThat` (any (not . isImpossible)
                                      &&& (isReady . head . dropWhile isImpossible)))
-              $ \dd -> bestResult dd `shouldSatisfy` readyDeployment
+              $ \dd -> bestResult dd `shouldSatisfy` deploymentReadyToDeploy
 
 
 checkSingleSpec :: Spec
@@ -154,32 +165,32 @@ checkSingleSpec = describe "checkSingle" $ do
     it "says 'dirty' if both the source and destination are files and it's a link deployment" $ do
         forAll (arbitraryWith IsFile) $ \src ->
             forAll (arbitraryWith IsFile) $ \dst ->
-                shouldBeDirty src dst LinkDeployment
+                shouldBeDirty src dst LinkDeployment $ CleanFile $ diagnosedFilePath dst
 
     it "says 'done' if both the source and destination are files and it's a copy deployment and the files are equal" $ do
         forAll arbitrary $ \src ->
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \h1 ->
-                        shouldBeDone (D src IsFile h1) (D dst IsFile h1) CopyDeployment
+                    shouldBeDone (D src IsFile h1) (D dst IsFile h1) CopyDeployment
 
     it "says 'dirty' if both the source and destination are files and it's a copy deployment but the files are unequal" $ do
         forAll arbitrary $ \src ->
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \h1 ->
                     forAll (arbitrary `suchThat` (/= h1)) $ \h2 ->
-                        shouldBeDirty (D src IsFile h1) (D dst IsFile h2) CopyDeployment
+                        shouldBeDirty (D src IsFile h1) (D dst IsFile h2) CopyDeployment $ CleanFile dst
 
     it "says 'dirty' if the source is a file and the destination is a directory" $ do
         forAll (arbitraryWith IsFile) $ \src ->
             forAll (arbitraryWith IsDirectory) $ \dst ->
                 forAll arbitrary $ \kind ->
-                    shouldBeDirty src dst kind
+                    shouldBeDirty src dst kind $ CleanDirectory $ diagnosedFilePath dst
 
     it "says 'dirty' if the source is a file and the destination is a link for a link deployment but the destination doesn't point to the source" $ do
         forAll (arbitraryWith IsFile) $ \src@(D srcp _ _) ->
             forAll (arbitrary `suchThat` (/= srcp)) $ \l ->
                 forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
-                    shouldBeDirty src dst LinkDeployment
+                    shouldBeDirty src dst LinkDeployment $ CleanLink $ diagnosedFilePath dst
 
     it "says 'done' if the source is a file and the destination is a link for a link deployment and the destination points to the source" $ do
         forAll (arbitraryWith IsFile) $ \src@(D srcp _ _) ->
@@ -190,7 +201,7 @@ checkSingleSpec = describe "checkSingle" $ do
         forAll (arbitraryWith IsFile)  $ \src ->
             forAll arbitrary $ \l ->
                 forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
-                    shouldBeDirty src dst CopyDeployment
+                    shouldBeDirty src dst CopyDeployment $ CleanLink $ diagnosedFilePath dst
 
     it "says 'ready' if the source is a directory and the destination does not exist" $ do
         forAll (arbitraryWith IsDirectory) $ \src ->
@@ -202,12 +213,12 @@ checkSingleSpec = describe "checkSingle" $ do
         forAll (arbitraryWith IsDirectory) $ \src ->
             forAll (arbitraryWith IsFile) $ \dst ->
                 forAll arbitrary $ \kind ->
-                    shouldBeDirty src dst kind
+                    shouldBeDirty src dst kind $ CleanFile $ diagnosedFilePath dst
 
     it "says 'dirty' if both the source and destination are directories for a link deployment" $ do
         forAll (arbitraryWith IsDirectory) $ \src ->
             forAll (arbitraryWith IsDirectory) $ \dst ->
-                shouldBeDirty src dst LinkDeployment
+                shouldBeDirty src dst LinkDeployment $ CleanDirectory $ diagnosedFilePath dst
 
     it "says 'done' if both the source and destination are directories and it's a copy deployment and the directories are equal" $ do
         forAll arbitrary $ \src ->
@@ -220,24 +231,24 @@ checkSingleSpec = describe "checkSingle" $ do
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \h1 ->
                     forAll (arbitrary `suchThat` (/= h1)) $ \h2 ->
-                        shouldBeDirty (D src IsDirectory h1) (D dst IsDirectory h2) CopyDeployment
+                        shouldBeDirty (D src IsDirectory h1) (D dst IsDirectory h2) CopyDeployment $ CleanDirectory dst
 
     it "says 'dirty' if the source is a directory and the destination is a link for a link deployment but the destination doesn't point to the source" $ do
         forAll (arbitraryWith IsDirectory) $ \src@(D srcp _ _) ->
             forAll (arbitrary `suchThat` (/= srcp)) $ \l ->
                 forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
-                    shouldBeDirty src dst LinkDeployment
+                    shouldBeDirty src dst LinkDeployment $ CleanLink $ diagnosedFilePath dst
 
     it "says 'done' if the source is a directory and the destination is a link for a link deployment and the destination points to the source" $ do
         forAll (arbitraryWith IsDirectory) $ \src@(D srcp _ _) ->
             forAll (arbitraryWith $ IsLinkTo srcp) $ \dst ->
                 shouldBeDone src dst LinkDeployment
 
-    it "says 'done' if the source is a directory and the destination is a link for a copy deployment" $ do
+    it "says 'dirty' if the source is a directory and the destination is a link for a copy deployment" $ do
         forAll (arbitraryWith IsDirectory) $ \src ->
             forAll arbitrary $ \l ->
                 forAll (arbitraryWith $ IsLinkTo l) $ \dst ->
-                    shouldBeDirty src dst CopyDeployment
+                    shouldBeDirty src dst CopyDeployment $ CleanLink $ diagnosedFilePath dst
 
     it "says 'dirty' if the source is a link" $ do
         forAll arbitrary $ \l ->
@@ -271,7 +282,7 @@ hashSpec = do
 tooManyFilesTest :: Spec
 tooManyFilesTest = do
     let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing True sandbox
+    let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
     let aLot = 20000 :: Int
     let setupALotOfFiles = do

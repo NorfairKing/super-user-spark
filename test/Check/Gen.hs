@@ -10,12 +10,19 @@ instance Arbitrary CheckResult where
     arbitrary = oneof
         [ pure AlreadyDone
         , Ready <$> arbitrary
-        , Dirty <$> arbitrary <*> arbitrary
+        , Dirty <$> arbitrary <*> arbitrary <*> arbitrary
         , Impossible <$> arbitrary
         ]
 
 instance Arbitrary Instruction where
     arbitrary = Instruction <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance Arbitrary CleanupInstruction where
+    arbitrary = oneof
+        [ CleanFile <$> arbitrary
+        , CleanDirectory <$> arbitrary
+        , CleanLink <$> arbitrary
+        ]
 
 instance Arbitrary DiagnosedDeployment where
     arbitrary = Diagnosed <$> arbitrary <*> arbitrary <*> arbitrary

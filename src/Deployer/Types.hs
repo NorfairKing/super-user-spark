@@ -2,7 +2,6 @@ module Deployer.Types where
 
 import           Language.Types
 import           Monad
-import           System.Directory      (Permissions (..))
 import           System.FilePath.Posix (takeExtension)
 import           Types
 
@@ -23,16 +22,6 @@ instance Read DeployerCardReference where
 
 type SparkDeployer = StateT DeployerState Sparker
 data DeployerState = DeployerState
-
-runSparkDeployer :: DeployerState -> SparkDeployer a -> Sparker (a, DeployerState)
-runSparkDeployer state func = runStateT func state
-
-data Diagnostics = NonExistent
-                 | IsFile Permissions
-                 | IsDirectory Permissions
-                 | IsLink Permissions
-                 | IsWeird
-    deriving (Show, Eq)
 
 data PreDeployment = Ready FilePath FilePath DeploymentKind
                    | AlreadyDone
