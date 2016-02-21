@@ -4,12 +4,14 @@ import           Check.Internal
 import           Check.Types
 import           Config
 import           Config.Types
-import           Data.Either        (isLeft)
-import           Data.Maybe         (isNothing)
+import           Data.Either           (isLeft)
+import           Data.Maybe            (isNothing)
 import           Deployer.Internal
 import           Deployer.Types
 import           Monad
-import           System.Directory   hiding (createDirectoryIfMissing)
+import           Parser.Gen
+import           System.Directory      hiding (createDirectoryIfMissing)
+import           System.FilePath.Posix ((</>))
 import           System.Posix.Files
 import           Test.Hspec
 import           Test.QuickCheck
@@ -225,6 +227,14 @@ deploymentSpec = do
 
 completionSpec :: Spec
 completionSpec = do
+    describe "complete" $ do
+        -- Necessary because not all utilities can handle paths with '~' in them.
+        it "replaces the home directory as specified for simple home directories and simple paths" $ do
+            forAll arbitrary $ \env ->
+                forAll generateWord $ \home ->
+                    forAll generateWord $ \fp ->
+                        complete home env ("~" </> fp) `shouldBe` Right (home </> fp)
+
     describe "parseId" $ do
         it "Works for these cases" $ do
             parseId "" `shouldBe` []

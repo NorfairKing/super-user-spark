@@ -2,12 +2,14 @@ module Deployer.Internal where
 
 import           Check.Types
 import           Compiler.Types
+import           Data.List             (isPrefixOf)
 import           Data.Text             (pack)
 import           Deployer.Types
 import           Shelly                (cp_r, fromText, shelly)
-import           System.Directory      (removeDirectoryRecursive, removeFile)
+import           System.Directory      (getHomeDirectory,
+                                        removeDirectoryRecursive, removeFile)
 import           System.Environment    (getEnvironment)
-import           System.FilePath       (normalise)
+import           System.FilePath       (normalise, (</>))
 import           System.FilePath.Posix (dropFileName)
 import           System.Posix.Files    (createSymbolicLink, removeLink)
 import           Types
@@ -15,24 +17,27 @@ import           Utils
 
 completeDeployments :: [Deployment] -> IO [Deployment]
 completeDeployments ds = do
+    home <- getHomeDirectory
     env <- getEnvironment
-    case mapM (completeDeployment env) ds of
+    case mapM (completeDeployment home env) ds of
         Left err -> die err
         Right fp -> return fp
 
-completeDeployment :: Environment -> Deployment -> Either String Deployment
-completeDeployment env (Put srcs dst kind) = do
-    csrcs <- mapM (complete env) srcs
-    cdst <- complete env dst
+type Environment = [(String, String)]
+type HomeDir = FilePath
+
+completeDeployment :: HomeDir -> Environment -> Deployment -> Either String Deployment
+completeDeployment home env (Put srcs dst kind) = do
+    csrcs <- mapM (complete home env) srcs
+    cdst <- complete home env dst
     return $ Put csrcs cdst kind
 
-complete :: Environment -> FilePath -> Either String FilePath
-complete env fp = do
+complete :: HomeDir -> Environment -> FilePath -> Either String FilePath
+complete home env fp = do
     let ids = parseId fp
     strs <- mapM (replaceId env) ids
-    return $ normalise $ concat strs
-
-type Environment = [(String, String)]
+    let completed = map (replaceHome home) strs
+    return $ normalise $ concat completed
 
 parseId :: FilePath -> [ID]
 parseId [] = []
@@ -46,9 +51,14 @@ replaceId :: Environment -> ID -> Either String FilePath
 replaceId _ (Plain str) = return str
 replaceId e (Var str) = do
     case lookup str e of
-        -- FIXME(kerckhove) make this total instead
         Nothing -> Left $ unwords ["variable", str, "could not be resolved from environment."]
         Just fp -> Right fp
+
+replaceHome :: HomeDir -> FilePath -> FilePath
+replaceHome home path
+    = if "~" `isPrefixOf` path
+        then home </> drop 2 path
+        else path
 
 performClean :: CleanupInstruction -> Sparker ()
 performClean (CleanFile fp)         = incase conf_deploy_replace_files       $ rmFile fp
