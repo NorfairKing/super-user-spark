@@ -192,7 +192,7 @@ formatDeploymentCheck :: (Deployment, DeploymentCheckResult) -> Maybe String
 formatDeploymentCheck (_, (ReadyToDeploy is))       = Just $ "ready to deploy: " ++ formatInstruction is
 formatDeploymentCheck (_, DeploymentDone)           = Nothing
 formatDeploymentCheck (d, ImpossibleDeployment ds)  = Just $ "IMPOSSIBLE: " ++ deployment_dst d ++ " cannot be deployed:\n" ++ unlines ds ++ "\n"
-formatDeploymentCheck (d, (DirtySituation str is))  = Just $ "DIRTY: " ++ deployment_dst d ++ " Error:\n" ++ str ++ "planned: " ++ formatInstruction is ++ "\n"
+formatDeploymentCheck (d, (DirtySituation str is))  = Just $ "DIRTY: " ++ deployment_dst d ++ "\n" ++ str ++ "planned: " ++ formatInstruction is ++ "\n"
 
 formatInstruction :: Instruction -> String
 formatInstruction (Instruction src dst k) = unwords $
