@@ -27,3 +27,7 @@ Before contributing, make sure you installed the pre-commit tests:
 ```
 spark deploy hooks.sus
 ```
+
+## Found a problem?
+
+Raise an issue or, even better, do a pull-request with a failing test!

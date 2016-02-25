@@ -111,5 +111,26 @@ alternatives <primary> <secondary> <tertiary> ... <last>
 Spark will look for the source in the primary directory, then the secondary, etc.
 This path is further prepended to the `into` directory.
 
+### Block
+
+A block is a part of the code between braces `{`, `}`.
+It is used to scope declaratons:
+
+```
+{
+  into a
+  b
+}
+c
+```
+
+... will result in ...
+
+```
+b -> a/b
+c -> c
+```
+
+
 ### Comments
 Line comments start with `#` and block comments are surrounded by `[[` and `]]`

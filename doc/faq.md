@@ -2,7 +2,7 @@
 title: Frequently Asked Questions
 ---
 
-- When I enter `spark pase some-file`, I get the following error, what does it mean?
+- When I enter `spark parse some-file`, I get the following error, what does it mean?
     ```
     "some-file" (line ..., column ...):
     unexpexted end of input

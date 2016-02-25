@@ -2,7 +2,7 @@
 title: Installation
 ---
 
-Cabal is on hackage!
+`spark` is on hackage!
 
 ```
 $ cabal install super-user-spark
