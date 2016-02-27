@@ -58,7 +58,7 @@ blankspaceParserTests = do
             forAll generateLineSpace (\ls -> f ls)
 
     describe "linespace" $ do
-        let s = shouldSucceed whitespace
+        let s = shouldSucceed linespace
         it "succeeds for spaces" $ do
             forAll (listOf generateSpace) s
         it "succeeds for tabs" $ do
