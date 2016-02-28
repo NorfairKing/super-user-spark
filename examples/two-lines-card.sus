@@ -1,4 +1,4 @@
 card two {
-    zshrc -> .zshrc
-    zlogin -> .zlogin
+  zshrc -> .zshrc
+  zlogin -> .zlogin
 }

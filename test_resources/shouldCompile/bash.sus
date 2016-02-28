@@ -1,0 +1,8 @@
+card bash {
+  into ~
+  
+  .bashrc
+  .bash_aliases
+  .bash_profile
+  .profile
+}

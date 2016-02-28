@@ -1,0 +1,7 @@
+card hop1 {
+  into b
+  outof x
+  
+  beta -> one
+  spark file hop2dir/hop2.sus
+}

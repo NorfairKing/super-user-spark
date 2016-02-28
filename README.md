@@ -1,5 +1,5 @@
 # Super User Spark
-[![Build Status](https://travis-ci.org/NorfairKing/super-user-spark.svg)](https://travis-ci.org/NorfairKing/super-user-spark)
+[![Build Status](https://travis-ci.org/NorfairKing/super-user-spark.svg?branch=master)](https://travis-ci.org/NorfairKing/super-user-spark)
 
 A safe way to never worry about your beautifully configured system again
 
@@ -21,3 +21,14 @@ If you would like to have your name on this list, just send a pull request.
 - [mkirsche](https://github.com/mkirsche/sus-depot)
 - [badi](https://github.com/badi/dotfiles/blob/master/deploy.sus)
 - [tilal6991](https://github.com/tilal6991/.dotfiles)
+
+## Contributing
+Before contributing, make sure you installed the pre-commit tests:
+
+```
+spark deploy hooks.sus
+```
+
+## Found a problem?
+
+Raise an issue or, even better, do a pull-request with a failing test!

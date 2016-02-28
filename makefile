@@ -1,35 +1,42 @@
-NAME = spark
-SRC = $(SRC_DIR)/Main.hs
-BIN = $(NAME)
+aGll: build test
 
-GHC = ghc
-GHC_OPTIMISATION = -O2
-GHC_FLAGS = 	-fwarn-unused-imports \
-				-fforce-recomp \
-				-fwarn-incomplete-patterns \
-				-Wall \
-				-fno-warn-unused-do-bind \
-				-fno-warn-name-shadowing
-GHC_SRC_DIRS = 	-i$(SRC_DIR) \
-			   	-ibenchmarks \
-			   	-itests
-GHC_OPTIONS = 	-threaded \
-				$(GHC_OPTIMISATION) \
-				$(GHC_FLAGS) \
-				$(GHC_SRC_DIRS)
+build: FORCE
+	stack build
 
+test: FORCE
+	stack test --test-arguments="--seed=42" # No flaky tests!
 
-SRC_DIR = src
+install: FORCE
+	stack install
 
-all: bin
-	
-bin:
-	$(GHC) $(GHC_OPTIONS) -o $(BIN) --make $(SRC)
+pedantic:
+	stack clean
+	stack build \
+    --pedantic \
+    --fast \
+    --jobs=8 \
+    --ghc-options="\
+        -fforce-recomp \
+        -O0 \
+        -Wall \
+        -Werror \
+        -fwarn-unused-imports \
+        -fwarn-incomplete-patterns \
+        -fwarn-unused-do-bind \
+        -fno-warn-name-shadowing \
+        -fno-warn-overlapping-patterns \
+        -fno-warn-orphans" \
+		--test \
+		--test-arguments="\
+			--dry-run \
+			"\
 
 love:
 	@echo "not war"
 	
 DIRTY_EXT = *.o *.hi *.bin
+
+FORCE:
 
 clean:
 	rm -f $(BIN) $(DIRTY_EXT)

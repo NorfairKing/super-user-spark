@@ -1,33 +1,42 @@
-module Dispatch where
+module Dispatch (dispatch) where
 
+import           Check
 import           Compiler
+import           Compiler.Types
+import           Control.Monad  (void)
 import           Deployer
+import           Deployer.Types
+import           Dispatch.Types
 import           Formatter
 import           Parser
+import           Seed
 import           Types
 
 dispatch :: Dispatch -> Sparker ()
-dispatch (DispatchParse fp) = parseFile fp >> return () -- Just parse, throw away the results.
+dispatch (DispatchParse fp) = do
+    void $ parseFile fp  -- Just parse, throw away the results.
+
 dispatch (DispatchFormat fp) = do
-    cards <- parseFile fp
-    str <- formatCards cards
+    sf <- parseFile fp
+    str <- formatSparkFile sf
     liftIO $ putStrLn str
-dispatch (DispatchCompile (CardFileReference fp mcnr)) = do
-    cards <- parseFile fp
-    deployments <- compileRef cards mcnr
+
+dispatch (DispatchCompile cfr) = do
+    deployments <- compileJob cfr
     outputCompiled deployments
-dispatch (DispatchCheck ccr) = do
-    deps <- case ccr of
-        DeployerCardCompiled fp -> inputCompiled fp
-        DeployerCardUncompiled (CardFileReference fp mcnr) -> do
-            cards <- parseFile fp
-            compileRef cards mcnr
-    pdps <- check deps
-    liftIO $ putStr $ formatPreDeployments $ zip deps pdps
+
+dispatch (DispatchCheck dcr) = do
+    deps <- compileDeployerCardRef dcr
+    seeded <- seedByCompiledCardRef dcr deps
+    dcrs <- liftIO $ check seeded
+    liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded dcrs
+
 dispatch (DispatchDeploy dcr) = do
-    deps <- case dcr of
-        DeployerCardCompiled fp -> inputCompiled fp
-        DeployerCardUncompiled scr -> do
-            cards <- parseCardFileReference scr
-            compile (head cards) cards -- filtering is already done at parse
-    deploy deps
+    deps <- compileDeployerCardRef dcr
+    seeded <- seedByCompiledCardRef dcr deps
+    dcrs <- liftIO $ check seeded
+    deploy $ zip seeded dcrs
+
+compileDeployerCardRef :: DeployerCardReference -> Sparker [Deployment]
+compileDeployerCardRef (DeployerCardCompiled fp) = inputCompiled fp
+compileDeployerCardRef (DeployerCardUncompiled cfr) = compileJob cfr

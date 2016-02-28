@@ -1,20 +1,16 @@
 card nested {
+  into ~
+  {
+    outof bash
 
-    into ~
-
-    {
-        outof bash
-
-        bashrc          -> .bashrc
-        bash_aliases    -> .bash_aliases
-        bash_login      -> .bash_login
-    }
-
-    {
-        outof zsh
-        
-        zshrc  -> .zshrc
-        zlogin -> .zlogin
-    }
-
+    .bashrc
+    .bash_aliases
+    .bash_login
+  }
+  {
+    outof zsh
+    
+    .zshrc
+    .zlogin
+  }
 }
