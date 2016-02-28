@@ -4,9 +4,7 @@ import           Spark
 import           System.Directory      hiding (createDirectoryIfMissing)
 import           System.Environment    (withArgs)
 import           System.FilePath.Posix ((</>))
-import           System.Posix.Files
 import           Test.Hspec
-import           Test.QuickCheck
 import           Utils
 
 spec :: Spec
