@@ -4,6 +4,7 @@ import           Spark
 import           System.Directory      hiding (createDirectoryIfMissing)
 import           System.Environment    (withArgs)
 import           System.FilePath.Posix ((</>))
+import           System.Posix.Files
 import           Test.Hspec
 import           Utils
 
@@ -55,6 +56,16 @@ spec = do
                 it "deploys correctly" $ do
                     withArgs ["deploy", cardfile] spark `shouldReturn` ()
 
-                    readFile ("subdir" </> ".bashrc") `shouldReturn` "bashrc"
-                    readFile ("subdir" </> ".bash_aliases") `shouldReturn` "bash_aliases"
-                    readFile ("subdir" </> ".bash_profile") `shouldReturn` "bash_profile"
+                    let f1 = "subdir" </> ".bashrc"
+                        f2 = "subdir" </> ".bash_aliases"
+                        f3 = "subdir" </> ".bash_profile"
+
+                    readFile f1 `shouldReturn` "bashrc"
+                    readFile f2 `shouldReturn` "bash_aliases"
+                    readFile f3 `shouldReturn` "bash_profile"
+
+                    removeLink f1
+                    removeLink f2
+                    removeLink f3
+
+
