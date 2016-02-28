@@ -1,0 +1,8 @@
+card bash {
+  into  subdir
+  outof bash
+  
+  .bashrc
+  .bash_aliases
+  .bash_profile
+}

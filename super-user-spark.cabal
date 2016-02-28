@@ -82,9 +82,12 @@ test-suite spark-tests
   type:             exitcode-stdio-1.0
   main-is:          MainTest.hs
   hs-source-dirs:   src, test
-  other-modules:    ParserSpec
+  other-modules:    CheckSpec
+                  , ParserSpec
                   , CompilerSpec
+                  , DeployerSpec
                   , SeedSpec
+                  , EndToEndSpec
   build-depends:    base                  >= 4.6   && < 4.9
                   , super-user-spark
                   , hspec                 >= 2.2   && < 2.3
