@@ -3,6 +3,7 @@ module EndToEndSpec (spec) where
 import           Spark
 import           System.Directory      hiding (createDirectoryIfMissing)
 import           System.Environment    (withArgs)
+import           System.Exit           (ExitCode (ExitSuccess))
 import           System.FilePath.Posix ((</>))
 import           System.Posix.Files
 import           Test.Hspec
@@ -10,6 +11,16 @@ import           Utils
 
 spec :: Spec
 spec = do
+    helpTextSpec
+    regularWorkflowSpec
+
+helpTextSpec :: Spec
+helpTextSpec = describe "help text test" $ do
+    it "shows the help text without crashing" $ do
+        withArgs ["--help"] spark `shouldThrow` (== ExitSuccess)
+
+regularWorkflowSpec :: Spec
+regularWorkflowSpec = do
     let sandbox = "test_sandbox"
     let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
