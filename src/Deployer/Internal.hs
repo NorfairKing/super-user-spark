@@ -43,9 +43,10 @@ parseId :: FilePath -> [ID]
 parseId [] = []
 parseId ('$':'(':rest) = (Var id):(parseId next)
   where (id, (')':next)) = break (\c -> c == ')') rest
-parseId (s:ss) = case parseId ss of
-                    (Plain str):r   -> (Plain (s:str)):r
-                    r               -> (Plain [s]):r
+parseId (s:ss)
+    = case parseId ss of
+        (Plain str):r -> (Plain (s:str)):r
+        r             -> (Plain [s]):r
 
 replaceId :: Environment -> ID -> Either String FilePath
 replaceId _ (Plain str) = return str

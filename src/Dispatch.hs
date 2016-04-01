@@ -7,7 +7,6 @@ import           Control.Monad  (void)
 import           Deployer
 import           Deployer.Types
 import           Dispatch.Types
-import           Formatter
 import           Parser
 import           Seed
 import           Types
@@ -15,11 +14,6 @@ import           Types
 dispatch :: Dispatch -> Sparker ()
 dispatch (DispatchParse fp) = do
     void $ parseFile fp  -- Just parse, throw away the results.
-
-dispatch (DispatchFormat fp) = do
-    sf <- parseFile fp
-    str <- formatSparkFile sf
-    liftIO $ putStrLn str
 
 dispatch (DispatchCompile cfr) = do
     deployments <- compileJob cfr

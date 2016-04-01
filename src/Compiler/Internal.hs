@@ -14,16 +14,16 @@ compileUnit card = do
 compileDecs :: [Declaration] -> InternalCompiler ()
 compileDecs = mapM_ compileDec
 
-
 compileDec :: Declaration -> InternalCompiler ()
 compileDec (Deploy src dst kind) = do
     override <- gets state_deployment_kind_override
     superOverride <- asks conf_compile_override
-    let resultKind = case (superOverride, override, kind) of
-            (Nothing, Nothing, Nothing) -> LinkDeployment
-            (Nothing, Nothing, Just k ) -> k
-            (Nothing, Just o , _      ) -> o
-            (Just o , _      , _      ) -> o
+    let resultKind
+            = case (superOverride, override, kind) of
+                (Nothing, Nothing, Nothing) -> LinkDeployment
+                (Nothing, Nothing, Just k ) -> k
+                (Nothing, Just o , _      ) -> o
+                (Just o , _      , _      ) -> o
     outof <- gets state_outof_prefix
     into <- gets state_into
 

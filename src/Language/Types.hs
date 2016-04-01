@@ -38,16 +38,18 @@ data CardFileReference = CardFileReference FilePath (Maybe CardNameReference)
 
 
 instance Read CardFileReference where
-    readsPrec _ fp = case length (words fp) of
-                      1 -> [(CardFileReference fp Nothing ,"")]
-                      2 -> let [f, c] = words fp
-                            in [(CardFileReference f (Just $ CardNameReference c), "")]
-                      _ -> []
+    readsPrec _ fp
+        = case length (words fp) of
+            1 -> [(CardFileReference fp Nothing ,"")]
+            2 -> let [f, c] = words fp
+                  in [(CardFileReference f (Just $ CardNameReference c), "")]
+            _ -> []
 
 
 -- | Union card reference
-data CardReference = CardFile CardFileReference
-                   | CardName CardNameReference
+data CardReference
+    = CardFile CardFileReference
+    | CardName CardNameReference
     deriving (Show, Eq)
 
 

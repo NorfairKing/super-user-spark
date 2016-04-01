@@ -86,7 +86,6 @@ outputCompiled deps = do
             case out of
                 Nothing -> BS.putStrLn bs
                 Just fp -> BS.writeFile fp bs
-        _ -> error $ "unrecognized format"
 
 inputCompiled :: FilePath -> Sparker [Deployment]
 inputCompiled fp = do
@@ -97,6 +96,5 @@ inputCompiled fp = do
             case eitherDecode bs of
                 Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data: " ++ err
                 Right ds        -> return ds
-        _ -> error $ "unrecognized format"
 
 

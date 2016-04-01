@@ -31,10 +31,10 @@ bestResult cs
     | otherwise
         -- Will not be empty as per line above
         = case head $ dropWhile impossible cs of
-            AlreadyDone         -> DeploymentDone
-            Ready i             -> ReadyToDeploy i
-            Dirty s i c         -> DirtySituation s i c
-            Impossible _        -> error "Cannot be the case"
+            AlreadyDone  -> DeploymentDone
+            Ready i      -> ReadyToDeploy i
+            Dirty s i c  -> DirtySituation s i c
+            Impossible _ -> error "Cannot be the case"
 
 impossible :: CheckResult -> Bool
 impossible (Impossible _) = True
