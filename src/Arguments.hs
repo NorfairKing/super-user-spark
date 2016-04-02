@@ -24,7 +24,6 @@ configFromOptions go = Right conf
   where
     conf = defaultConfig
           { conf_compile_output             = opt_output go
-          , conf_compile_format             = opt_format go
           , conf_compile_kind               = opt_kind go
           , conf_compile_override           = opt_overrride go
           , conf_deploy_replace_links       = opt_replace_links go       || opt_replace go
@@ -110,12 +109,6 @@ parseGlobalOptions = GlobalOptions
         <> value Nothing
         <> metavar "FILE"
         <> help "The output file for compilation" )
-    <*> option auto
-      ( long "format"
-        <> short 'f'
-        <> value FormatJson
-        <> metavar "FORMAT"
-        <> help "Compilation format default: json" )
     <*> option (Just <$> auto)
       ( long "kind"
         <> short 'k'

@@ -39,7 +39,6 @@ import           Monad
 ---[ Options ]---
 data GlobalOptions = GlobalOptions
     { opt_output              :: Maybe FilePath
-    , opt_format              :: CompileFormat
     , opt_kind                :: Maybe DeploymentKind
     , opt_overrride           :: Maybe DeploymentKind
     , opt_replace_links       :: Bool
