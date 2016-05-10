@@ -30,7 +30,6 @@ library
                   , Deployer.Internal
                   , Dispatch
                   , Dispatch.Types
-                  , Formatter
                   , Language.Types
                   , Monad
                   , Parser
@@ -81,7 +80,7 @@ executable spark
 test-suite spark-tests
   type:             exitcode-stdio-1.0
   main-is:          MainTest.hs
-  hs-source-dirs:   src, test
+  hs-source-dirs:   test
   other-modules:    CheckSpec
                   , ParserSpec
                   , CompilerSpec

@@ -1,6 +1,5 @@
 module Types
-    (
-      module Types
+    ( module Types
     , module CoreTypes
     , module Monad
     , module Config.Types
@@ -39,13 +38,7 @@ import           Monad
 
 ---[ Options ]---
 data GlobalOptions = GlobalOptions
-    { opt_lineUp              :: Bool
-    , opt_indent              :: Int
-    , opt_trailingNewline     :: Bool
-    , opt_alwaysQuote         :: Bool
-    , opt_compress            :: Bool
-    , opt_output              :: Maybe FilePath
-    , opt_format              :: CompileFormat
+    { opt_output              :: Maybe FilePath
     , opt_kind                :: Maybe DeploymentKind
     , opt_overrride           :: Maybe DeploymentKind
     , opt_replace_links       :: Bool
@@ -54,16 +47,3 @@ data GlobalOptions = GlobalOptions
     , opt_replace             :: Bool
     , opt_debug               :: Bool
     } deriving (Show, Eq)
-
----[ Pretty Types ]---
-
-type SparkFormatter = StateT FormatterState (WriterT String Sparker)
-data FormatterState = FormatterState
-    { state_current_indent        :: Int
-    , state_longest_src           :: Int
-    , state_newline_before_deploy :: Bool
-    } deriving (Show, Eq)
-
-runSparkFormatter :: FormatterState -> SparkFormatter a -> Sparker ((a, FormatterState), String)
-runSparkFormatter state func = runWriterT (runStateT func state)
-

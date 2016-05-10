@@ -1,4 +1,4 @@
-aGll: build test
+all: build test
 
 build: FORCE
 	stack build

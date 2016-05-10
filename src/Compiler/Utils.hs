@@ -9,11 +9,11 @@ import           Types
 initialState :: PureCompiler CompilerState
 initialState = do
     override <- asks conf_compile_kind
-    return $ CompilerState {
-        state_deployment_kind_override = override
-    ,   state_into = ""
-    ,   state_outof_prefix = []
-    }
+    return $ CompilerState
+        { state_deployment_kind_override = override
+        , state_into = ""
+        , state_outof_prefix = []
+        }
 
 addDeployment :: Deployment -> InternalCompiler ()
 addDeployment d = tell ([d], [])

@@ -330,9 +330,6 @@ hopTests = do
 
 exactTests :: Spec
 exactTests = do
-    let runJsonSparker :: Sparker a -> IO (Either SparkError a)
-        runJsonSparker func = flip runReaderT (defaultConfig {conf_compile_format = FormatJson}) $ runExceptT func
-
     describe "exact tests" $ do
         let dir = "test_resources/exact_compile_test_src"
         forFileInDirss [dir] $ \fp ->
@@ -343,7 +340,7 @@ exactTests = do
                     let orig = fp
                     let result = fp <.> "res"
                     ads <- runDefaultSparker $ compileJob $ CardFileReference orig Nothing
-                    eds <- runJsonSparker $ inputCompiled result
+                    eds <- runDefaultSparker $ inputCompiled result
                     ads `shouldBe` eds
 
 

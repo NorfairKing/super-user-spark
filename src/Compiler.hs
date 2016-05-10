@@ -78,25 +78,18 @@ embedPureCompiler func = withExceptT CompileError $ mapExceptT (mapReaderT idToI
 
 outputCompiled :: [Deployment] -> Sparker ()
 outputCompiled deps = do
-    form <- asks conf_compile_format
     out <- asks conf_compile_output
-    liftIO $ case form of
-        FormatJson -> do
-            let bs = encodePretty deps
-            case out of
-                Nothing -> BS.putStrLn bs
-                Just fp -> BS.writeFile fp bs
-        _ -> error $ "unrecognized format"
+    liftIO $ do
+        let bs = encodePretty deps
+        case out of
+            Nothing -> BS.putStrLn bs
+            Just fp -> BS.writeFile fp bs
 
 inputCompiled :: FilePath -> Sparker [Deployment]
 inputCompiled fp = do
-    form <- asks conf_compile_format
-    case form of
-        FormatJson -> do
-            bs <- liftIO $ BS.readFile fp
-            case eitherDecode bs of
-                Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data: " ++ err
-                Right ds        -> return ds
-        _ -> error $ "unrecognized format"
+    bs <- liftIO $ BS.readFile fp
+    case eitherDecode bs of
+        Left err        -> throwError $ CompileError $ "Something went wrong while deserialising json data: " ++ err
+        Right ds        -> return ds
 
 

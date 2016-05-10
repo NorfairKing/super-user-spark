@@ -12,8 +12,6 @@ type Sparker = ExceptT SparkError (ReaderT SparkConfig IO)
 runSparker :: SparkConfig -> Sparker a -> IO (Either SparkError a)
 runSparker conf func = runReaderT (runExceptT func) conf
 
-
-
 data SparkError = ParseError ParseError
                 | PreCompileError [PreCompileError]
                 | CompileError CompileError

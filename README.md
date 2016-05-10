@@ -1,7 +1,33 @@
 # Super User Spark
 [![Build Status](https://travis-ci.org/NorfairKing/super-user-spark.svg?branch=master)](https://travis-ci.org/NorfairKing/super-user-spark)
 
-A safe way to never worry about your beautifully configured system again
+A safe way to never worry about your beautifully configured system again.
+
+## Example
+
+If your dotfiles repository looks like this...
+
+```
+dotfiles
+├── bashrc
+├── bash_aliases
+├── bash_profile
+└── README
+```
+
+... then you can now deploy those dotfiles with this `.sus` file using `spark`!
+
+``` super-user-spark
+card bash {
+  into ~
+
+  .bashrc
+  .bash_aliases
+  .bash_profile
+}
+```
+
+Find out more in the documentation below.
 
 ## Documentation
 Most of the documentation is in the `doc` directory.

@@ -11,9 +11,9 @@ import           Monad
 import           Types
 
 data Deployment = Put
-    {   deployment_srcs :: [FilePath]
-    ,   deployment_dst  :: FilePath
-    ,   deployment_kind :: DeploymentKind
+    { deployment_srcs :: [FilePath]
+    , deployment_dst  :: FilePath
+    , deployment_kind :: DeploymentKind
     } deriving Eq
 
 instance Show Deployment where
@@ -27,22 +27,25 @@ instance Show Deployment where
         quote = (\s -> "\"" ++ s ++ "\"")
 
 instance FromJSON Deployment where
-    parseJSON (Object o) = Put <$> o .: "sources"
-                               <*> o .: "destination"
-                               <*> o .: "deployment kind"
+    parseJSON (Object o)
+        = Put <$> o .: "sources"
+              <*> o .: "destination"
+              <*> o .: "deployment kind"
     parseJSON _ = mzero
 
 instance ToJSON Deployment where
-    toJSON depl = object [
-                           "sources" .= deployment_srcs depl
-                         , "destination" .= deployment_dst depl
-                         , "deployment kind" .= deployment_kind depl
-                         ]
+    toJSON depl
+        = object
+        [ "sources" .= deployment_srcs depl
+        , "destination" .= deployment_dst depl
+        , "deployment kind" .= deployment_kind depl
+        ]
 
 type CompilerPrefix = [PrefixPart]
 
-data PrefixPart = Literal String
-                | Alts [String]
+data PrefixPart
+    = Literal String
+    | Alts [String]
     deriving (Show, Eq)
 
 data CompilerState = CompilerState

@@ -51,8 +51,7 @@ declarations = (inLineSpace declaration) `sepEndBy` delim
 
 declaration :: Parser Declaration
 declaration = choice $ map try
-    [
-      block
+    [ block
     , alternatives
     , sparkOff
     , intoDir
@@ -270,8 +269,8 @@ whitespace = skip $ many $ oneOf whitespaceChars
 eol :: Parser ()
 eol =  skip newline
   where
-    newline =
-            try (string "\r\n")
+    newline
+        =   try (string "\r\n")
         <|> try (string "\n")
         <|> string "\r"
         <?> "end of line"
