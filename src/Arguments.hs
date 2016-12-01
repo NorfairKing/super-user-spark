@@ -1,4 +1,9 @@
+{-# LANGUAGE CPP #-}
 module Arguments where
+
+#if (MIN_VERSION_base(4,9,0))
+import           Data.Monoid
+#endif
 
 import           Options.Applicative
 import           System.Environment  (getArgs)
