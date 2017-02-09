@@ -1,14 +1,15 @@
-module Spark (spark) where
+module Spark
+    ( spark
+    ) where
 
-import           Arguments
-import           Dispatch
-import           Types
-import           Utils
+import Arguments
+import Dispatch
+import Types
+import Utils
 
 spark :: IO ()
 spark = do
     (di, config) <- getInstructions
-
     er <- runSparker config $ dispatch di
     case er of
         Left err -> die $ showError err

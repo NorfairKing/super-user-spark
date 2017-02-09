@@ -37,13 +37,13 @@ unspecifiedKindSymbol :: String
 unspecifiedKindSymbol = "->"
 
 bracesChars :: [Char]
-bracesChars = ['{','}']
+bracesChars = ['{', '}']
 
 linespaceChars :: [Char]
 linespaceChars = [' ', '\t']
 
 endOfLineChars :: [Char]
-endOfLineChars = ['\n','\r']
+endOfLineChars = ['\n', '\r']
 
 whitespaceChars :: [Char]
 whitespaceChars = linespaceChars ++ endOfLineChars

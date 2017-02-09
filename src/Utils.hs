@@ -1,28 +1,35 @@
-{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+
 module Utils where
 
-import           Control.Monad    (when)
-import           Data.List        (isInfixOf)
+import Control.Monad (when)
+import Data.List (isInfixOf)
 import qualified System.Directory as D (createDirectoryIfMissing)
-import           System.Exit      (exitFailure)
-import           System.IO        (hPutStrLn, stderr)
-import           Types
+import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
+import Types
 
-debug :: (MonadReader SparkConfig m, MonadIO m) => String -> m ()
+debug
+    :: (MonadReader SparkConfig m, MonadIO m)
+    => String -> m ()
 debug str = incase (asks conf_debug) $ liftIO $ putStrLn str
 
-incase :: MonadReader SparkConfig m => (SparkConfig -> Bool) -> m () -> m ()
+incase
+    :: MonadReader SparkConfig m
+    => (SparkConfig -> Bool) -> m () -> m ()
 incase bf func = do
     b <- asks bf
     when b func
 
-incaseElse :: MonadReader SparkConfig m => (SparkConfig -> Bool) -> m a -> m a -> m a
+incaseElse
+    :: MonadReader SparkConfig m
+    => (SparkConfig -> Bool) -> m a -> m a -> m a
 incaseElse bf funcif funcelse = do
     b <- asks bf
     if b
-    then funcif
-    else funcelse
+        then funcif
+        else funcelse
 
 die :: String -> IO a
 die err = hPutStrLn stderr err >> exitFailure
@@ -41,4 +48,3 @@ containsMultipleConsequtiveSlashes = isInfixOf "//"
 
 createDirectoryIfMissing :: FilePath -> IO ()
 createDirectoryIfMissing = D.createDirectoryIfMissing True
-

@@ -1,10 +1,9 @@
 module Parser where
 
-import           Control.Exception (try)
-import           Language.Types
-import           Parser.Internal
-import           Types
-
+import Control.Exception (try)
+import Language.Types
+import Parser.Internal
+import Types
 
 parseFile :: FilePath -> Sparker SparkFile
 parseFile file = do

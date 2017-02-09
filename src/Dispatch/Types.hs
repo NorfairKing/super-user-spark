@@ -1,10 +1,9 @@
 module Dispatch.Types where
 
-import           Types
+import Types
 
-import           Deployer.Types
-import           Language.Types
-
+import Deployer.Types
+import Language.Types
 
 type Instructions = (Dispatch, SparkConfig)
 
@@ -16,4 +15,3 @@ data Dispatch
     deriving (Show, Eq)
 
 type Options = (Dispatch, GlobalOptions)
-

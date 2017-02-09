@@ -1,9 +1,9 @@
 module PreCompiler where
 
-import           Compiler.Types
-import           Language.Types
-import           Types
-import           Utils
+import Compiler.Types
+import Language.Types
+import Types
+import Utils
 
 preCompileChecks :: Card -> [PreCompileError]
 preCompileChecks c = runIdentity $ execWriterT $ cleanCard c
@@ -20,7 +20,6 @@ cleanDeclaration :: Declaration -> Precompiler ()
 cleanDeclaration (Deploy src dst _) = do
     cleanFilePath src
     cleanFilePath dst
-
 cleanDeclaration (SparkOff cr) = cleanCardReference cr
 cleanDeclaration (IntoDir dir) = cleanFilePath dir
 cleanDeclaration (OutofDir dir) = cleanFilePath dir
@@ -44,7 +43,8 @@ cleanCardNameReference (CardNameReference cn) = cleanCardName cn
 
 cleanCardName :: CardName -> Precompiler ()
 cleanCardName n
-    | containsNewline n = dirty $ "Card name contains newline character(s): " ++ n
+    | containsNewline n =
+        dirty $ "Card name contains newline character(s): " ++ n
     | otherwise = return ()
 
 cleanFilePath :: FilePath -> Precompiler ()
