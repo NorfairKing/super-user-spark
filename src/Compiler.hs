@@ -61,7 +61,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
                 Just ('/':new) -> new
                 Just new -> new
         composeBases :: FilePath -> FilePath -> FilePath
-        composeBases base [] = base
+        composeBases base_ [] = base_
         composeBases _ base2 = takeDirectory (stripRoot base2)
         compileCardReference :: CardReference -> Sparker [Deployment]
         compileCardReference (CardFile cfr@(CardFileReference base2 _)) =

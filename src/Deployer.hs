@@ -40,6 +40,6 @@ deploy dcrs = do
             "Something went wrong during deployment. It's not done yet."
   where
     err :: [(Deployment, DeploymentCheckResult)] -> String -> Sparker ()
-    err dcrs text = do
-        liftIO $ putStrLn $ formatDeploymentChecks dcrs
-        throwError $ DeployError text
+    err dcrs_ text = do
+      liftIO $ putStrLn $ formatDeploymentChecks dcrs_
+      throwError $ DeployError text

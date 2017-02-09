@@ -45,9 +45,9 @@ complete home env fp = do
 
 parseId :: FilePath -> [ID]
 parseId [] = []
-parseId ('$':'(':rest) = (Var id) : (parseId next)
+parseId ('$':'(':rest) = (Var id_) : (parseId next)
   where
-    (id, (')':next)) = break (\c -> c == ')') rest
+    (id_, (')':next)) = break (\c -> c == ')') rest
 parseId (s:ss) =
     case parseId ss of
         (Plain str):r -> (Plain (s : str)) : r

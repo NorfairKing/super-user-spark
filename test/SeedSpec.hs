@@ -1,24 +1,27 @@
 module SeedSpec where
 
-import           Compiler.Gen          ()
-import           Compiler.TestUtils
-import           Compiler.Types
-import           PreCompiler
-import           Seed
-import           System.FilePath.Posix (isAbsolute)
-import           Test.Hspec
-import           Test.QuickCheck
-import           TestUtils
+import Compiler.Gen ()
+import Compiler.TestUtils
+import Compiler.Types
+import PreCompiler
+import Seed
+import System.FilePath.Posix (isAbsolute)
+import Test.Hspec
+import Test.QuickCheck
+import TestUtils
 
 spec :: Spec
-spec = parallel $ do
-    pureSeedSpec
+spec = parallel $ do pureSeedSpec
 
 pureSeedSpec :: Spec
-pureSeedSpec = describe "seed" $ do
-    it "ensures that sources are absolute if the seed is an absolute path" $ do
-        once $ forAll (arbitrary `suchThat` cleanBy cleanFilePath `suchThat` isAbsolute) $ \fp ->
-            forAll arbitrary $ \ds ->
-                all (\d -> all (isAbsolute) $ deployment_srcs d) $ seed fp ds
-
-    pend
+pureSeedSpec =
+    describe "seed" $ do
+        it "ensures that sources are absolute if the seed is an absolute path" $ do
+            once $
+                forAll
+                    (arbitrary `suchThat` cleanBy cleanFilePath `suchThat`
+                     isAbsolute) $ \fp ->
+                    forAll arbitrary $ \ds ->
+                        all (\d -> all (isAbsolute) $ deployment_srcs d) $
+                        seed fp ds
+        pend

@@ -261,11 +261,11 @@ whitespace :: Parser ()
 whitespace = skip $ many $ oneOf whitespaceChars
 
 eol :: Parser ()
-eol = skip newline
+eol = skip newline_
   where
-    newline =
-        try (string "\r\n") <|> try (string "\n") <|>
-        string "\r" <?> "end of line"
+    newline_ =
+      try (string "\r\n") <|> try (string "\n") <|>
+      string "\r" <?> "end of line"
 
 --[ Utils ]--
 skip :: Parser a -> Parser ()

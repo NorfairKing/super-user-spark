@@ -1,11 +1,12 @@
 module Parser.Gen where
 
-import           Test.QuickCheck
+import Test.QuickCheck
 
-import           Data.List       (isSuffixOf)
+import Data.List (isSuffixOf)
 
 generateNormalCharacter :: Gen Char
-generateNormalCharacter = elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'1']
+generateNormalCharacter =
+    elements $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '1']
 
 generateWord :: Gen String
 generateWord = listOf1 generateNormalCharacter
@@ -17,16 +18,18 @@ generateSpace :: Gen Char
 generateSpace = return ' '
 
 generateLineFeed :: Gen Char
-generateLineFeed= return '\n'
+generateLineFeed = return '\n'
 
 generateCarriageReturn :: Gen Char
-generateCarriageReturn= return '\r'
+generateCarriageReturn = return '\r'
 
 generateLineSpace :: Gen String
 generateLineSpace = listOf $ oneof [generateTab, generateSpace]
 
 generateWhiteSpace :: Gen String
-generateWhiteSpace = listOf $ oneof [generateTab, generateSpace, generateLineFeed, generateCarriageReturn]
+generateWhiteSpace =
+    listOf $
+    oneof [generateTab, generateSpace, generateLineFeed, generateCarriageReturn]
 
 generateWords :: Gen String
 generateWords = fmap unwords $ listOf1 generateWord
@@ -57,7 +60,8 @@ generatePlainIdentifier = do
     return $ (w, w)
 
 generateFilePath :: Gen (FilePath, FilePath)
-generateFilePath = generateIdentifier `suchThat` (\(_,f) -> not $ "/" `isSuffixOf` f)
+generateFilePath =
+    generateIdentifier `suchThat` (\(_, f) -> not $ "/" `isSuffixOf` f)
 
 generateDirectory :: Gen (FilePath, FilePath)
 generateDirectory = generateFilePath
@@ -79,7 +83,3 @@ generateBlockComment = do
 
 generateDeploymentKindSymbol :: Gen String
 generateDeploymentKindSymbol = elements ["l->", "c->", "->"]
-
-
-
-

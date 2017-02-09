@@ -1,12 +1,12 @@
 module Compiler.TestUtils where
 
-import           Compiler.Internal
-import           Compiler.Types
-import           Data.Either       (isLeft, isRight)
-import           Language.Types
-import           PreCompiler
-import           Test.Hspec
-import           Types
+import Compiler.Internal
+import Compiler.Types
+import Data.Either (isLeft, isRight)
+import Language.Types
+import PreCompiler
+import Test.Hspec
+import Types
 
 runPreCompiler :: Precompiler () -> [PrecompileError]
 runPreCompiler pc = runIdentity $ execWriterT pc
@@ -30,11 +30,12 @@ runPureCompiler :: SparkConfig -> PureCompiler a -> Either CompileError a
 runPureCompiler c func = runIdentity $ runReaderT (runExceptT func) c
 
 runInternalCompiler
-     :: [Declaration]
+    :: [Declaration]
     -> CompilerState
     -> SparkConfig
     -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
-runInternalCompiler ds s c = runPureCompiler c $ runWriterT $ execStateT (compileDecs ds) s
+runInternalCompiler ds s c =
+    runPureCompiler c $ runWriterT $ execStateT (compileDecs ds) s
 
 compileSingleDec
     :: Declaration
@@ -43,60 +44,46 @@ compileSingleDec
     -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
 compileSingleDec d = runInternalCompiler [d]
 
+compilationShouldSucceed :: [Declaration]
+                         -> CompilerState
+                         -> SparkConfig
+                         -> IO ()
+compilationShouldSucceed ds s c =
+    runInternalCompiler ds s c `shouldSatisfy` isRight
 
-compilationShouldSucceed
-    :: [Declaration]
-    -> CompilerState
-    -> SparkConfig
-    -> IO ()
-compilationShouldSucceed ds s c = runInternalCompiler ds s c `shouldSatisfy` isRight
-
-compilationShouldFail
-    :: [Declaration]
-    -> CompilerState
-    -> SparkConfig
-    -> IO ()
+compilationShouldFail :: [Declaration] -> CompilerState -> SparkConfig -> IO ()
 compilationShouldFail ds s c = runInternalCompiler ds s c `shouldSatisfy` isLeft
 
-singleShouldFail
-    :: SparkConfig
-    -> CompilerState
-    -> Declaration
-    -> IO ()
+singleShouldFail :: SparkConfig -> CompilerState -> Declaration -> IO ()
 singleShouldFail c s d = compilationShouldFail [d] s c
 
-shouldCompileTo
-    :: SparkConfig
-    -> CompilerState
-    -> [Declaration]
-    -> [Deployment]
-    -> IO ()
+shouldCompileTo :: SparkConfig
+                -> CompilerState
+                -> [Declaration]
+                -> [Deployment]
+                -> IO ()
 shouldCompileTo c s ds eds = do
     compilationShouldSucceed ds s c
     let Right (_, (ads, crs)) = runInternalCompiler ds s c
     ads `shouldBe` eds
     crs `shouldSatisfy` null
 
-singleShouldCompileTo
-    :: SparkConfig
-    -> CompilerState
-    -> Declaration
-    -> Deployment
-    -> IO ()
+singleShouldCompileTo :: SparkConfig
+                      -> CompilerState
+                      -> Declaration
+                      -> Deployment
+                      -> IO ()
 singleShouldCompileTo c s d eds = shouldCompileTo c s [d] [eds]
 
-shouldResultInState
-    :: SparkConfig
-    -> CompilerState
-    -> Declaration
-    -> CompilerState
-    -> IO ()
+shouldResultInState :: SparkConfig
+                    -> CompilerState
+                    -> Declaration
+                    -> CompilerState
+                    -> IO ()
 shouldResultInState c s d es = do
     compilationShouldSucceed [d] s c
     let Right (as, _) = runInternalCompiler [d] s c
     as `shouldBe` es
-
-
 
 -- Filepath utils
 containsNewlineCharacter :: String -> Bool
