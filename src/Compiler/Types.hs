@@ -25,6 +25,7 @@ instance Show Deployment where
             case deployment_kind dep of
                 LinkDeployment -> linkKindSymbol
                 CopyDeployment -> copyKindSymbol
+                DecryptDeployment -> decryptKindSymbol
         dst = quote $ deployment_dst dep
         quote = (\s -> "\"" ++ s ++ "\"")
 

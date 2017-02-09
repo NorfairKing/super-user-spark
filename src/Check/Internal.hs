@@ -80,6 +80,15 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                          , dst
                          , "are files for a copy deployment, but they are not equal."
                          ]
+        (IsFile, IsFile, DecryptDeployment) ->
+            e
+                [ "Both the source:"
+                , src
+                , "and the destination:"
+                , dst
+                , "are files for a decrypt deployment."
+                , "The source and destination have not been compared because the source was not decrypted."
+                ]
         (IsFile, IsDirectory, _) ->
             e
                 [ "The source: "
@@ -107,6 +116,14 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 , dst
                 , "is a link for a copy deployment."
                 ]
+        (IsFile, IsLinkTo _, DecryptDeployment) ->
+            e
+                [ "The source:"
+                , src
+                , "is a file and the destination:"
+                , dst
+                , "is a link for a decrypt deployment."
+                ]
         (IsDirectory, Nonexistent, _) -> ready
         (IsDirectory, IsFile, _) ->
             e
@@ -115,6 +132,14 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 , "is a directory and the destination:"
                 , dst
                 , "is a file."
+                ]
+        (IsDirectory, IsDirectory, LinkDeployment) ->
+            e
+                [ "The source:"
+                , src
+                , "and the destination:"
+                , dst
+                , "are directories for a link deployment."
                 ]
         (IsDirectory, IsDirectory, CopyDeployment) ->
             if srch == dsth
@@ -126,13 +151,14 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                          , dst
                          , "are directories for a copy deployment, but they are not equal."
                          ]
-        (IsDirectory, IsDirectory, LinkDeployment) ->
+        (IsDirectory, IsDirectory, DecryptDeployment) ->
             e
                 [ "The source:"
                 , src
-                , "and the destination:"
+                , "and destination:"
                 , dst
-                , "are directories for a link deployment."
+                , "are directories for a decrypt deployment, but they are not equal."
+                , "The source and destination have not been compared because the source was not decrypted."
                 ]
         (IsDirectory, IsLinkTo l, LinkDeployment) ->
             if l == src
@@ -146,6 +172,14 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                          , l ++ "."
                          ]
         (IsDirectory, IsLinkTo _, CopyDeployment) ->
+            e
+                [ "The source:"
+                , src
+                , "is a directory and the destination:"
+                , dst
+                , "is a link for a copy deployment."
+                ]
+        (IsDirectory, IsLinkTo _, DecryptDeployment) ->
             e
                 [ "The source:"
                 , src
@@ -282,6 +316,7 @@ formatInstruction (Instruction src dst k) = unwords $ [src, kindSymbol k, dst]
   where
     kindSymbol LinkDeployment = linkKindSymbol
     kindSymbol CopyDeployment = copyKindSymbol
+    kindSymbol DecryptDeployment = decryptKindSymbol
 
 formatCleanupInstruction :: CleanupInstruction -> String
 formatCleanupInstruction (CleanFile fp) = "remove file " ++ fp

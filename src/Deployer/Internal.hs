@@ -88,6 +88,8 @@ performDeployment (Instruction source destination LinkDeployment) =
     link source destination
 performDeployment (Instruction source destination CopyDeployment) =
     copy source destination
+performDeployment (Instruction source destination DecryptDeployment) =
+    decrypt source destination
 
 copy :: FilePath -> FilePath -> IO ()
 copy src dst = do
@@ -102,3 +104,6 @@ link src dst = do
     createSymbolicLink src dst
   where
     upperDir = dropFileName dst
+
+decrypt :: FilePath -> FilePath -> IO ()
+decrypt _ _ = undefined -- Not yet implemented

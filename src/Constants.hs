@@ -24,6 +24,9 @@ keywordLink = "link"
 keywordCopy :: String
 keywordCopy = "copy"
 
+keywordDecrypt :: String
+keywordDecrypt = "decrypt"
+
 keywordAlternatives :: String
 keywordAlternatives = "alternatives"
 
@@ -32,6 +35,9 @@ linkKindSymbol = "l->"
 
 copyKindSymbol :: String
 copyKindSymbol = "c->"
+
+decryptKindSymbol :: String
+decryptKindSymbol = "d->"
 
 unspecifiedKindSymbol :: String
 unspecifiedKindSymbol = "->"
