@@ -1,10 +1,17 @@
 module Deployer.Internal where
 
+import Import
+
+import Control.Monad.State
+
 import Check.Types
 import Compiler.Types
+import Config.Types
+import CoreTypes
 import Data.List (isPrefixOf)
 import Data.Text (pack)
 import Deployer.Types
+import Monad
 import Shelly (cp_r, fromText, shelly)
 import System.Directory
        (getHomeDirectory, removeDirectoryRecursive, removeFile)

@@ -2,6 +2,15 @@
 
 module Compiler.Types where
 
+import Import
+
+import Control.Monad.Except
+import Control.Monad.Identity
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Writer
+
+import Config.Types
 import Constants
 import Control.Monad (mzero)
 import CoreTypes

@@ -1,5 +1,7 @@
 module Language.Types where
 
+import Import
+
 import CoreTypes
 
 -- * Cards

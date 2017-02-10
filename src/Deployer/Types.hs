@@ -1,8 +1,13 @@
 module Deployer.Types where
 
+import Import
+
+import Control.Monad.State
+import System.FilePath.Posix (takeExtension)
+
+import CoreTypes
 import Language.Types
 import Monad
-import System.FilePath.Posix (takeExtension)
 import Types
 
 data DeployerCardReference

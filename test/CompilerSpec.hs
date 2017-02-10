@@ -1,5 +1,7 @@
 module CompilerSpec where
 
+import TestImport
+
 import Compiler
 import Compiler.TestUtils
 import Compiler.Types
@@ -9,12 +11,10 @@ import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)
 import Language.Gen ()
 import Language.Types
+import Monad
 import PreCompiler
 import System.FilePath.Posix (takeExtension, (<.>), (</>))
-import Test.Hspec
-import Test.QuickCheck
 import TestUtils
-import Types
 import Utils
 
 spec :: Spec

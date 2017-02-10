@@ -1,5 +1,7 @@
 module ParserSpec where
 
+import TestImport
+
 import CoreTypes
 import Data.Either (isLeft, isRight)
 import Data.List (intercalate)
@@ -8,8 +10,6 @@ import Parser.Gen
 import Parser.Internal
 import Parser.TestUtils
 import System.FilePath.Posix ((</>))
-import Test.Hspec
-import Test.QuickCheck
 import TestUtils
 import Text.Parsec
 

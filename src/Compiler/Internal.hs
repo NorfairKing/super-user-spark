@@ -1,7 +1,15 @@
 module Compiler.Internal where
 
+import Import
+
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Writer
+
 import Compiler.Types
+import CoreTypes
 import Compiler.Utils
+import Config.Types
 import Language.Types
 import System.FilePath ((</>))
 import Types

@@ -1,5 +1,7 @@
 module Constants where
 
+import Import
+
 keywordCard :: String
 keywordCard = "card"
 

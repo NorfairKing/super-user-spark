@@ -1,7 +1,10 @@
 module Dispatch.Types where
 
+import Import
+
 import Types
 
+import Config.Types
 import Deployer.Types
 import Language.Types
 

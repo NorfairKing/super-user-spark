@@ -1,5 +1,9 @@
 module Deployer where
 
+import Import
+
+import Control.Monad.Except
+
 import Check
 import Check.Internal
 import Check.Types
@@ -7,7 +11,6 @@ import Compiler.Types
 import Control.Monad (forM_, when)
 import Deployer.Internal
 import Monad
-import Types
 import Utils
 
 deploy :: [(Deployment, DeploymentCheckResult)] -> Sparker ()
@@ -41,5 +44,5 @@ deploy dcrs = do
   where
     err :: [(Deployment, DeploymentCheckResult)] -> String -> Sparker ()
     err dcrs_ text = do
-      liftIO $ putStrLn $ formatDeploymentChecks dcrs_
-      throwError $ DeployError text
+        liftIO $ putStrLn $ formatDeploymentChecks dcrs_
+        throwError $ DeployError text

@@ -1,5 +1,7 @@
 module Config where
 
+import Import
+
 import Config.Types
 
 defaultConfig :: SparkConfig

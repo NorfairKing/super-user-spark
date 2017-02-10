@@ -1,13 +1,13 @@
 module SeedSpec where
 
+import TestImport
+
 import Compiler.Gen ()
 import Compiler.TestUtils
 import Compiler.Types
 import PreCompiler
 import Seed
 import System.FilePath.Posix (isAbsolute)
-import Test.Hspec
-import Test.QuickCheck
 import TestUtils
 
 spec :: Spec

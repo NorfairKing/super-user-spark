@@ -2,6 +2,8 @@
 
 module Compiler.Gen where
 
+import TestImport
+
 import Compiler.Types
 import Language.Gen ()
 import Test.QuickCheck

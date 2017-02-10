@@ -1,5 +1,7 @@
 module Check.Types where
 
+import Import
+
 import CoreTypes
 import Data.Digest.Pure.MD5 (MD5Digest)
 

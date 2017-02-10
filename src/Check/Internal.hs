@@ -1,5 +1,7 @@
 module Check.Internal where
 
+import Import
+
 import Check.Types
 import Compiler.Types
 import Constants

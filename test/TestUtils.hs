@@ -1,14 +1,10 @@
-module TestUtils
-    ( module TestUtils
-    , module Debug.Trace
-    ) where
+module TestUtils where
 
-import Control.Monad (filterM, forM_, when)
-import Debug.Trace
+import TestImport
+
 import System.Directory
        (doesDirectoryExist, doesFileExist, getDirectoryContents)
 import System.FilePath.Posix ((</>))
-import Test.Hspec
 
 concerningContents :: (FilePath -> String -> SpecWith a)
                    -> (FilePath -> SpecWith a)

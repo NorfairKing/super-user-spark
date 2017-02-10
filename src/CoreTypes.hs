@@ -2,6 +2,8 @@
 
 module CoreTypes where
 
+import Import
+
 import Control.Monad (mzero)
 import Data.Aeson (FromJSON(..), ToJSON(..), Value(..))
 

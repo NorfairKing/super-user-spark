@@ -1,7 +1,13 @@
 module PreCompiler where
 
+import Import
+
+import Control.Monad.Identity
+import Control.Monad.Writer
+
 import Compiler.Types
 import Language.Types
+import Monad
 import Types
 import Utils
 

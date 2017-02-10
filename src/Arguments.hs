@@ -1,6 +1,9 @@
 {-# LANGUAGE CPP #-}
 
 module Arguments where
+
+import Import
+
 #if (MIN_VERSION_base(4,9,0))
 import Data.Monoid
 #endif
@@ -8,6 +11,7 @@ import Options.Applicative
 import System.Environment (getArgs)
 
 import Config
+import Config.Types
 import Dispatch.Types
 import Types
 import Utils
@@ -47,19 +51,19 @@ runOptionsParser :: [String] -> ParserResult Options
 runOptionsParser strs = execParserPure prefs_ optionsParser strs
   where
     prefs_ =
-      ParserPrefs
-      { prefMultiSuffix = "SPARK" -- metavar suffix for multiple options
-      , prefDisambiguate = True -- automatically disambiguate abbreviations (default: False)
-      , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
-      , prefBacktrack = True -- backtrack to parent parser when a subcommand fails (default: True)
-      , prefColumns = 80 -- number of columns in the terminal, used to format the help page (default: 80)
-      }
+        ParserPrefs
+        { prefMultiSuffix = "SPARK" -- metavar suffix for multiple options
+        , prefDisambiguate = True -- automatically disambiguate abbreviations (default: False)
+        , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
+        , prefBacktrack = True -- backtrack to parent parser when a subcommand fails (default: True)
+        , prefColumns = 80 -- number of columns in the terminal, used to format the help page (default: 80)
+        }
 
 optionsParser :: ParserInfo Options
 optionsParser =
-  info
-    (helper <*> parseOptions)
-    (fullDesc <> progDesc "Super User Spark, author: Tom Sydney Kerckhove")
+    info
+        (helper <*> parseOptions)
+        (fullDesc <> progDesc "Super User Spark, author: Tom Sydney Kerckhove")
 
 parseOptions :: Parser Options
 parseOptions = (,) <$> parseCommand <*> parseGlobalOptions

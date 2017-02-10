@@ -1,13 +1,21 @@
 module Compiler where
 
+import Import
+
+import Control.Monad.Except
+import Control.Monad.Identity
+import Control.Monad.Reader
+
 import Compiler.Internal
 import Compiler.Types
+import Config.Types
 import Control.Monad (when)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (find, stripPrefix)
 import Language.Types
+import Monad
 import Parser
 import PreCompiler
 import System.FilePath (takeDirectory, (</>))

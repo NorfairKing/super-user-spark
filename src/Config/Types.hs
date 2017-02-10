@@ -1,5 +1,7 @@
 module Config.Types where
 
+import Import
+
 import CoreTypes
 
 data SparkConfig = Config

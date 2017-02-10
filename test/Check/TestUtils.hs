@@ -1,11 +1,11 @@
 module Check.TestUtils where
 
+import TestImport
+
 import Check.Gen ()
 import Check.Internal
 import Check.Types
 import CoreTypes
-import Test.Hspec
-import Test.QuickCheck
 
 -- * Test utils for checkDeployment
 shouldBeImpossible' :: DiagnosedDeployment -> Expectation

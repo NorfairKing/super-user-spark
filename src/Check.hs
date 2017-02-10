@@ -3,6 +3,8 @@ module Check
     , formatDeploymentChecks
     ) where
 
+import Import
+
 import Check.Internal
 import Check.Types
 import Compiler.Types

@@ -1,9 +1,11 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+
 module Language.Gen where
+
+import TestImport
 
 import CoreTypes
 import Language.Types
-import Test.QuickCheck
 
 instance Arbitrary SparkFile where
     arbitrary = SparkFile <$> arbitrary <*> arbitrary

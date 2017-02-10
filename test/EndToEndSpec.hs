@@ -2,13 +2,14 @@ module EndToEndSpec
     ( spec
     ) where
 
+import TestImport
+
 import Spark
 import System.Directory hiding (createDirectoryIfMissing)
 import System.Environment (withArgs)
 import System.Exit (ExitCode(ExitSuccess))
 import System.FilePath.Posix ((</>))
 import System.Posix.Files
-import Test.Hspec
 import Utils
 
 spec :: Spec

@@ -1,5 +1,7 @@
 module Seed where
 
+import Import
+
 import Compiler.Types
 import Deployer.Types
 import Language.Types

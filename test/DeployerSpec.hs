@@ -1,5 +1,7 @@
 module DeployerSpec where
 
+import TestImport
+
 import Check.Internal
 import Check.Types
 import Config
@@ -13,8 +15,6 @@ import Parser.Gen
 import System.Directory hiding (createDirectoryIfMissing)
 import System.FilePath.Posix ((</>))
 import System.Posix.Files
-import Test.Hspec
-import Test.QuickCheck
 import Utils
 
 spec :: Spec

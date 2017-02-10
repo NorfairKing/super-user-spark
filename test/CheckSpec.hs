@@ -1,5 +1,7 @@
 module CheckSpec where
 
+import TestImport
+
 import Check.Gen ()
 import Check.Internal
 import Check.TestUtils
@@ -12,8 +14,6 @@ import Parser.Gen
 import System.Directory
        (removeDirectoryRecursive, removeFile, withCurrentDirectory)
 import System.Posix.Files
-import Test.Hspec
-import Test.QuickCheck
 import TestUtils
 import Utils
 

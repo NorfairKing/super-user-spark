@@ -1,6 +1,9 @@
 module Parser.Internal where
 
+import Import
+
 import Constants
+import CoreTypes
 import Data.List (isSuffixOf)
 import Deployer.Types
 import Language.Types
@@ -264,8 +267,8 @@ eol :: Parser ()
 eol = skip newline_
   where
     newline_ =
-      try (string "\r\n") <|> try (string "\n") <|>
-      string "\r" <?> "end of line"
+        try (string "\r\n") <|> try (string "\n") <|>
+        string "\r" <?> "end of line"
 
 --[ Utils ]--
 skip :: Parser a -> Parser ()

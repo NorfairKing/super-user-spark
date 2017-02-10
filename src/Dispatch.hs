@@ -2,6 +2,8 @@ module Dispatch
     ( dispatch
     ) where
 
+import Import
+
 import Check
 import Compiler
 import Compiler.Types
@@ -9,6 +11,7 @@ import Control.Monad (void)
 import Deployer
 import Deployer.Types
 import Dispatch.Types
+import Monad
 import Parser
 import Seed
 import Types

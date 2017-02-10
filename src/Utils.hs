@@ -3,6 +3,11 @@
 
 module Utils where
 
+import Import
+
+import Control.Monad.Reader
+
+import Config.Types
 import Control.Monad (when)
 import Data.List (isInfixOf)
 import qualified System.Directory as D (createDirectoryIfMissing)

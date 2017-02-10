@@ -1,5 +1,11 @@
 module Compiler.Utils where
 
+import Import
+
+import Control.Monad.Writer
+import Control.Monad.Reader
+
+import Config.Types
 import Compiler.Types
 import Language.Types
 import System.FilePath ((</>))

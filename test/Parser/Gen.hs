@@ -1,6 +1,6 @@
 module Parser.Gen where
 
-import Test.QuickCheck
+import TestImport
 
 import Data.List (isSuffixOf)
 
