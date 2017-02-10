@@ -181,9 +181,9 @@ cleanContentSpec = do
 defaultCompilerState :: CompilerState
 defaultCompilerState =
     CompilerState
-    { state_deployment_kind_override = Nothing
-    , state_into = ""
-    , state_outof_prefix = []
+    { stateDeploymentKindOverride = Nothing
+    , stateInto = ""
+    , stateOutof_prefix = []
     }
 
 singleCompileDecSpec :: Spec
@@ -226,7 +226,7 @@ singleCompileDecSpec =
         describe "IntoDir" $ do
             it "adds the given directory to the into state" $ do
                 forAll validFp $ \fp ->
-                    shouldState (IntoDir fp) $ s {state_into = fp}
+                    shouldState (IntoDir fp) $ s {stateInto = fp}
             it "compounds with the input state" $ do
                 pendingWith "Change the input state to an explicit list first"
             pend
@@ -234,13 +234,13 @@ singleCompileDecSpec =
             it "adds the given directory to the outof state" $ do
                 forAll validFp $ \fp ->
                     shouldState (OutofDir fp) $
-                    s {state_outof_prefix = [Literal fp]}
+                    s {stateOutof_prefix = [Literal fp]}
             pend
         describe "DeployKindOverride" $ do
             it "modifies the internal deployment kind override" $ do
                 property $ \kind ->
                     shouldState (DeployKindOverride kind) $
-                    s {state_deployment_kind_override = Just kind}
+                    s {stateDeploymentKindOverride = Just kind}
             pend
         describe "Block" $ do
             it "uses a separate scope for its sub-compilation" $ do
@@ -251,7 +251,7 @@ singleCompileDecSpec =
                 "adds an alternatives prefix to the outof prefix in the compiler state" $ do
                 forAll (listOf validFilePath) $ \fps ->
                     shouldState (Alternatives fps) $
-                    s {state_outof_prefix = [Alts fps]}
+                    s {stateOutof_prefix = [Alts fps]}
             pend
 
 runDefaultSparker :: Sparker a -> IO (Either SparkError a)

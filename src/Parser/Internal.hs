@@ -9,7 +9,6 @@ import Deployer.Types
 import Language.Types
 import Text.Parsec
 import Text.Parsec.String
-import Types
 
 parseCardFile :: FilePath -> String -> Either ParseError SparkFile
 parseCardFile f s = do

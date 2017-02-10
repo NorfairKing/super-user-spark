@@ -9,7 +9,6 @@ import Language.Types
 import Monad
 import Parser.Internal
 import Text.Parsec hiding (try)
-import Types
 
 parseFile :: FilePath -> Sparker SparkFile
 parseFile file = do

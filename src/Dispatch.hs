@@ -14,7 +14,6 @@ import Dispatch.Types
 import Monad
 import Parser
 import Seed
-import Types
 
 dispatch :: Dispatch -> Sparker ()
 dispatch (DispatchParse fp) = do

@@ -19,7 +19,6 @@ import Monad
 import Parser
 import PreCompiler
 import System.FilePath (takeDirectory, (</>))
-import Types
 
 compileJob :: CardFileReference -> Sparker [Deployment]
 compileJob cr@(CardFileReference root _) = go "" cr
@@ -91,7 +90,7 @@ embedPureCompiler func =
 
 outputCompiled :: [Deployment] -> Sparker ()
 outputCompiled deps = do
-    out <- asks conf_compile_output
+    out <- asks confCompileOutput
     liftIO $ do
         let bs = encodePretty deps
         case out of

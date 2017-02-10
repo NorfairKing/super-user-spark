@@ -18,23 +18,22 @@ import Data.Aeson
        (FromJSON(..), ToJSON(..), Value(..), object, (.:), (.=))
 import Language.Types
 import Monad
-import Types
 
 data Deployment = Put
-    { deployment_srcs :: [FilePath]
-    , deployment_dst :: FilePath
-    , deployment_kind :: DeploymentKind
+    { deploymentSources :: [FilePath]
+    , deploymentDestination :: FilePath
+    , deploymentKind :: DeploymentKind
     } deriving (Eq)
 
 instance Show Deployment where
     show dep = unwords $ srcs ++ [k, dst]
       where
-        srcs = map quote $ deployment_srcs dep
+        srcs = map quote $ deploymentSources dep
         k =
-            case deployment_kind dep of
+            case deploymentKind dep of
                 LinkDeployment -> linkKindSymbol
                 CopyDeployment -> copyKindSymbol
-        dst = quote $ deployment_dst dep
+        dst = quote $ deploymentDestination dep
         quote = (\s -> "\"" ++ s ++ "\"")
 
 instance FromJSON Deployment where
@@ -45,9 +44,9 @@ instance FromJSON Deployment where
 instance ToJSON Deployment where
     toJSON depl =
         object
-            [ "sources" .= deployment_srcs depl
-            , "destination" .= deployment_dst depl
-            , "deployment kind" .= deployment_kind depl
+            [ "sources" .= deploymentSources depl
+            , "destination" .= deploymentDestination depl
+            , "deployment kind" .= deploymentKind depl
             ]
 
 type CompilerPrefix = [PrefixPart]
@@ -58,9 +57,9 @@ data PrefixPart
     deriving (Show, Eq)
 
 data CompilerState = CompilerState
-    { state_deployment_kind_override :: Maybe DeploymentKind
-    , state_into :: Directory
-    , state_outof_prefix :: CompilerPrefix
+    { stateDeploymentKindOverride :: Maybe DeploymentKind
+    , stateInto :: Directory
+    , stateOutof_prefix :: CompilerPrefix
     } deriving (Show, Eq)
 
 type PrecompileError = String

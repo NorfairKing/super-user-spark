@@ -2,8 +2,6 @@ module Deployer.Internal where
 
 import Import
 
-import Control.Monad.State
-
 import Check.Types
 import Compiler.Types
 import Config.Types
@@ -19,7 +17,6 @@ import System.Environment (getEnvironment)
 import System.FilePath (normalise, (</>))
 import System.FilePath.Posix (dropFileName)
 import System.Posix.Files (createSymbolicLink, removeLink)
-import Types
 import Utils
 
 completeDeployments :: [Deployment] -> IO [Deployment]
@@ -76,10 +73,10 @@ replaceHome home path =
         else path
 
 performClean :: CleanupInstruction -> Sparker ()
-performClean (CleanFile fp) = incase conf_deploy_replace_files $ rmFile fp
+performClean (CleanFile fp) = incase confDeployReplaceFiles $ rmFile fp
 performClean (CleanDirectory fp) =
-    incase conf_deploy_replace_directories $ rmDir fp
-performClean (CleanLink fp) = incase conf_deploy_replace_links $ unlink fp
+    incase confDeployReplaceDirectories $ rmDir fp
+performClean (CleanLink fp) = incase confDeployReplaceLinks $ unlink fp
 
 unlink :: FilePath -> Sparker ()
 unlink fp = liftIO $ removeLink fp

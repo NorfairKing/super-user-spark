@@ -35,7 +35,7 @@ cleanSpec = do
         afterAll_ teardown $ do
             describe "performClean" $ do
                 it "doesn't remove this file if that's not in the config" $ do
-                    let c = defaultConfig {conf_deploy_replace_files = False}
+                    let c = defaultConfig {confDeployReplaceFiles = False}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
                         writeFile file "This is a test"
@@ -45,7 +45,7 @@ cleanSpec = do
                         removeFile file
                         diagnoseFp file `shouldReturn` Nonexistent
                 it "removes this file if that's in the config" $ do
-                    let c = defaultConfig {conf_deploy_replace_files = True}
+                    let c = defaultConfig {confDeployReplaceFiles = True}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
                         writeFile file "This is a test"
@@ -55,7 +55,7 @@ cleanSpec = do
                 it "doesn't remove this directory if that's not in the config" $ do
                     let c =
                             defaultConfig
-                            {conf_deploy_replace_directories = False}
+                            {confDeployReplaceDirectories = False}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir
@@ -67,7 +67,7 @@ cleanSpec = do
                 it "removes this directory if that's in the config" $ do
                     let c =
                             defaultConfig
-                            {conf_deploy_replace_directories = True}
+                            {confDeployReplaceDirectories = True}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir
@@ -75,7 +75,7 @@ cleanSpec = do
                         clean c $ CleanDirectory dir
                         diagnoseFp dir `shouldReturn` Nonexistent
                 it "doesn't remove this link if that's not in the config" $ do
-                    let c = defaultConfig {conf_deploy_replace_links = False}
+                    let c = defaultConfig {confDeployReplaceLinks = False}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
@@ -90,7 +90,7 @@ cleanSpec = do
                         diagnoseFp file_ `shouldReturn` Nonexistent
                 it
                     "removes this link with an existent source if that's in the config" $ do
-                    let c = defaultConfig {conf_deploy_replace_links = True}
+                    let c = defaultConfig {confDeployReplaceLinks = True}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
@@ -103,7 +103,7 @@ cleanSpec = do
                         diagnoseFp file_ `shouldReturn` Nonexistent
                 it
                     "removes this link with a nonexistent source if that's in the config" $ do
-                    let c = defaultConfig {conf_deploy_replace_links = True}
+                    let c = defaultConfig {confDeployReplaceLinks = True}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"

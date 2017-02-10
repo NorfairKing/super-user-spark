@@ -22,6 +22,6 @@ pureSeedSpec =
                     (arbitrary `suchThat` cleanBy cleanFilePath `suchThat`
                      isAbsolute) $ \fp ->
                     forAll arbitrary $ \ds ->
-                        all (\d -> all (isAbsolute) $ deployment_srcs d) $
+                        all (\d -> all (isAbsolute) $ deploymentSources d) $
                         seed fp ds
         pend

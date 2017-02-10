@@ -31,14 +31,14 @@ configFromOptions go = Right conf
   where
     conf =
         defaultConfig
-        { conf_compile_output = opt_output go
-        , conf_compile_kind = opt_kind go
-        , conf_compile_override = opt_overrride go
-        , conf_deploy_replace_links = opt_replace_links go || opt_replace go
-        , conf_deploy_replace_files = opt_replace_files go || opt_replace go
-        , conf_deploy_replace_directories =
-              opt_replace_directories go || opt_replace go
-        , conf_debug = opt_debug go
+        { confCompileOutput = optOutput go
+        , confCompileKind = optKind go
+        , confCompileOverride = optOverride go
+        , confDeployReplaceLinks = optReplaceLinks go || optReplace go
+        , confDeployReplaceFiles = optReplaceFiles go || optReplace go
+        , confDeployReplaceDirectories =
+              optReplaceDirectories go || optReplace go
+        , confDebug = optDebug go
         }
 
 getOptions :: IO Options

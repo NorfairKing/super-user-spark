@@ -13,12 +13,11 @@ import Data.List (isInfixOf)
 import qualified System.Directory as D (createDirectoryIfMissing)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
-import Types
 
 debug
     :: (MonadReader SparkConfig m, MonadIO m)
     => String -> m ()
-debug str = incase (asks conf_debug) $ liftIO $ putStrLn str
+debug str = incase (asks confDebug) $ liftIO $ putStrLn str
 
 incase
     :: MonadReader SparkConfig m

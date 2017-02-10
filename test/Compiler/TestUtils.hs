@@ -9,7 +9,6 @@ import Data.Either (isLeft, isRight)
 import Language.Types
 import Monad
 import PreCompiler
-import Types
 
 runPreCompiler :: Precompiler () -> [PrecompileError]
 runPreCompiler pc = runIdentity $ execWriterT pc

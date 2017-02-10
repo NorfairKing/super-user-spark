@@ -9,16 +9,15 @@ import Config.Types
 import Compiler.Types
 import Language.Types
 import System.FilePath ((</>))
-import Types
 
 initialState :: PureCompiler CompilerState
 initialState = do
-    override <- asks conf_compile_kind
+    override <- asks confCompileKind
     return $
         CompilerState
-        { state_deployment_kind_override = override
-        , state_into = ""
-        , state_outof_prefix = []
+        { stateDeploymentKindOverride = override
+        , stateInto = ""
+        , stateOutof_prefix = []
         }
 
 addDeployment :: Deployment -> InternalCompiler ()

@@ -7,7 +7,6 @@ import Import
 import Arguments
 import Dispatch
 import Monad
-import Types
 import Utils
 
 spark :: IO ()

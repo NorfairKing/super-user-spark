@@ -8,7 +8,6 @@ import System.FilePath.Posix (takeExtension)
 import CoreTypes
 import Language.Types
 import Monad
-import Types
 
 data DeployerCardReference
     = DeployerCardCompiled FilePath

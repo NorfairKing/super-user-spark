@@ -268,11 +268,11 @@ formatDeploymentCheck (_, DeploymentDone) = Nothing
 formatDeploymentCheck (d, ImpossibleDeployment ds) =
     Just $
     "IMPOSSIBLE: " ++
-    deployment_dst d ++ " cannot be deployed:\n" ++ unlines ds ++ "\n"
+    deploymentDestination d ++ " cannot be deployed:\n" ++ unlines ds ++ "\n"
 formatDeploymentCheck (d, (DirtySituation str is c)) =
     Just $
     "DIRTY: " ++
-    deployment_dst d ++
+    deploymentDestination d ++
     "\n" ++
     str ++
     "planned: " ++
