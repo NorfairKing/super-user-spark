@@ -2,7 +2,6 @@ module Deployer.Types where
 
 import Import
 
-import Control.Monad.State
 import System.FilePath.Posix (takeExtension)
 
 import CoreTypes
@@ -33,10 +32,7 @@ instance Read DeployerCardReference where
                    ]
             _ -> []
 
-type SparkDeployer = StateT DeployerState Sparker
-
-data DeployerState =
-    DeployerState
+type SparkDeployer = Sparker
 
 data PreDeployment
     = Ready FilePath
