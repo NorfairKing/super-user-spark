@@ -1,9 +1,58 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module SuperUserSpark.Check.Types where
 
 import Import
 
-import SuperUserSpark.CoreTypes
 import Data.Digest.Pure.MD5 (MD5Digest)
+import System.FilePath
+
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Language.Types
+
+data CheckAssignment = CheckAssignment
+    { checkCardReference :: CheckCardReference
+    , checkSettings :: CheckSettings
+    } deriving (Show, Eq, Generic)
+
+data CheckCardReference
+    = CheckCardCompiled FilePath
+    | CheckCardUncompiled CardFileReference
+    deriving (Show, Eq, Generic)
+
+instance Read CheckCardReference where
+    readsPrec _ fp =
+        case length (words fp) of
+            0 -> []
+            1 ->
+                if takeExtension fp == ".sus"
+                    then [ ( CheckCardUncompiled (CardFileReference fp Nothing)
+                           , "")
+                         ]
+                    else [(CheckCardCompiled fp, "")]
+            2 ->
+                let [f, c] = words fp
+                in [ ( CheckCardUncompiled
+                           (CardFileReference f (Just $ CardNameReference c))
+                     , "")
+                   ]
+            _ -> []
+
+data CheckSettings = CheckSettings
+    { checkCompileSettings :: CompileSettings
+    } deriving (Show, Eq, Generic)
+
+defaultCheckSettings :: CheckSettings
+defaultCheckSettings =
+    CheckSettings {checkCompileSettings = defaultCompileSettings}
+
+type SparkChecker = ExceptT CheckError (ReaderT CheckSettings IO)
+
+data CheckError
+    = CheckCompileError CompileError
+    | CheckError String
+    deriving (Show, Eq, Generic)
 
 type HashDigest = MD5Digest
 

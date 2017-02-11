@@ -4,22 +4,17 @@ module SuperUserSpark
 
 import Import
 
+import SuperUserSpark.Check
+import SuperUserSpark.Compiler
+import SuperUserSpark.Deployer
 import SuperUserSpark.OptParse
-import SuperUserSpark.Dispatch
-import SuperUserSpark.Monad
-import SuperUserSpark.Utils
+import SuperUserSpark.Parser
 
 spark :: IO ()
-spark = do
-    (di, config) <- getInstructions
-    er <- runSparker config $ dispatch di
-    case er of
-        Left err -> die $ showError err
-        Right _ -> return ()
+spark = getDispatch >>= dispatch
 
-showError :: SparkError -> String
-showError (ParseError err) = show err
-showError (PreCompileError errs) = unlines errs
-showError (CompileError err) = err
-showError (UnpredictedError err) = "Panic: " ++ err
-showError (DeployError err) = err
+dispatch :: Dispatch -> IO ()
+dispatch (DispatchParse pas) = parseFromArgs pas
+dispatch (DispatchCompile cas) = compileFromArgs cas
+dispatch (DispatchCheck cas) = checkFromArgs cas
+dispatch (DispatchDeploy das) = deployFromArgs das

@@ -1,31 +1,71 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module SuperUserSpark.Compiler where
 
 import Import
 
-import Control.Monad.Except
-import Control.Monad.Identity
-import Control.Monad.Reader
-
-import Control.Monad (when)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (find, stripPrefix)
-import SuperUserSpark.Compiler.Internal
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config.Types
-import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
-import SuperUserSpark.Parser
-import SuperUserSpark.PreCompiler
 import System.FilePath (takeDirectory, (</>))
 
-compileJob :: CardFileReference -> Sparker [Deployment]
+import SuperUserSpark.Compiler.Internal
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Language.Types
+import SuperUserSpark.OptParse.Types
+import SuperUserSpark.Parser
+import SuperUserSpark.PreCompiler
+
+compileFromArgs :: CompileArgs -> IO ()
+compileFromArgs ca = do
+    let ass = compileAssignment ca
+    compile ass
+
+compileAssignment :: CompileArgs -> CompileAssignment
+compileAssignment CompileArgs {..} =
+    CompileAssignment
+    { compileCardReference = read compileCardRef -- TODO fix errors in this.
+    , compileSettings = deriveCompileSettings compileFlags
+    }
+
+deriveCompileSettings :: CompileFlags -> CompileSettings
+deriveCompileSettings CompileFlags {..} =
+    CompileSettings
+    { compileOutput = compileFlagOutput
+    , compileDefaultKind =
+          fromMaybe LinkDeployment $ read <$> compileDefaultKind
+    , compileKindOverride = read <$> compileKindOverride
+    }
+
+compile :: CompileAssignment -> IO ()
+compile CompileAssignment {..} = do
+    errOrDone <-
+        runReaderT
+            (runExceptT $ compileJob compileCardReference >>= outputCompiled)
+            compileSettings
+    case errOrDone of
+        Left ce -> die $ formatCompileError ce
+        Right () -> pure ()
+
+formatCompileError :: CompileError -> String
+formatCompileError (ParseError s) = unlines ["Parse failed:", show s]
+formatCompileError (PreCompileErrors ss) =
+    unlines $ "Precompilation checks failed:" : map show ss
+formatCompileError (DuringCompilationError s) =
+    unlines ["Compilation failed:", s]
+
+compileJob :: CardFileReference -> ImpureCompiler [Deployment]
 compileJob cr@(CardFileReference root _) = go "" cr
   where
-    go :: FilePath -> CardFileReference -> Sparker [Deployment]
+    go :: FilePath -> CardFileReference -> ImpureCompiler [Deployment]
     go base (CardFileReference fp mcn) = do
-        sf <- parseFile fp
+        esf <- liftIO $ parseFile fp
+        sf <-
+            case esf of
+                Left pe -> throwError $ ParseError pe
+                Right sf_ -> pure sf_
         let scope = sparkFileCards sf
         unit <-
             case mcn of
@@ -33,21 +73,22 @@ compileJob cr@(CardFileReference root _) = go "" cr
                     case scope of
                         [] ->
                             throwError $
-                            CompileError $
+                            DuringCompilationError $
                             "No cards found for compilation in file:" ++ fp
+                            -- TODO more detailed error here
                         (first:_) -> return first
                 Just (CardNameReference name) -> do
                     case find (\c -> cardName c == name) scope of
                         Nothing ->
                             throwError $
-                            CompileError $
-                            unwords ["Card", name, "not found for compilation."]
+                            DuringCompilationError $
+                            unwords ["Card", name, "not found for compilation."] -- TODO more detailed error here
                         Just cu -> return cu
         -- Inject base outofDir
         let injected = injectBase unit
         -- Precompile checks
         let pces = preCompileChecks injected
-        when (not . null $ pces) $ throwError $ PreCompileError pces
+        when (not . null $ pces) $ throwError $ PreCompileErrors pces
         -- Compile this unit
         (deps, crfs) <- embedPureCompiler $ compileUnit injected
         -- Compile the rest of the units
@@ -70,7 +111,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
         composeBases :: FilePath -> FilePath -> FilePath
         composeBases base_ [] = base_
         composeBases _ base2 = takeDirectory (stripRoot base2)
-        compileCardReference :: CardReference -> Sparker [Deployment]
+        compileCardReference :: CardReference -> ImpureCompiler [Deployment]
         compileCardReference (CardFile cfr@(CardFileReference base2 _)) =
             go (composeBases base base2) cfr
         compileCardReference (CardName cnr) =
@@ -81,28 +122,27 @@ resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) =
     CardFile $ CardFileReference (takeDirectory fp </> cfp) mcn
 resolveCardReferenceRelativeTo _ cn = cn
 
-embedPureCompiler :: PureCompiler a -> Sparker a
-embedPureCompiler func =
-    withExceptT CompileError $ mapExceptT (mapReaderT idToIO) func
+embedPureCompiler :: PureCompiler a -> ImpureCompiler a
+embedPureCompiler = withExceptT id . mapExceptT (mapReaderT idToIO)
   where
     idToIO :: Identity a -> IO a
     idToIO = return . runIdentity
 
-outputCompiled :: [Deployment] -> Sparker ()
+outputCompiled :: [Deployment] -> ImpureCompiler ()
 outputCompiled deps = do
-    out <- asks confCompileOutput
+    out <- asks compileOutput
     liftIO $ do
         let bs = encodePretty deps
         case out of
             Nothing -> BS.putStrLn bs
             Just fp -> BS.writeFile fp bs
 
-inputCompiled :: FilePath -> Sparker [Deployment]
+inputCompiled :: FilePath -> ImpureCompiler [Deployment]
 inputCompiled fp = do
     bs <- liftIO $ BS.readFile fp
     case eitherDecode bs of
         Left err ->
             throwError $
-            CompileError $
+            DuringCompilationError $
             "Something went wrong while deserialising json data: " ++ err
         Right ds -> return ds

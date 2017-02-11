@@ -2,19 +2,18 @@ module SuperUserSpark.DeployerSpec where
 
 import TestImport
 
-import SuperUserSpark.Check.Internal
-import SuperUserSpark.Check.Types
-import SuperUserSpark.Config
-import SuperUserSpark.Config.Types
 import Data.Either (isLeft)
 import Data.Maybe (isNothing)
-import SuperUserSpark.Deployer.Internal
-import SuperUserSpark.Deployer.Types
-import SuperUserSpark.Monad
-import SuperUserSpark.Parser.Gen
+
 import System.Directory hiding (createDirectoryIfMissing)
 import System.FilePath.Posix ((</>))
 import System.Posix.Files
+
+import SuperUserSpark.Check.Internal
+import SuperUserSpark.Check.Types
+import SuperUserSpark.Deployer.Internal
+import SuperUserSpark.Deployer.Types
+import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Utils
 
 spec :: Spec
@@ -28,14 +27,17 @@ cleanSpec = do
     let sandbox = "test_sandbox"
     let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
-    let clean :: SparkConfig -> CleanupInstruction -> IO ()
-        clean conf ci =
-            runSparker conf (performClean ci) `shouldReturn` Right ()
+    let clean :: DeploySettings -> CleanupInstruction -> IO ()
+        clean sets ci =
+            runReaderT (runExceptT $ performClean ci) sets `shouldReturn`
+            Right ()
     beforeAll_ setup $
         afterAll_ teardown $ do
             describe "performClean" $ do
                 it "doesn't remove this file if that's not in the config" $ do
-                    let c = defaultConfig {confDeployReplaceFiles = False}
+                    let c =
+                            defaultDeploySettings
+                            {deploySetsReplaceFiles = False}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
                         writeFile file "This is a test"
@@ -45,7 +47,9 @@ cleanSpec = do
                         removeFile file
                         diagnoseFp file `shouldReturn` Nonexistent
                 it "removes this file if that's in the config" $ do
-                    let c = defaultConfig {confDeployReplaceFiles = True}
+                    let c =
+                            defaultDeploySettings
+                            {deploySetsReplaceFiles = True}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
                         writeFile file "This is a test"
@@ -54,8 +58,8 @@ cleanSpec = do
                         diagnoseFp file `shouldReturn` Nonexistent
                 it "doesn't remove this directory if that's not in the config" $ do
                     let c =
-                            defaultConfig
-                            {confDeployReplaceDirectories = False}
+                            defaultDeploySettings
+                            {deploySetsReplaceDirectories = False}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir
@@ -66,8 +70,8 @@ cleanSpec = do
                         diagnoseFp dir `shouldReturn` Nonexistent
                 it "removes this directory if that's in the config" $ do
                     let c =
-                            defaultConfig
-                            {confDeployReplaceDirectories = True}
+                            defaultDeploySettings
+                            {deploySetsReplaceDirectories = True}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir
@@ -75,7 +79,9 @@ cleanSpec = do
                         clean c $ CleanDirectory dir
                         diagnoseFp dir `shouldReturn` Nonexistent
                 it "doesn't remove this link if that's not in the config" $ do
-                    let c = defaultConfig {confDeployReplaceLinks = False}
+                    let c =
+                            defaultDeploySettings
+                            {deploySetsReplaceLinks = False}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
@@ -90,7 +96,9 @@ cleanSpec = do
                         diagnoseFp file_ `shouldReturn` Nonexistent
                 it
                     "removes this link with an existent source if that's in the config" $ do
-                    let c = defaultConfig {confDeployReplaceLinks = True}
+                    let c =
+                            defaultDeploySettings
+                            {deploySetsReplaceLinks = True}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
@@ -103,7 +111,9 @@ cleanSpec = do
                         diagnoseFp file_ `shouldReturn` Nonexistent
                 it
                     "removes this link with a nonexistent source if that's in the config" $ do
-                    let c = defaultConfig {confDeployReplaceLinks = True}
+                    let c =
+                            defaultDeploySettings
+                            {deploySetsReplaceLinks = True}
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"

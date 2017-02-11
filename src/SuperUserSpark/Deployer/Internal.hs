@@ -2,22 +2,20 @@ module SuperUserSpark.Deployer.Internal where
 
 import Import
 
-import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config.Types
-import SuperUserSpark.CoreTypes
 import Data.List (isPrefixOf)
 import Data.Text (pack)
-import SuperUserSpark.Deployer.Types
-import SuperUserSpark.Monad
 import Shelly (cp_r, fromText, shelly)
+import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Deployer.Types
+import SuperUserSpark.Utils
 import System.Directory
        (getHomeDirectory, removeDirectoryRecursive, removeFile)
 import System.Environment (getEnvironment)
 import System.FilePath (normalise, (</>))
 import System.FilePath.Posix (dropFileName)
 import System.Posix.Files (createSymbolicLink, removeLink)
-import SuperUserSpark.Utils
 
 completeDeployments :: [Deployment] -> IO [Deployment]
 completeDeployments ds = do
@@ -72,20 +70,20 @@ replaceHome home path =
         then home </> drop 2 path
         else path
 
-performClean :: CleanupInstruction -> Sparker ()
-performClean (CleanFile fp) = incase confDeployReplaceFiles $ rmFile fp
+performClean :: CleanupInstruction -> SparkDeployer ()
+performClean (CleanFile fp) = incase deploySetsReplaceFiles $ rmFile fp
 performClean (CleanDirectory fp) =
-    incase confDeployReplaceDirectories $ rmDir fp
-performClean (CleanLink fp) = incase confDeployReplaceLinks $ unlink fp
+    incase deploySetsReplaceDirectories $ rmDir fp
+performClean (CleanLink fp) = incase deploySetsReplaceLinks $ unlink fp
 
-unlink :: FilePath -> Sparker ()
-unlink fp = liftIO $ removeLink fp
+unlink :: FilePath -> SparkDeployer ()
+unlink = liftIO . removeLink
 
-rmFile :: FilePath -> Sparker ()
-rmFile fp = liftIO $ removeFile fp
+rmFile :: FilePath -> SparkDeployer ()
+rmFile = liftIO . removeFile
 
-rmDir :: FilePath -> Sparker ()
-rmDir fp = liftIO $ removeDirectoryRecursive fp
+rmDir :: FilePath -> SparkDeployer ()
+rmDir = liftIO . removeDirectoryRecursive
 
 performDeployment :: Instruction -> IO ()
 performDeployment (Instruction source destination LinkDeployment) =

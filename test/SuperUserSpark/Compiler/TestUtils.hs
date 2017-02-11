@@ -2,15 +2,15 @@ module SuperUserSpark.Compiler.TestUtils where
 
 import TestImport
 
+import Data.Either (isLeft, isRight)
+
 import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config.Types
-import Data.Either (isLeft, isRight)
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
 import SuperUserSpark.PreCompiler
+import SuperUserSpark.PreCompiler.Types
 
-runPreCompiler :: Precompiler () -> [PrecompileError]
+runPreCompiler :: Precompiler () -> [PreCompileError]
 runPreCompiler pc = runIdentity $ execWriterT pc
 
 cleanBy :: (a -> Precompiler ()) -> a -> Bool
@@ -28,13 +28,13 @@ filePathDirty fp = fp `shouldNotSatisfy` cleanBy cleanFilePath
 filePathClean :: FilePath -> IO ()
 filePathClean fp = fp `shouldSatisfy` cleanBy cleanFilePath
 
-runPureCompiler :: SparkConfig -> PureCompiler a -> Either CompileError a
+runPureCompiler :: CompileSettings -> PureCompiler a -> Either CompileError a
 runPureCompiler c func = runIdentity $ runReaderT (runExceptT func) c
 
 runInternalCompiler
     :: [Declaration]
     -> CompilerState
-    -> SparkConfig
+    -> CompileSettings
     -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
 runInternalCompiler ds s c =
     runPureCompiler c $ runWriterT $ execStateT (compileDecs ds) s
@@ -42,24 +42,27 @@ runInternalCompiler ds s c =
 compileSingleDec
     :: Declaration
     -> CompilerState
-    -> SparkConfig
+    -> CompileSettings
     -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
 compileSingleDec d = runInternalCompiler [d]
 
 compilationShouldSucceed :: [Declaration]
                          -> CompilerState
-                         -> SparkConfig
+                         -> CompileSettings
                          -> IO ()
 compilationShouldSucceed ds s c =
     runInternalCompiler ds s c `shouldSatisfy` isRight
 
-compilationShouldFail :: [Declaration] -> CompilerState -> SparkConfig -> IO ()
+compilationShouldFail :: [Declaration]
+                      -> CompilerState
+                      -> CompileSettings
+                      -> IO ()
 compilationShouldFail ds s c = runInternalCompiler ds s c `shouldSatisfy` isLeft
 
-singleShouldFail :: SparkConfig -> CompilerState -> Declaration -> IO ()
+singleShouldFail :: CompileSettings -> CompilerState -> Declaration -> IO ()
 singleShouldFail c s d = compilationShouldFail [d] s c
 
-shouldCompileTo :: SparkConfig
+shouldCompileTo :: CompileSettings
                 -> CompilerState
                 -> [Declaration]
                 -> [Deployment]
@@ -70,14 +73,14 @@ shouldCompileTo c s ds eds = do
     ads `shouldBe` eds
     crs `shouldSatisfy` null
 
-singleShouldCompileTo :: SparkConfig
+singleShouldCompileTo :: CompileSettings
                       -> CompilerState
                       -> Declaration
                       -> Deployment
                       -> IO ()
 singleShouldCompileTo c s d eds = shouldCompileTo c s [d] [eds]
 
-shouldResultInState :: SparkConfig
+shouldResultInState :: CompileSettings
                     -> CompilerState
                     -> Declaration
                     -> CompilerState

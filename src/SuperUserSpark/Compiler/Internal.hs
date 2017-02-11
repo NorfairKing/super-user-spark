@@ -2,35 +2,28 @@ module SuperUserSpark.Compiler.Internal where
 
 import Import
 
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Writer
-
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.CoreTypes
-import SuperUserSpark.Compiler.Utils
-import SuperUserSpark.Config.Types
-import SuperUserSpark.Language.Types
 import System.FilePath ((</>))
 
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Compiler.Utils
+import SuperUserSpark.Language.Types
+
 compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
-compileUnit card = do
-    initSt <- initialState
-    execWriterT $ evalStateT (compileDecs [cardContent card]) initSt
+compileUnit card =
+    execWriterT $ evalStateT (compileDecs [cardContent card]) initialState
 
 compileDecs :: [Declaration] -> InternalCompiler ()
 compileDecs = mapM_ compileDec
 
 compileDec :: Declaration -> InternalCompiler ()
 compileDec (Deploy src dst kind) = do
-    override <- gets stateDeploymentKindOverride
-    superOverride <- asks confCompileOverride
+    defaultKind <- asks compileDefaultKind
+    localOverride <- gets stateDeploymentKindLocalOverride
+    superOverride <- asks compileKindOverride
     let resultKind =
-            case (superOverride, override, kind) of
-                (Nothing, Nothing, Nothing) -> LinkDeployment
-                (Nothing, Nothing, Just k) -> k
-                (Nothing, Just o, _) -> o
-                (Just o, _, _) -> o
+            case msum [superOverride, localOverride, kind] of
+                Nothing -> defaultKind
+                Just k -> k
     outof <- gets stateOutof_prefix
     into <- gets stateInto
     let alternates = resolvePrefix $ outof ++ [sources src]
@@ -46,7 +39,7 @@ compileDec (OutofDir dir) = do
     op <- gets stateOutof_prefix
     modify (\s -> s {stateOutof_prefix = op ++ [Literal dir]})
 compileDec (DeployKindOverride kind) = do
-    modify (\s -> s {stateDeploymentKindOverride = Just kind})
+    modify (\s -> s {stateDeploymentKindLocalOverride = Just kind})
 compileDec (Block ds) = do
     before <- get
     compileDecs ds

@@ -2,19 +2,15 @@ module SuperUserSpark.PreCompiler where
 
 import Import
 
-import Control.Monad.Identity
-import Control.Monad.Writer
-
-import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
+import SuperUserSpark.PreCompiler.Types
 import SuperUserSpark.Utils
 
 preCompileChecks :: Card -> [PreCompileError]
 preCompileChecks c = runIdentity $ execWriterT $ cleanCard c
 
 dirty :: String -> Precompiler ()
-dirty s = tell ["Precompilation check failed: " ++ s]
+dirty s = tell [PreCompileError $ "Precompilation check failed: " ++ s]
 
 cleanCard :: Card -> Precompiler ()
 cleanCard (Card name d) = do

@@ -2,20 +2,18 @@ module SuperUserSpark.CompilerSpec where
 
 import TestImport
 
+import Data.Either (isLeft, isRight)
+import Data.List (isPrefixOf)
 import SuperUserSpark.Compiler
 import SuperUserSpark.Compiler.TestUtils
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config
 import SuperUserSpark.CoreTypes
-import Data.Either (isLeft, isRight)
-import Data.List (isPrefixOf)
 import SuperUserSpark.Language.Gen ()
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
 import SuperUserSpark.PreCompiler
+import SuperUserSpark.Utils
 import System.FilePath.Posix (takeExtension, (<.>), (</>))
 import TestUtils
-import SuperUserSpark.Utils
 
 spec :: Spec
 spec =
@@ -181,7 +179,7 @@ cleanContentSpec = do
 defaultCompilerState :: CompilerState
 defaultCompilerState =
     CompilerState
-    { stateDeploymentKindOverride = Nothing
+    { stateDeploymentKindLocalOverride = Nothing
     , stateInto = ""
     , stateOutof_prefix = []
     }
@@ -190,7 +188,7 @@ singleCompileDecSpec :: Spec
 singleCompileDecSpec =
     describe "compileDec" $ do
         let s = defaultCompilerState
-        let c = defaultConfig
+        let c = defaultCompileSettings
         let sc = singleShouldCompileTo c s
         let nonNull = arbitrary `suchThat` (not . null)
         let validFilePath = nonNull `suchThat` (not . containsNewlineCharacter)
@@ -240,7 +238,7 @@ singleCompileDecSpec =
             it "modifies the internal deployment kind override" $ do
                 property $ \kind ->
                     shouldState (DeployKindOverride kind) $
-                    s {stateDeploymentKindOverride = Just kind}
+                    s {stateDeploymentKindLocalOverride = Just kind}
             pend
         describe "Block" $ do
             it "uses a separate scope for its sub-compilation" $ do
@@ -254,8 +252,8 @@ singleCompileDecSpec =
                     s {stateOutof_prefix = [Alts fps]}
             pend
 
-runDefaultSparker :: Sparker a -> IO (Either SparkError a)
-runDefaultSparker func = flip runReaderT defaultConfig $ runExceptT $ func
+runDefaultSparker :: ImpureCompiler a -> IO (Either CompileError a)
+runDefaultSparker = flip runReaderT defaultCompileSettings . runExceptT
 
 hopTests :: Spec
 hopTests = do
