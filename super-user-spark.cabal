@@ -1,5 +1,5 @@
 name:                super-user-spark
-version:             0.3.2.0
+version:             0.4.0.0
 license:             MIT
 license-file:        LICENSE
 description:         Configure your dotfile deployment with a DSL.
@@ -14,32 +14,32 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:   src
   exposed-modules: 
-        Arguments
-      , Check
-      , Check.Internal
-      , Check.Types
-      , Compiler
-      , Compiler.Internal
-      , Compiler.Types
-      , Compiler.Utils
-      , Config
-      , Config.Types
-      , Constants
-      , CoreTypes
-      , Deployer
-      , Deployer.Internal
-      , Deployer.Types
-      , Dispatch
-      , Dispatch.Types
-      , Language.Types
-      , Monad
-      , Parser
-      , Parser.Internal
-      , PreCompiler
-      , Seed
-      , Spark
-      , Types
-      , Utils
+        SuperUserSpark
+      , SuperUserSpark.Arguments
+      , SuperUserSpark.Check
+      , SuperUserSpark.Check.Internal
+      , SuperUserSpark.Check.Types
+      , SuperUserSpark.Compiler
+      , SuperUserSpark.Compiler.Internal
+      , SuperUserSpark.Compiler.Types
+      , SuperUserSpark.Compiler.Utils
+      , SuperUserSpark.Config
+      , SuperUserSpark.Config.Types
+      , SuperUserSpark.Constants
+      , SuperUserSpark.CoreTypes
+      , SuperUserSpark.Deployer
+      , SuperUserSpark.Deployer.Internal
+      , SuperUserSpark.Deployer.Types
+      , SuperUserSpark.Dispatch
+      , SuperUserSpark.Dispatch.Types
+      , SuperUserSpark.Language.Types
+      , SuperUserSpark.Monad
+      , SuperUserSpark.Parser
+      , SuperUserSpark.Parser.Internal
+      , SuperUserSpark.PreCompiler
+      , SuperUserSpark.Seed
+      , SuperUserSpark.Types
+      , SuperUserSpark.Utils
   other-modules:
         Import
 
@@ -69,7 +69,7 @@ library
   default-language: Haskell2010
   default-extensions: NoImplicitPrelude
 
-executable spark
+executable super-user-spark
   main-is:          Main.hs
   hs-source-dirs:   app
   ghc-options:      -Wall
@@ -89,21 +89,21 @@ test-suite spark-tests
   main-is:          MainTest.hs
   hs-source-dirs:   test
   other-modules:    
-        Check.Gen
-      , Check.TestUtils
-      , CheckSpec
-      , Compiler.Gen
-      , Compiler.TestUtils
-      , CompilerSpec
-      , DeployerSpec
-      , EndToEndSpec
-      , Language.Gen
-      , Parser.Gen
-      , Parser.TestUtils
-      , ParserSpec
-      , SeedSpec
-      , TestUtils
+        SuperUserSpark.Check.Gen
+      , SuperUserSpark.Check.TestUtils
+      , SuperUserSpark.CheckSpec
+      , SuperUserSpark.Compiler.Gen
+      , SuperUserSpark.Compiler.TestUtils
+      , SuperUserSpark.CompilerSpec
+      , SuperUserSpark.DeployerSpec
+      , SuperUserSpark.EndToEndSpec
+      , SuperUserSpark.Language.Gen
+      , SuperUserSpark.Parser.Gen
+      , SuperUserSpark.Parser.TestUtils
+      , SuperUserSpark.ParserSpec
+      , SuperUserSpark.SeedSpec
       , TestImport
+      , TestUtils
   build-depends:    
         base                  >= 4.6   && < 5
       , super-user-spark
