@@ -6,9 +6,7 @@ import Import
 
 import SuperUserSpark.Check
 import SuperUserSpark.Compiler
-import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Deployer
-import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Dispatch.Types
 import SuperUserSpark.Monad
 import SuperUserSpark.Parser
@@ -25,12 +23,4 @@ dispatch (DispatchCheck dcr) = do
     seeded <- seedByCompiledCardRef dcr deps
     dcrs <- liftIO $ check seeded
     liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded dcrs
-dispatch (DispatchDeploy dcr) = do
-    deps <- compileDeployerCardRef dcr
-    seeded <- seedByCompiledCardRef dcr deps
-    dcrs <- liftIO $ check seeded
-    deploy $ zip seeded dcrs
-
-compileDeployerCardRef :: DeployerCardReference -> Sparker [Deployment]
-compileDeployerCardRef (DeployerCardCompiled fp) = inputCompiled fp
-compileDeployerCardRef (DeployerCardUncompiled cfr) = compileJob cfr
+dispatch (DispatchDeploy dcr) = deploy dcr

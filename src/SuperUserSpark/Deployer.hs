@@ -7,13 +7,27 @@ import Control.Monad.Except
 import SuperUserSpark.Check
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Deployer.Internal
+import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Monad
+import SuperUserSpark.Seed
 import SuperUserSpark.Utils
 
-deploy :: [(Deployment, DeploymentCheckResult)] -> Sparker ()
-deploy dcrs = do
+deploy :: DeployerCardReference -> Sparker ()
+deploy dcr = do
+    deps <- compileDeployerCardRef dcr
+    seeded <- seedByCompiledCardRef dcr deps
+    dcrs <- liftIO $ check seeded
+    deploySeeded $ zip seeded dcrs
+
+compileDeployerCardRef :: DeployerCardReference -> Sparker [Deployment]
+compileDeployerCardRef (DeployerCardCompiled fp) = inputCompiled fp
+compileDeployerCardRef (DeployerCardUncompiled cfr) = compileJob cfr
+
+deploySeeded :: [(Deployment, DeploymentCheckResult)] -> Sparker ()
+deploySeeded dcrs = do
     let crs = map snd dcrs
     -- Check for impossible deployments
     when (any impossibleDeployment crs) $ err dcrs "Deployment is impossible."

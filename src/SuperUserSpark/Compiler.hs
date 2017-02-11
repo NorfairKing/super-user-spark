@@ -6,14 +6,14 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
 
-import SuperUserSpark.Compiler.Internal
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config.Types
 import Control.Monad (when)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (find, stripPrefix)
+import SuperUserSpark.Compiler.Internal
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Config.Types
 import SuperUserSpark.Language.Types
 import SuperUserSpark.Monad
 import SuperUserSpark.Parser
