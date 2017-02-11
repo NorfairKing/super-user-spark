@@ -20,24 +20,23 @@ import SuperUserSpark.PreCompiler
 
 compileFromArgs :: CompileArgs -> IO ()
 compileFromArgs ca = do
-    let ass = compileAssignment ca
-    compile ass
+    case compileAssignment ca of
+        Left ce -> die $ unwords ["Failed to build compile assignment:", ce]
+        Right ca -> compile ca
 
-compileAssignment :: CompileArgs -> CompileAssignment
+compileAssignment :: CompileArgs -> Either String CompileAssignment
 compileAssignment CompileArgs {..} =
-    CompileAssignment
-    { compileCardReference = read compileCardRef -- TODO fix errors in this.
-    , compileSettings = deriveCompileSettings compileFlags
-    }
+    CompileAssignment <$> readEither compileCardRef <*>
+    deriveCompileSettings compileFlags
 
-deriveCompileSettings :: CompileFlags -> CompileSettings
+deriveCompileSettings :: CompileFlags -> Either String CompileSettings
 deriveCompileSettings CompileFlags {..} =
-    CompileSettings
-    { compileOutput = compileFlagOutput
-    , compileDefaultKind =
-          fromMaybe LinkDeployment $ read <$> compileDefaultKind
-    , compileKindOverride = read <$> compileKindOverride
-    }
+    CompileSettings <$> pure compileFlagOutput <*> (case compileDefaultKind of
+        Nothing -> Right LinkDeployment
+        Just s -> readEither s) <*>
+    (case compileKindOverride of
+         Nothing -> Right Nothing
+         Just s -> readEither s)
 
 compile :: CompileAssignment -> IO ()
 compile CompileAssignment {..} = do

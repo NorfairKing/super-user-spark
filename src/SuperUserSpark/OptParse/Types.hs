@@ -9,16 +9,22 @@ data Dispatch
     | DispatchCompile CompileArgs
     | DispatchCheck CheckArgs
     | DispatchDeploy DeployArgs
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity Dispatch
 
 data ParseArgs = ParseArgs
     { parseFilePath :: FilePath
     } deriving (Show, Eq, Generic)
 
+instance Validity ParseArgs
+
 data CompileArgs = CompileArgs
     { compileCardRef :: String
     , compileFlags :: CompileFlags
     } deriving (Show, Eq, Generic)
+
+instance Validity CompileArgs
 
 data CompileFlags = CompileFlags
     { compileFlagOutput :: Maybe FilePath
@@ -26,19 +32,27 @@ data CompileFlags = CompileFlags
     , compileKindOverride :: Maybe String
     } deriving (Show, Eq, Generic)
 
+instance Validity CompileFlags
+
 data CheckArgs = CheckArgs
     { checkArgCardRef :: String
     , checkFlags :: CheckFlags
     } deriving (Show, Eq, Generic)
 
+instance Validity CheckArgs
+
 data CheckFlags = CheckFlags
     { checkCompileFlags :: CompileFlags
     } deriving (Show, Eq, Generic)
+
+instance Validity CheckFlags
 
 data DeployArgs = DeployArgs
     { deployArgCardRef :: String
     , deployFlags :: DeployFlags
     } deriving (Show, Eq, Generic)
+
+instance Validity DeployArgs
 
 data DeployFlags = DeployFlags
     { deployFlagReplaceLinks :: Bool
@@ -47,3 +61,5 @@ data DeployFlags = DeployFlags
     , deployFlagReplaceAll :: Bool
     , deployCheckFlags :: CheckFlags
     } deriving (Show, Eq, Generic)
+
+instance Validity DeployFlags

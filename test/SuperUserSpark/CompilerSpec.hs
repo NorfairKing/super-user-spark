@@ -16,6 +16,7 @@ import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Gen ()
 import SuperUserSpark.Language.Types
+import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.PreCompiler
 import SuperUserSpark.Utils
 import TestUtils
@@ -24,6 +25,7 @@ spec :: Spec
 spec = do
     parallel $ do
         instanceSpec
+        compileSpec
         singleCompileDecSpec
         precompileSpec
         compileUnitSpec
@@ -192,9 +194,29 @@ defaultCompilerState =
     }
 
 instanceSpec :: Spec
-instanceSpec = do
-    eqSpec @Deployment
-    genValidSpec @Deployment
+instanceSpec =
+    parallel $ do
+        eqSpec @CompileAssignment
+        genValidSpec @CompileAssignment
+        eqSpec @CompileSettings
+        genValidSpec @CompileSettings
+        eqSpec @Deployment
+        genValidSpec @Deployment
+        eqSpec @PrefixPart
+        genValidSpec @PrefixPart
+        eqSpec @CompilerState
+        genValidSpec @CompilerState
+        eqSpec @CompileError
+        genValidSpec @CompileError
+
+compileSpec :: Spec
+compileSpec = do
+    describe "compileAssignment" $
+        it "only every produces valid assignments" $
+        validIfSucceeds compileAssignment
+    describe "deriveCompileSettings" $
+        it "only every produces valid settings" $
+        validIfSucceeds deriveCompileSettings
 
 singleCompileDecSpec :: Spec
 singleCompileDecSpec =

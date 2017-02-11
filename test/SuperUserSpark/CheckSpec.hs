@@ -6,12 +6,14 @@ import TestImport
 
 import Control.Monad (forM_)
 import qualified Data.ByteString as SB
+import SuperUserSpark.Check
 import SuperUserSpark.Check.Gen ()
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.TestUtils
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
+import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Utils
 import System.Directory
@@ -119,6 +121,12 @@ diagnoseSpec = do
 checkSpec :: Spec
 checkSpec =
     parallel $ do
+        describe "checkAssignment" $
+            it "always produces valid assignments" $
+            validIfSucceeds checkAssignment
+        describe "deriveCheckSettings" $
+            it "always produces valid settings" $
+            validIfSucceeds deriveCheckSettings
         checkSingleSpec
         checkDeploymentSpec
 

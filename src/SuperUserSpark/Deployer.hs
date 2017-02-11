@@ -18,31 +18,27 @@ import SuperUserSpark.Utils
 
 deployFromArgs :: DeployArgs -> IO ()
 deployFromArgs das = do
-    errOrAss <- deployAssignment das
-    case errOrAss of
+    case deployAssignment das of
         Left err -> die $ unwords ["Failed to make Deployment assignment:", err]
         Right ass -> deploy ass
 
-deployAssignment :: DeployArgs -> IO (Either String DeployAssignment)
-deployAssignment DeployArgs {..}
-    -- TODO check that the reference points to something that exists and can be opened.
- = do
-    let DeployFlags {..} = deployFlags
-    pure $
-        Right $
-        DeployAssignment
-        { deployCardReference = read deployArgCardRef -- TODO fix failures and ensure safety of paths
-        , deploySettings =
-              DeploySettings
-              { deploySetsReplaceLinks =
-                    deployFlagReplaceLinks || deployFlagReplaceAll
-              , deploySetsReplaceFiles =
-                    deployFlagReplaceFiles || deployFlagReplaceAll
-              , deploySetsReplaceDirectories =
-                    deployFlagReplaceDirectories || deployFlagReplaceAll
-              , deployCheckSettings = deriveCheckSettings deployCheckFlags
-              }
-        }
+deployAssignment :: DeployArgs -> Either String DeployAssignment
+deployAssignment DeployArgs {..} =
+    DeployAssignment <$> readEither deployArgCardRef <*> deriveDeploySettings deployFlags
+
+deriveDeploySettings :: DeployFlags -> Either String DeploySettings
+deriveDeploySettings DeployFlags{..} = do
+       cs <- deriveCheckSettings deployCheckFlags
+       pure
+               DeploySettings
+               { deploySetsReplaceLinks =
+                     deployFlagReplaceLinks || deployFlagReplaceAll
+               , deploySetsReplaceFiles =
+                     deployFlagReplaceFiles || deployFlagReplaceAll
+               , deploySetsReplaceDirectories =
+                     deployFlagReplaceDirectories || deployFlagReplaceAll
+               , deployCheckSettings = cs
+               }
 
 deploy :: DeployAssignment -> IO ()
 deploy DeployAssignment {..} = do

@@ -15,12 +15,16 @@ data DeployAssignment = DeployAssignment
     , deploySettings :: DeploySettings
     } deriving (Show, Eq, Generic)
 
+instance Validity DeployAssignment
+
 data DeploySettings = DeploySettings
     { deploySetsReplaceLinks :: Bool
     , deploySetsReplaceFiles :: Bool
     , deploySetsReplaceDirectories :: Bool
     , deployCheckSettings :: CheckSettings
     } deriving (Show, Eq, Generic)
+
+instance Validity DeploySettings
 
 defaultDeploySettings :: DeploySettings
 defaultDeploySettings =
@@ -35,6 +39,8 @@ data DeployerCardReference
     = DeployerCardCompiled FilePath
     | DeployerCardUncompiled CardFileReference
     deriving (Show, Eq, Generic)
+
+instance Validity DeployerCardReference
 
 instance Read DeployerCardReference where
     readsPrec _ fp =
@@ -62,6 +68,8 @@ data DeployError
     | DeployError String
     deriving (Show, Eq, Generic)
 
+instance Validity DeployError
+
 data PreDeployment
     = Ready FilePath
             FilePath
@@ -70,7 +78,11 @@ data PreDeployment
     | Error String
     deriving (Show, Eq, Generic)
 
+instance Validity PreDeployment
+
 data ID
     = Plain String
     | Var String
     deriving (Show, Eq, Generic)
+
+instance Validity ID

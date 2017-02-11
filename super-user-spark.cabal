@@ -91,9 +91,11 @@ test-suite spark-tests
       , SuperUserSpark.Compiler.Gen
       , SuperUserSpark.Compiler.TestUtils
       , SuperUserSpark.CompilerSpec
+      , SuperUserSpark.Deployer.Gen
       , SuperUserSpark.DeployerSpec
       , SuperUserSpark.EndToEndSpec
       , SuperUserSpark.Language.Gen
+      , SuperUserSpark.OptParse.Gen
       , SuperUserSpark.Parser.Gen
       , SuperUserSpark.Parser.TestUtils
       , SuperUserSpark.ParserSpec

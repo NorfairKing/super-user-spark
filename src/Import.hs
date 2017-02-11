@@ -1,11 +1,13 @@
 module Import
     ( module X
     ) where
+
 import Prelude as X
 
+import Data.Maybe as X
 import GHC.Generics as X
 import System.Exit as X
-import Data.Maybe as X
+import Text.Read as X (readEither)
 
 import Control.Monad as X
 import Control.Monad.Except as X

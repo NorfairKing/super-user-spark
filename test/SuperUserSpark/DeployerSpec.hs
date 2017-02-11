@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeApplications #-}
+
 module SuperUserSpark.DeployerSpec where
 
 import TestImport
@@ -11,16 +13,47 @@ import System.Posix.Files
 
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
+import SuperUserSpark.Deployer
+import SuperUserSpark.Deployer.Gen ()
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
+import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Utils
 
 spec :: Spec
 spec = do
+    instanceSpec
+    deployerSpec
     cleanSpec
     deploymentSpec
     completionSpec
+
+instanceSpec :: Spec
+instanceSpec =
+    parallel $ do
+        eqSpec @DeployAssignment
+        genValidSpec @DeployAssignment
+        eqSpec @DeploySettings
+        genValidSpec @DeploySettings
+        eqSpec @DeployerCardReference
+        genValidSpec @DeployerCardReference
+        eqSpec @DeployError
+        genValidSpec @DeployError
+        eqSpec @PreDeployment
+        genValidSpec @PreDeployment
+        eqSpec @ID
+        genValidSpec @ID
+
+deployerSpec :: Spec
+deployerSpec =
+    parallel $ do
+        describe "deployAssignment" $ do
+            it "Only ever produces valid assignments" $
+                validIfSucceeds deployAssignment
+        describe "deriveDeploySettings" $ do
+            it "Only ever produces valid settings" $
+                validIfSucceeds deriveDeploySettings
 
 cleanSpec :: Spec
 cleanSpec = do
