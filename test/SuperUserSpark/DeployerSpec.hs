@@ -48,12 +48,27 @@ instanceSpec =
 deployerSpec :: Spec
 deployerSpec =
     parallel $ do
+        describe "defaultDeploySettings" $ it "is valid" $ isValid defaultDeploySettings
         describe "deployAssignment" $ do
-            it "Only ever produces valid assignments" $
+            it "only ever produces valid assignments" $
                 validIfSucceeds deployAssignment
         describe "deriveDeploySettings" $ do
-            it "Only ever produces valid settings" $
+            it "only ever produces valid settings" $
                 validIfSucceeds deriveDeploySettings
+        describe "formatDeployError" $ do
+            it "only ever produces valid strings" $
+                producesValid formatDeployError
+        describe "completeDeployment" $
+            it "only ever produces a valid deployment" $
+            validIfSucceeds3 completeDeployment
+        describe "complete" $
+            it "only ever produces a valid filepath" $ validIfSucceeds3 complete
+        describe "parseId" $
+            it "only ever produces valid IDs" $ producesValid parseId
+        describe "replaceId" $
+            it "only ever produces valid FilePaths" $ validIfSucceeds2 replaceId
+        describe "replaceHome" $
+            it "only ever produces valid FilePaths" $ producesValid2 replaceHome
 
 cleanSpec :: Spec
 cleanSpec = do

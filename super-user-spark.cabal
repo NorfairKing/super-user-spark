@@ -125,7 +125,7 @@ test-suite spark-tests
       , transformers          
       , unix                  
       , genvalidity >= 0.3.1 && < 0.4
-      , genvalidity-hspec >= 0.3 && < 0.4
+      , genvalidity-hspec >= 0.3.1 && < 0.4
   default-language:  Haskell2010
   default-extensions: NoImplicitPrelude
   
