@@ -71,7 +71,7 @@ instance Validity CardReference
 
 -- * Card files
 data SparkFile = SparkFile
-    { sparkFilePath :: FilePath
+    { sparkFilePath :: Path Abs File
     , sparkFileCards :: [Card]
     } deriving (Show, Eq, Generic)
 

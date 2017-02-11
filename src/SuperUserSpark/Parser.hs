@@ -4,21 +4,32 @@ module SuperUserSpark.Parser where
 
 import Import
 
-import Text.Parsec hiding (try)
+import qualified Text.Parsec as Parsec
 
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Parser.Internal
+import SuperUserSpark.Parser.Types
 
 parseFromArgs :: ParseArgs -> IO ()
-parseFromArgs ParseArgs {..} = do
-    errOrDone <- parseFile parseFilePath
-    case errOrDone of
+parseFromArgs pa = do
+    case parseAssignment pa of
+        Left err -> die $ unwords ["Unable to build parse assignment:", err]
+        Right _ -> pure ()
+
+parseAssignment :: ParseArgs -> Either String ParseAssignment
+parseAssignment ParseArgs {..} =
+    ParseAssignment <$> left show (parseAbsFile parseFilePath)
+
+parse :: ParseAssignment -> IO ()
+parse ParseAssignment {..} = do
+    errOrFile <- parseFile fileToParse
+    case errOrFile of
         Left err -> die $ formatParseError err
         Right _ -> pure ()
 
 formatParseError :: ParseError -> String
-formatParseError = show
+formatParseError (ParseError pe) = show pe
 
-parseFile :: FilePath -> IO (Either ParseError SparkFile)
-parseFile file = (liftIO $ readFile file) >>= return . parseCardFile file
+parseFile :: Path Abs File -> IO (Either ParseError SparkFile)
+parseFile file = (left ParseError . parseCardFile file) <$> readFile file

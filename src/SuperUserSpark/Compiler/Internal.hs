@@ -1,6 +1,6 @@
 module SuperUserSpark.Compiler.Internal where
 
-import Import
+import Import hiding ((</>))
 
 import System.FilePath ((</>))
 

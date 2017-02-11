@@ -2,7 +2,8 @@
 
 module SuperUserSpark.DeployerSpec where
 
-import TestImport
+import qualified Prelude as P (writeFile)
+import TestImport hiding ((</>), removeFile, writeFile)
 
 import Data.Either (isLeft)
 import Data.Maybe (isNothing)
@@ -48,7 +49,8 @@ instanceSpec =
 deployerSpec :: Spec
 deployerSpec =
     parallel $ do
-        describe "defaultDeploySettings" $ it "is valid" $ isValid defaultDeploySettings
+        describe "defaultDeploySettings" $
+            it "is valid" $ isValid defaultDeploySettings
         describe "deployAssignment" $ do
             it "only ever produces valid assignments" $
                 validIfSucceeds deployAssignment
@@ -88,7 +90,7 @@ cleanSpec = do
                             {deploySetsReplaceFiles = False}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
-                        writeFile file "This is a test"
+                        P.writeFile file "This is a test"
                         diagnoseFp file `shouldReturn` IsFile
                         clean c $ CleanFile file
                         diagnoseFp file `shouldReturn` IsFile
@@ -100,7 +102,7 @@ cleanSpec = do
                             {deploySetsReplaceFiles = True}
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
-                        writeFile file "This is a test"
+                        P.writeFile file "This is a test"
                         diagnoseFp file `shouldReturn` IsFile
                         clean c $ CleanFile file
                         diagnoseFp file `shouldReturn` Nonexistent
@@ -133,7 +135,7 @@ cleanSpec = do
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
-                        writeFile file_ "This is a test"
+                        P.writeFile file_ "This is a test"
                         createSymbolicLink file_ link_
                         diagnoseFp link_ `shouldReturn` IsLinkTo file_
                         clean c $ CleanLink link_
@@ -150,7 +152,7 @@ cleanSpec = do
                     withCurrentDirectory sandbox $ do
                         let link_ = "testlink"
                         let file_ = "testfile"
-                        writeFile file_ "This is a test"
+                        P.writeFile file_ "This is a test"
                         createSymbolicLink file_ link_
                         diagnoseFp link_ `shouldReturn` IsLinkTo file_
                         clean c $ CleanLink link_
@@ -184,7 +186,7 @@ deploymentSpec = do
                     withCurrentDirectory sandbox $ do
                         let src = "testfile"
                         let dst = "testcopy"
-                        writeFile src "This is a file."
+                        P.writeFile src "This is a file."
                         diagnoseFp src `shouldReturn` IsFile
                         diagnoseFp dst `shouldReturn` Nonexistent
                     -- Under test
@@ -225,7 +227,7 @@ deploymentSpec = do
                         let dst = "testlink"
                         diagnoseFp src `shouldReturn` Nonexistent
                         diagnoseFp dst `shouldReturn` Nonexistent
-                        writeFile src "This is a test."
+                        P.writeFile src "This is a test."
                         diagnoseFp src `shouldReturn` IsFile
                         diagnoseFp dst `shouldReturn` Nonexistent
                     -- Under test

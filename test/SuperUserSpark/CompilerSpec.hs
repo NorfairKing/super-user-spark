@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module SuperUserSpark.CompilerSpec where
 
@@ -6,7 +7,7 @@ import TestImport
 
 import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)
-import System.FilePath.Posix (takeExtension, (<.>), (</>))
+import System.FilePath.Posix (takeExtension, (<.>))
 
 import SuperUserSpark.Compiler
 import SuperUserSpark.Compiler.Gen ()
@@ -317,20 +318,25 @@ utilsSpec =
 hopTests :: Spec
 hopTests = do
     describe "hop test" $ do
-        let dir = "test_resources/hop_test"
-        let root = dir </> "root.sus"
-        let hop1 = dir </> "hop1dir" </> "hop1.sus"
-        let hop2 = dir </> "hop1dir" </> "hop2dir" </> "hop2.sus"
-        let hop3 = dir </> "hop1dir" </> "hop2dir" </> "hop3dir" </> "hop3.sus"
+        dir <- runIO $ resolveDir' "test_resources/hop_test"
+        let root = dir </> $(mkRelFile "root.sus")
+        let hop1 = dir </> $(mkRelDir "hop1dir") </> $(mkRelFile "hop1.sus")
+        let hop2 =
+                dir </> $(mkRelDir "hop1dir") </> $(mkRelDir "hop2dir") </>
+                $(mkRelFile "hop2.sus")
+        let hop3 =
+                dir </> $(mkRelDir "hop1dir") </> $(mkRelDir "hop2dir") </>
+                $(mkRelDir "hop3dir") </>
+                $(mkRelFile "hop3.sus")
         it "compiles hop3 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference hop3 Nothing
+                compileJob $ CardFileReference (toFilePath hop3) Nothing
             r `shouldBe` Right [Put ["z/delta"] "d/three" LinkDeployment]
         it "compiles hop2 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference hop2 Nothing
+                compileJob $ CardFileReference (toFilePath hop2) Nothing
             r `shouldBe`
                 Right
                     [ Put ["y/gamma"] "c/two" LinkDeployment
@@ -339,7 +345,7 @@ hopTests = do
         it "compiles hop1 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference hop1 Nothing
+                compileJob $ CardFileReference (toFilePath hop1) Nothing
             r `shouldBe`
                 Right
                     [ Put ["x/beta"] "b/one" LinkDeployment
@@ -349,7 +355,7 @@ hopTests = do
         it "compiles root correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference root Nothing
+                compileJob $ CardFileReference (toFilePath root) Nothing
             r `shouldBe`
                 Right
                     [ Put ["u/alpha"] "a/zero" LinkDeployment
@@ -364,36 +370,42 @@ hopTests = do
 exactTests :: Spec
 exactTests = do
     describe "exact tests" $ do
-        let dir = "test_resources/exact_compile_test_src"
+        dir <- runIO $ resolveDir' "test_resources/exact_compile_test_src"
         forFileInDirss [dir] $ \fp ->
-            if takeExtension fp == ".res"
+            if fileExtension fp == ".res"
                 then return ()
                 else do
-                    it fp $ do
+                    it (toFilePath fp) $ do
                         let orig = fp
-                        let result = fp <.> "res"
+                        result <- parseAbsFile $ toFilePath fp <.> "res"
                         ads <-
                             runDefaultImpureCompiler $
-                            compileJob $ CardFileReference orig Nothing
-                        eds <- runDefaultImpureCompiler $ inputCompiled result
+                            compileJob $
+                            CardFileReference (toFilePath orig) Nothing
+                        eds <-
+                            runDefaultImpureCompiler $
+                            inputCompiled (toFilePath result)
                         ads `shouldBe` eds
+
+hopTestDir :: Path Rel Dir
+hopTestDir = $(mkRelDir "hop_test")
 
 compilerBlackBoxTests :: Spec
 compilerBlackBoxTests = do
-    let tr = "test_resources"
+    tr <- runIO $ resolveDir' "test_resources"
     describe "Succesful compile examples" $ do
-        let dirs = map (tr </>) ["shouldCompile", "hop_test"]
+        let dirs = map (tr </>) [shouldCompileDir, hopTestDir]
         forFileInDirss dirs $ \f -> do
-            it f $ do
+            it (toFilePath f) $ do
                 r <-
                     runDefaultImpureCompiler $
-                    compileJob $ CardFileReference f Nothing
+                    compileJob $ CardFileReference (toFilePath f) Nothing
                 r `shouldSatisfy` isRight
     describe "Unsuccesfull compile examples" $ do
-        let dirs = map (tr </>) ["shouldNotParse", "shouldNotCompile"]
+        let dirs = map (tr </>) [shouldNotParseDir, shouldNotCompileDir]
         forFileInDirss dirs $ \f -> do
-            it f $ do
+            it (toFilePath f) $ do
                 r <-
                     runDefaultImpureCompiler $
-                    compileJob $ CardFileReference f Nothing
+                    compileJob $ CardFileReference (toFilePath f) Nothing
                 r `shouldSatisfy` isLeft

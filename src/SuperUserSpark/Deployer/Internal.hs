@@ -1,6 +1,6 @@
 module SuperUserSpark.Deployer.Internal where
 
-import Import
+import Import hiding ((</>), removeFile)
 
 import Data.List (isPrefixOf)
 import Data.Text (pack)

@@ -1,6 +1,6 @@
 module SuperUserSpark.Seed where
 
-import Import
+import Import hiding ((</>))
 
 import SuperUserSpark.Compiler.Types
 import System.Directory (getCurrentDirectory)

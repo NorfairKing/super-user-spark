@@ -2,7 +2,8 @@
 
 module SuperUserSpark.CheckSpec where
 
-import TestImport
+import qualified Prelude as P (writeFile)
+import TestImport hiding ((</>), removeFile, writeFile)
 
 import Control.Monad (forM_)
 import qualified Data.ByteString as SB
@@ -106,7 +107,7 @@ diagnoseSpec = do
                 it "figures out this test file" $ do
                     withCurrentDirectory sandbox $ do
                         let file = "test.txt"
-                        writeFile file "This is a test"
+                        P.writeFile file "This is a test"
                         diagnoseFp file `shouldReturn` IsFile
                         removeFile file
                         diagnoseFp file `shouldReturn` Nonexistent
@@ -121,7 +122,7 @@ diagnoseSpec = do
                     withCurrentDirectory sandbox $ do
                         let link = "testlink"
                         let file = "testfile"
-                        writeFile file "This is a test"
+                        P.writeFile file "This is a test"
                         createSymbolicLink file link
                         diagnoseFp file `shouldReturn` IsFile
                         diagnoseFp link `shouldReturn` IsLinkTo file
@@ -340,7 +341,7 @@ tooManyFilesTest = do
     let aLot = 20000 :: Int
     let setupALotOfFiles = do
             forM_ [1 .. aLot] $ \i ->
-                writeFile (sandbox ++ "/file" ++ show i) $
+                P.writeFile (sandbox ++ "/file" ++ show i) $
                 "This is file " ++ show i ++ ".\n"
     beforeAll_ setup $
         afterAll_ teardown $ do

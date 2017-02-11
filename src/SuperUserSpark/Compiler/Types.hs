@@ -7,11 +7,11 @@ import Import
 
 import Data.Aeson
        (FromJSON(..), ToJSON(..), Value(..), object, (.:), (.=))
-import Text.Parsec as Parsec
 
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
+import SuperUserSpark.Parser.Types
 import SuperUserSpark.PreCompiler.Types
 
 data CompileAssignment = CompileAssignment
@@ -93,12 +93,9 @@ type PureCompiler = ExceptT CompileError (ReaderT CompileSettings Identity)
 type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
 
 data CompileError
-    = ParseError Parsec.ParseError
+    = CompileParseError ParseError
     | PreCompileErrors [PreCompileError]
     | DuringCompilationError String
     deriving (Show, Eq, Generic)
 
-instance Validity CompileError where
-    isValid (ParseError _) = True
-    isValid (PreCompileErrors es) = isValid es
-    isValid (DuringCompilationError s) = isValid s
+instance Validity CompileError

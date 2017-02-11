@@ -32,6 +32,7 @@ library
       , SuperUserSpark.OptParse.Types
       , SuperUserSpark.Parser
       , SuperUserSpark.Parser.Internal
+      , SuperUserSpark.Parser.Types
       , SuperUserSpark.PreCompiler
       , SuperUserSpark.PreCompiler.Types
       , SuperUserSpark.Seed
@@ -62,6 +63,10 @@ library
       , text                  >= 1.2   && < 1.3
       , unix                  >= 2.7   && < 2.8
       , validity              >= 0.3.2 && < 0.4
+      , validity-path >= 0.1 && < 0.2
+      , path >= 0.5 && < 0.6
+      , path-io >= 1.2 && < 1.3
+      , iostring >= 0.0 && < 0.1
   default-language: Haskell2010
   default-extensions: NoImplicitPrelude
 
@@ -125,7 +130,13 @@ test-suite spark-tests
       , transformers          
       , unix                  
       , genvalidity >= 0.3.1 && < 0.4
+      , genvalidity-path >= 0.1 && < 0.2
       , genvalidity-hspec >= 0.3.1 && < 0.4
+      , validity
+      , validity-path
+      , path
+      , path-io
+      , iostring
   default-language:  Haskell2010
   default-extensions: NoImplicitPrelude
   

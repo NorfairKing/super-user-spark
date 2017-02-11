@@ -2,7 +2,7 @@
 
 module SuperUserSpark.Compiler where
 
-import Import
+import Import hiding ((</>))
 
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
@@ -31,9 +31,10 @@ compileAssignment CompileArgs {..} =
 
 deriveCompileSettings :: CompileFlags -> Either String CompileSettings
 deriveCompileSettings CompileFlags {..} =
-    CompileSettings <$> pure compileFlagOutput <*> (case compileDefaultKind of
-        Nothing -> Right LinkDeployment
-        Just s -> readEither s) <*>
+    CompileSettings <$> pure compileFlagOutput <*>
+    (case compileDefaultKind of
+         Nothing -> Right LinkDeployment
+         Just s -> readEither s) <*>
     (case compileKindOverride of
          Nothing -> Right Nothing
          Just s -> readEither s)
@@ -49,7 +50,7 @@ compile CompileAssignment {..} = do
         Right () -> pure ()
 
 formatCompileError :: CompileError -> String
-formatCompileError (ParseError s) = unlines ["Parse failed:", show s]
+formatCompileError (CompileParseError s) = unlines ["Parse failed:", show s]
 formatCompileError (PreCompileErrors ss) =
     unlines $ "Precompilation checks failed:" : map show ss
 formatCompileError (DuringCompilationError s) =
@@ -60,10 +61,10 @@ compileJob cr@(CardFileReference root _) = go "" cr
   where
     go :: FilePath -> CardFileReference -> ImpureCompiler [Deployment]
     go base (CardFileReference fp mcn) = do
-        esf <- liftIO $ parseFile fp
+        esf <- liftIO $ parseAbsFile fp >>= parseFile
         sf <-
             case esf of
-                Left pe -> throwError $ ParseError pe
+                Left pe -> throwError $ CompileParseError pe
                 Right sf_ -> pure sf_
         let scope = sparkFileCards sf
         unit <-

@@ -33,8 +33,5 @@ containsMultipleConsequtiveSlashes = isInfixOf "//"
 (&&&) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
 (&&&) f g = \a -> f a && g a
 
-(|||) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
-(|||) f g = \a -> f a || g a
-
 createDirectoryIfMissing :: FilePath -> IO ()
 createDirectoryIfMissing = D.createDirectoryIfMissing True

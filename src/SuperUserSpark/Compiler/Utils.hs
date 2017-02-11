@@ -1,6 +1,6 @@
 module SuperUserSpark.Compiler.Utils where
 
-import Import
+import Import hiding ((</>))
 
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Language.Types

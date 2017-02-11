@@ -93,7 +93,7 @@ deploySeeded dcrs = do
     let ds = map fst dcrs
     dcrs2 <- liftIO $ checkDeployments ds
     -- Error if the cleaning is not done now.
-    when (any (impossibleDeployment ||| dirtyDeployment) dcrs2) $
+    when (any (\d -> impossibleDeployment d || dirtyDeployment d) dcrs2) $
         err
             (zip ds dcrs2)
             "Situation was not entirely clean after attemted cleanup. Maybe you forgot to enable cleanups (--replace-all)?"

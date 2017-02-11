@@ -2,21 +2,21 @@ module SuperUserSpark.Parser.Internal where
 
 import Import
 
+import Data.List (isSuffixOf)
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
-import Data.List (isSuffixOf)
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Language.Types
 import Text.Parsec
 import Text.Parsec.String
 
-parseCardFile :: FilePath -> String -> Either ParseError SparkFile
+parseCardFile :: Path Abs File -> String -> Either ParseError SparkFile
 parseCardFile f s = do
     cs <- parseFromSource sparkFile f s
     return $ SparkFile f cs
 
-parseFromSource :: Parser a -> FilePath -> String -> Either ParseError a
-parseFromSource = parse
+parseFromSource :: Parser a -> Path Abs File -> String -> Either ParseError a
+parseFromSource parser file = parse parser $ toFilePath file
 
 --[ Language ]--
 sparkFile :: Parser [Card]

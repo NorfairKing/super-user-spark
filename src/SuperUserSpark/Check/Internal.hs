@@ -1,16 +1,16 @@
 module SuperUserSpark.Check.Internal where
 
-import Import
+import Import hiding ((</>))
 
-import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Constants
-import SuperUserSpark.CoreTypes
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as SBC
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Digest.Pure.MD5 as H (md5)
 import Data.Maybe (catMaybes)
+import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Constants
+import SuperUserSpark.CoreTypes
 import System.Directory (getDirectoryContents)
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))

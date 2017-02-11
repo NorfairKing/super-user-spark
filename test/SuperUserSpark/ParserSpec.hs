@@ -6,7 +6,6 @@ import TestImport hiding (succeeds)
 
 import Data.Either (isLeft, isRight)
 import Data.List (intercalate)
-import System.FilePath.Posix ((</>))
 import Text.Parsec
 
 import SuperUserSpark.CoreTypes
@@ -46,13 +45,11 @@ enclosingCharacterTests = do
     describe "inQuotes" $ do
         it
             "succeeds for cases where we enclose quotes around a string without quotes" $ do
-            forAll
-                (listOf1 arbitrary `suchThat` (/= "\""))
-                (\word ->
-                     parseShouldSucceedAs
-                         (inQuotes $ string word)
-                         ("\"" ++ word ++ "\"")
-                         word)
+            forAll (listOf1 arbitrary `suchThat` (/= "\"")) $ \word ->
+                parseShouldSucceedAs
+                    (inQuotes $ string word)
+                    ("\"" ++ word ++ "\"")
+                    word
 
 instanceSpec :: Spec
 instanceSpec = do
@@ -505,20 +502,22 @@ cardReferenceParserTests = do
 
 parserBlackBoxTests :: Spec
 parserBlackBoxTests = do
-    let tr = "test_resources"
+    testRecoursesDir <- runIO $ resolveDir' "test_resources"
     describe "Correct succesful parse examples" $ do
         let dirs =
                 map
-                    (tr </>)
-                    ["shouldParse", "shouldCompile", "shouldNotCompile"]
+                    (testRecoursesDir </>)
+                    [shouldParseDir, shouldCompileDir, shouldNotCompileDir]
         forFileInDirss dirs $
             concerningContents $ \f contents -> do
-                it f $ parseCardFile f contents `shouldSatisfy` isRight
+                it (toFilePath f) $
+                    parseCardFile f contents `shouldSatisfy` isRight
     describe "Correct unsuccesfull parse examples" $ do
-        let dirs = map (tr </>) ["shouldNotParse"]
+        let dirs = map (testRecoursesDir </>) [shouldNotParseDir]
         forFileInDirss dirs $
             concerningContents $ \f contents -> do
-                it f $ parseCardFile f contents `shouldSatisfy` isLeft
+                it (toFilePath f) $
+                    parseCardFile f contents `shouldSatisfy` isLeft
 
 toplevelParserTests :: Spec
 toplevelParserTests = do
