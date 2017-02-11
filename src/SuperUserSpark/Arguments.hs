@@ -1,12 +1,7 @@
-{-# LANGUAGE CPP #-}
-
 module SuperUserSpark.Arguments where
 
 import Import
 
-#if (MIN_VERSION_base(4,9,0))
-import Data.Monoid
-#endif
 import Options.Applicative
 import System.Environment (getArgs)
 
@@ -52,11 +47,12 @@ runOptionsParser strs = execParserPure prefs_ optionsParser strs
   where
     prefs_ =
         ParserPrefs
-        { prefMultiSuffix = "SPARK" -- metavar suffix for multiple options
-        , prefDisambiguate = True -- automatically disambiguate abbreviations (default: False)
-        , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
-        , prefBacktrack = True -- backtrack to parent parser when a subcommand fails (default: True)
-        , prefColumns = 80 -- number of columns in the terminal, used to format the help page (default: 80)
+        { prefMultiSuffix = ""
+        , prefDisambiguate = True
+        , prefShowHelpOnError = True
+        , prefShowHelpOnEmpty = True
+        , prefBacktrack = True
+        , prefColumns = 80
         }
 
 optionsParser :: ParserInfo Options

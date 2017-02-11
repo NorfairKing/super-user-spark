@@ -1,6 +1,9 @@
-resolver: lts-7.17
-packages:
-- '.'
-extra-deps: []
 flags: {}
 extra-package-dbs: []
+packages:
+- '.'
+extra-deps:
+- aeson-1.1.0.0
+- optparse-applicative-0.13.1.0
+- process-1.5.0.0
+resolver: lts-7.19
