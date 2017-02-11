@@ -4,7 +4,7 @@ module SuperUserSpark
 
 import Import
 
-import SuperUserSpark.Arguments
+import SuperUserSpark.OptParse
 import SuperUserSpark.Dispatch
 import SuperUserSpark.Monad
 import SuperUserSpark.Utils

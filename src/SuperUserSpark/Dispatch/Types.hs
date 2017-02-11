@@ -2,11 +2,10 @@ module SuperUserSpark.Dispatch.Types where
 
 import Import
 
-import SuperUserSpark.Types
-
 import SuperUserSpark.Config.Types
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Language.Types
+import SuperUserSpark.OptParse.Types
 
 type Instructions = (Dispatch, SparkConfig)
 

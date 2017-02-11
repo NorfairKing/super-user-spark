@@ -1,4 +1,7 @@
-module SuperUserSpark.Arguments where
+module SuperUserSpark.OptParse
+    ( getInstructions
+    , Instructions
+    ) where
 
 import Import
 
@@ -8,7 +11,7 @@ import System.Environment (getArgs)
 import SuperUserSpark.Config
 import SuperUserSpark.Config.Types
 import SuperUserSpark.Dispatch.Types
-import SuperUserSpark.Types
+import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Utils
 
 getInstructions :: IO Instructions

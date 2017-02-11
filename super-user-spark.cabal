@@ -15,7 +15,6 @@ library
   hs-source-dirs:   src
   exposed-modules: 
         SuperUserSpark
-      , SuperUserSpark.Arguments
       , SuperUserSpark.Check
       , SuperUserSpark.Check.Internal
       , SuperUserSpark.Check.Types
@@ -34,11 +33,12 @@ library
       , SuperUserSpark.Dispatch.Types
       , SuperUserSpark.Language.Types
       , SuperUserSpark.Monad
+      , SuperUserSpark.OptParse
+      , SuperUserSpark.OptParse.Types
       , SuperUserSpark.Parser
       , SuperUserSpark.Parser.Internal
       , SuperUserSpark.PreCompiler
       , SuperUserSpark.Seed
-      , SuperUserSpark.Types
       , SuperUserSpark.Utils
   other-modules:
         Import
