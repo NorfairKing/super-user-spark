@@ -13,6 +13,7 @@ import SuperUserSpark.Compiler.Gen ()
 import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.TestUtils
 import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Compiler.Utils
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Gen ()
 import SuperUserSpark.Language.Types
@@ -29,6 +30,7 @@ spec = do
         singleCompileDecSpec
         precompileSpec
         compileUnitSpec
+        utilsSpec
     hopTests
     exactTests
     compilerBlackBoxTests
@@ -217,6 +219,11 @@ compileSpec = do
     describe "deriveCompileSettings" $
         it "only every produces valid settings" $
         validIfSucceeds deriveCompileSettings
+    describe "formatCompileError" $
+        it "only produces valid strings" $ producesValid formatCompileError
+    describe "resolveCardReferenceRelativeTo" $
+        it "only produces valid card references" $
+        producesValid2 resolveCardReferenceRelativeTo
 
 singleCompileDecSpec :: Spec
 singleCompileDecSpec =
@@ -297,6 +304,15 @@ compileUnitSpec =
                 validIfSucceeds
                     (runIdentity .
                      flip runReaderT sets . runExceptT . compileUnit)
+
+utilsSpec :: Spec
+utilsSpec =
+    parallel $ do
+        describe "initialState" $ it "is valid" $ isValid initialState
+        describe "sources" $
+            it "only produces valid prefix parts" $ producesValid sources
+        describe "resolvePrefix" $
+            it "only produces valid paths" $ producesValid resolvePrefix
 
 hopTests :: Spec
 hopTests = do
