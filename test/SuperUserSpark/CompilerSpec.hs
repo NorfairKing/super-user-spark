@@ -1,10 +1,16 @@
+{-# LANGUAGE TypeApplications #-}
+
 module SuperUserSpark.CompilerSpec where
 
 import TestImport
 
 import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)
+import System.FilePath.Posix (takeExtension, (<.>), (</>))
+
 import SuperUserSpark.Compiler
+import SuperUserSpark.Compiler.Gen ()
+import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.TestUtils
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
@@ -12,14 +18,15 @@ import SuperUserSpark.Language.Gen ()
 import SuperUserSpark.Language.Types
 import SuperUserSpark.PreCompiler
 import SuperUserSpark.Utils
-import System.FilePath.Posix (takeExtension, (<.>), (</>))
 import TestUtils
 
 spec :: Spec
 spec = do
     parallel $ do
+        instanceSpec
         singleCompileDecSpec
         precompileSpec
+        compileUnitSpec
     hopTests
     exactTests
     compilerBlackBoxTests
@@ -184,6 +191,11 @@ defaultCompilerState =
     , stateOutof_prefix = []
     }
 
+instanceSpec :: Spec
+instanceSpec = do
+    eqSpec @Deployment
+    genValidSpec @Deployment
+
 singleCompileDecSpec :: Spec
 singleCompileDecSpec =
     describe "compileDec" $ do
@@ -252,8 +264,17 @@ singleCompileDecSpec =
                     s {stateOutof_prefix = [Alts fps]}
             pend
 
-runDefaultSparker :: ImpureCompiler a -> IO (Either CompileError a)
-runDefaultSparker = flip runReaderT defaultCompileSettings . runExceptT
+runDefaultImpureCompiler :: ImpureCompiler a -> IO (Either CompileError a)
+runDefaultImpureCompiler = flip runReaderT defaultCompileSettings . runExceptT
+
+compileUnitSpec :: Spec
+compileUnitSpec =
+    describe "compileUnit" $ do
+        it "Only ever produces valid results" $
+            forAll genValid $ \sets ->
+                validIfSucceeds
+                    (runIdentity .
+                     flip runReaderT sets . runExceptT . compileUnit)
 
 hopTests :: Spec
 hopTests = do
@@ -264,17 +285,23 @@ hopTests = do
         let hop2 = dir </> "hop1dir" </> "hop2dir" </> "hop2.sus"
         let hop3 = dir </> "hop1dir" </> "hop2dir" </> "hop3dir" </> "hop3.sus"
         it "compiles hop3 correctly" $ do
-            r <- runDefaultSparker $ compileJob $ CardFileReference hop3 Nothing
+            r <-
+                runDefaultImpureCompiler $
+                compileJob $ CardFileReference hop3 Nothing
             r `shouldBe` Right [Put ["z/delta"] "d/three" LinkDeployment]
         it "compiles hop2 correctly" $ do
-            r <- runDefaultSparker $ compileJob $ CardFileReference hop2 Nothing
+            r <-
+                runDefaultImpureCompiler $
+                compileJob $ CardFileReference hop2 Nothing
             r `shouldBe`
                 Right
                     [ Put ["y/gamma"] "c/two" LinkDeployment
                     , Put ["hop3dir/z/delta"] "d/three" LinkDeployment
                     ]
         it "compiles hop1 correctly" $ do
-            r <- runDefaultSparker $ compileJob $ CardFileReference hop1 Nothing
+            r <-
+                runDefaultImpureCompiler $
+                compileJob $ CardFileReference hop1 Nothing
             r `shouldBe`
                 Right
                     [ Put ["x/beta"] "b/one" LinkDeployment
@@ -282,7 +309,9 @@ hopTests = do
                     , Put ["hop2dir/hop3dir/z/delta"] "d/three" LinkDeployment
                     ]
         it "compiles root correctly" $ do
-            r <- runDefaultSparker $ compileJob $ CardFileReference root Nothing
+            r <-
+                runDefaultImpureCompiler $
+                compileJob $ CardFileReference root Nothing
             r `shouldBe`
                 Right
                     [ Put ["u/alpha"] "a/zero" LinkDeployment
@@ -306,25 +335,27 @@ exactTests = do
                         let orig = fp
                         let result = fp <.> "res"
                         ads <-
-                            runDefaultSparker $
+                            runDefaultImpureCompiler $
                             compileJob $ CardFileReference orig Nothing
-                        eds <- runDefaultSparker $ inputCompiled result
+                        eds <- runDefaultImpureCompiler $ inputCompiled result
                         ads `shouldBe` eds
 
 compilerBlackBoxTests :: Spec
 compilerBlackBoxTests = do
     let tr = "test_resources"
-    describe "Correct succesful compile examples" $ do
+    describe "Succesful compile examples" $ do
         let dirs = map (tr </>) ["shouldCompile", "hop_test"]
         forFileInDirss dirs $ \f -> do
             it f $ do
                 r <-
-                    runDefaultSparker $ compileJob $ CardFileReference f Nothing
+                    runDefaultImpureCompiler $
+                    compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isRight
-    describe "Correct unsuccesfull compile examples" $ do
+    describe "Unsuccesfull compile examples" $ do
         let dirs = map (tr </>) ["shouldNotParse", "shouldNotCompile"]
         forFileInDirss dirs $ \f -> do
             it f $ do
                 r <-
-                    runDefaultSparker $ compileJob $ CardFileReference f Nothing
+                    runDefaultImpureCompiler $
+                    compileJob $ CardFileReference f Nothing
                 r `shouldSatisfy` isLeft

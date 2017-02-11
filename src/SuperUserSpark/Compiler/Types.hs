@@ -33,11 +33,15 @@ defaultCompileSettings =
     , compileKindOverride = Nothing
     }
 
+instance Validity CompileSettings
+
 data Deployment = Put
     { deploymentSources :: [FilePath]
     , deploymentDestination :: FilePath
     , deploymentKind :: DeploymentKind
-    } deriving (Eq)
+    } deriving (Eq, Generic)
+
+instance Validity Deployment
 
 instance Show Deployment where
     show dep = unwords $ srcs ++ [k, dst]
