@@ -25,6 +25,14 @@ data CompileSettings = CompileSettings
     , compileKindOverride :: Maybe DeploymentKind
     } deriving (Show, Eq, Generic)
 
+defaultCompileSettings :: CompileSettings
+defaultCompileSettings =
+    CompileSettings
+    { compileOutput = Nothing
+    , compileDefaultKind = LinkDeployment
+    , compileKindOverride = Nothing
+    }
+
 data Deployment = Put
     { deploymentSources :: [FilePath]
     , deploymentDestination :: FilePath

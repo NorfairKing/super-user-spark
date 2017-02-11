@@ -18,7 +18,10 @@ import SuperUserSpark.Utils
 
 deployFromArgs :: DeployArgs -> IO ()
 deployFromArgs das = do
-    deployAssignment das >>= print
+    errOrAss <- deployAssignment das
+    case errOrAss of
+        Left err -> die $ unwords ["Failed to make Deployment assignment:", err]
+        Right ass -> deploy ass
 
 deployAssignment :: DeployArgs -> IO (Either String DeployAssignment)
 deployAssignment DeployArgs {..}

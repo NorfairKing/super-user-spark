@@ -12,13 +12,32 @@ import System.FilePath (takeDirectory, (</>))
 
 import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Parser
 import SuperUserSpark.PreCompiler
 
 compileFromArgs :: CompileArgs -> IO ()
-compileFromArgs _ = pure ()
+compileFromArgs ca = do
+    let ass = compileAssignment ca
+    compile ass
+
+compileAssignment :: CompileArgs -> CompileAssignment
+compileAssignment CompileArgs {..} =
+    CompileAssignment
+    { compileCardReference = read compileCardRef -- TODO fix errors in this.
+    , compileSettings = deriveCompileSettings compileFlags
+    }
+
+deriveCompileSettings :: CompileFlags -> CompileSettings
+deriveCompileSettings CompileFlags {..} =
+    CompileSettings
+    { compileOutput = compileFlagOutput
+    , compileDefaultKind =
+          fromMaybe LinkDeployment $ read <$> compileDefaultKind
+    , compileKindOverride = read <$> compileKindOverride
+    }
 
 compile :: CompileAssignment -> IO ()
 compile CompileAssignment {..} = do

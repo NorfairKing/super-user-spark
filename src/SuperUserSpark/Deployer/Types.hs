@@ -22,6 +22,15 @@ data DeploySettings = DeploySettings
     , deployCheckSettings :: CheckSettings
     } deriving (Show, Eq, Generic)
 
+defaultDeploySettings :: DeploySettings
+defaultDeploySettings =
+    DeploySettings
+    { deploySetsReplaceLinks = False
+    , deploySetsReplaceFiles = False
+    , deploySetsReplaceDirectories = False
+    , deployCheckSettings = defaultCheckSettings
+    }
+
 data DeployerCardReference
     = DeployerCardCompiled FilePath
     | DeployerCardUncompiled CardFileReference

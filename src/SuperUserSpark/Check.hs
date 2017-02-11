@@ -25,10 +25,16 @@ checkFromArgs :: CheckArgs -> IO ()
 checkFromArgs = check . checkAssignment
 
 checkAssignment :: CheckArgs -> CheckAssignment
-checkAssignment = undefined
+checkAssignment CheckArgs {..} =
+    CheckAssignment
+    { checkCardReference = read checkArgCardRef -- TODO handle failures
+    , checkSettings = deriveCheckSettings checkFlags
+    }
 
 deriveCheckSettings :: CheckFlags -> CheckSettings
-deriveCheckSettings = undefined
+deriveCheckSettings CheckFlags {..} =
+    CheckSettings
+    {checkCompileSettings = deriveCompileSettings checkCompileFlags}
 
 check :: CheckAssignment -> IO ()
 check CheckAssignment {..} = do

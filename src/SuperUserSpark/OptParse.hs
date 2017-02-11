@@ -78,6 +78,7 @@ parseCompileFlags =
         (mconcat
              [ long "output"
              , short 'o'
+             , value Nothing
              , metavar "FILE"
              , help "The output file for compilation"
              ]) <*>
