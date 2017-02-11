@@ -10,11 +10,11 @@ import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Gen ()
 import SuperUserSpark.Language.Gen ()
 
-instance GenUnchecked CheckSettings
+instance GenUnchecked CheckAssignment
 
-instance GenValid CheckSettings
+instance GenValid CheckAssignment
 
-instance Arbitrary CheckSettings where
+instance Arbitrary CheckAssignment where
     arbitrary = genValid
 
 instance GenUnchecked CheckCardReference
@@ -22,6 +22,20 @@ instance GenUnchecked CheckCardReference
 instance GenValid CheckCardReference
 
 instance Arbitrary CheckCardReference where
+    arbitrary = genValid
+
+instance GenUnchecked CheckSettings
+
+instance GenValid CheckSettings
+
+instance Arbitrary CheckSettings where
+    arbitrary = genValid
+
+instance GenUnchecked CheckError
+
+instance GenValid CheckError
+
+instance Arbitrary CheckError where
     arbitrary = genValid
 
 instance GenUnchecked CheckResult

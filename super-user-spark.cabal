@@ -97,6 +97,7 @@ test-suite spark-tests
       , SuperUserSpark.Parser.Gen
       , SuperUserSpark.Parser.TestUtils
       , SuperUserSpark.ParserSpec
+      , SuperUserSpark.PreCompiler.Gen
       , SuperUserSpark.SeedSpec
       , TestImport
       , TestUtils

@@ -17,6 +17,8 @@ data CheckAssignment = CheckAssignment
     , checkSettings :: CheckSettings
     } deriving (Show, Eq, Generic)
 
+instance Validity CheckAssignment
+
 data CheckCardReference
     = CheckCardCompiled FilePath
     | CheckCardUncompiled CardFileReference
@@ -58,6 +60,8 @@ data CheckError
     = CheckCompileError CompileError
     | CheckError String
     deriving (Show, Eq, Generic)
+
+instance Validity CheckError
 
 type HashDigest = MD5Digest
 

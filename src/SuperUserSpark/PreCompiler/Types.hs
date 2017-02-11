@@ -8,4 +8,6 @@ newtype PreCompileError =
     PreCompileError String
     deriving (Show, Eq, Generic)
 
+instance Validity PreCompileError
+
 type Precompiler = WriterT [PreCompileError] Identity

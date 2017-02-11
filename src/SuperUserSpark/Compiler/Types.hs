@@ -19,11 +19,15 @@ data CompileAssignment = CompileAssignment
     , compileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
+instance Validity CompileAssignment
+
 data CompileSettings = CompileSettings
     { compileOutput :: Maybe FilePath -- Todo make statically typed
     , compileDefaultKind :: DeploymentKind
     , compileKindOverride :: Maybe DeploymentKind
     } deriving (Show, Eq, Generic)
+
+instance Validity CompileSettings
 
 defaultCompileSettings :: CompileSettings
 defaultCompileSettings =
@@ -32,8 +36,6 @@ defaultCompileSettings =
     , compileDefaultKind = LinkDeployment
     , compileKindOverride = Nothing
     }
-
-instance Validity CompileSettings
 
 data Deployment = Put
     { deploymentSources :: [FilePath]
@@ -72,13 +74,17 @@ type CompilerPrefix = [PrefixPart]
 data PrefixPart
     = Literal String
     | Alts [String]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity PrefixPart
 
 data CompilerState = CompilerState
     { stateDeploymentKindLocalOverride :: Maybe DeploymentKind
     , stateInto :: Directory
     , stateOutof_prefix :: CompilerPrefix
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+
+instance Validity CompilerState
 
 type ImpureCompiler = ExceptT CompileError (ReaderT CompileSettings IO)
 
@@ -91,3 +97,8 @@ data CompileError
     | PreCompileErrors [PreCompileError]
     | DuringCompilationError String
     deriving (Show, Eq, Generic)
+
+instance Validity CompileError where
+    isValid (ParseError _) = True
+    isValid (PreCompileErrors es) = isValid es
+    isValid (DuringCompilationError s) = isValid s
