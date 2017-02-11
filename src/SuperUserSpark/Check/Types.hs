@@ -1,11 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module SuperUserSpark.Check.Types where
 
 import Import
 
 import Data.Digest.Pure.MD5 (MD5Digest)
-import System.FilePath
+import System.FilePath hiding (isValid)
 
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
@@ -20,6 +21,8 @@ data CheckCardReference
     = CheckCardCompiled FilePath
     | CheckCardUncompiled CardFileReference
     deriving (Show, Eq, Generic)
+
+instance Validity CheckCardReference
 
 instance Read CheckCardReference where
     readsPrec _ fp =
@@ -43,6 +46,8 @@ data CheckSettings = CheckSettings
     { checkCompileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
+instance Validity CheckSettings
+
 defaultCheckSettings :: CheckSettings
 defaultCheckSettings =
     CheckSettings {checkCompileSettings = defaultCompileSettings}
@@ -62,25 +67,35 @@ data Diagnostics
     | IsDirectory
     | IsLinkTo FilePath
     | IsWeird
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity Diagnostics
 
 data DiagnosedFp = D
     { diagnosedFilePath :: FilePath
     , diagnosedDiagnostics :: Diagnostics
     , diagnosedHashDigest :: HashDigest
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+
+instance Validity DiagnosedFp where
+    isValid D {..} =
+        and [isValid diagnosedFilePath, isValid diagnosedDiagnostics]
 
 data Instruction =
     Instruction FilePath
                 FilePath
                 DeploymentKind
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity Instruction
 
 data CleanupInstruction
     = CleanFile FilePath
     | CleanDirectory FilePath
     | CleanLink FilePath
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity CleanupInstruction
 
 data DeploymentCheckResult
     = DeploymentDone -- ^ Done already
@@ -89,7 +104,9 @@ data DeploymentCheckResult
                      Instruction
                      CleanupInstruction -- ^ Possible after cleanup of destination
     | ImpossibleDeployment [String] -- ^ Entirely impossible
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity DeploymentCheckResult
 
 data CheckResult
     = AlreadyDone -- ^ Done already
@@ -98,10 +115,14 @@ data CheckResult
             Instruction
             CleanupInstruction -- ^ Possible after cleanup
     | Impossible String -- ^ Entirely impossible
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity CheckResult
 
 data DiagnosedDeployment = Diagnosed
     { diagnosedSrcs :: [DiagnosedFp]
     , diagnosedDst :: DiagnosedFp
     , diagnosedKind :: DeploymentKind
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+
+instance Validity DiagnosedDeployment

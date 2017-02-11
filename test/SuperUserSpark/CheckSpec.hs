@@ -1,27 +1,51 @@
+{-# LANGUAGE TypeApplications #-}
+
 module SuperUserSpark.CheckSpec where
 
 import TestImport
 
+import Control.Monad (forM_)
+import qualified Data.ByteString as SB
 import SuperUserSpark.Check.Gen ()
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.TestUtils
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
-import Control.Monad (forM_)
 import SuperUserSpark.CoreTypes
-import qualified Data.ByteString as SB
 import SuperUserSpark.Parser.Gen
+import SuperUserSpark.Utils
 import System.Directory
        (removeDirectoryRecursive, removeFile, withCurrentDirectory)
 import System.Posix.Files
 import TestUtils
-import SuperUserSpark.Utils
 
 spec :: Spec
 spec = do
+    instanceSpec
     diagnoseSpec
     checkSpec
     hashSpec
+
+instanceSpec :: Spec
+instanceSpec = do
+    eqSpec @CheckCardReference
+    genValidSpec @CheckCardReference
+    eqSpec @CheckSettings
+    genValidSpec @CheckSettings
+    eqSpec @Diagnostics
+    genValidSpec @Diagnostics
+    eqSpec @DiagnosedFp
+    genValidSpec @DiagnosedFp
+    eqSpec @Instruction
+    genValidSpec @Instruction
+    eqSpec @CleanupInstruction
+    genValidSpec @CleanupInstruction
+    eqSpec @DeploymentCheckResult
+    genValidSpec @DeploymentCheckResult
+    eqSpec @CheckResult
+    genValidSpec @CheckResult
+    eqSpec @DiagnosedDeployment
+    genValidSpec @DiagnosedDeployment
 
 diagnoseSpec :: Spec
 diagnoseSpec = do
