@@ -24,8 +24,8 @@ import TestUtils
 spec :: Spec
 spec = do
     instanceSpec
-    diagnoseSpec
     checkSpec
+    diagnoseSpec
     hashSpec
 
 instanceSpec :: Spec
@@ -48,6 +48,31 @@ instanceSpec = do
     genValidSpec @CheckResult
     eqSpec @DiagnosedDeployment
     genValidSpec @DiagnosedDeployment
+
+checkSpec :: Spec
+checkSpec =
+    parallel $ do
+        describe "checkAssignment" $
+            it "always produces valid assignments" $
+            validIfSucceeds checkAssignment
+        describe "deriveCheckSettings" $
+            it "always produces valid settings" $
+            validIfSucceeds deriveCheckSettings
+        describe "formatCheckError" $
+            it "always produces valid strings" $ producesValid formatCheckError
+        checkSingleSpec
+        checkDeploymentSpec
+        describe "formatDeploymentChecks" $
+            it "always produces valid strings" $
+            producesValid formatDeploymentChecks
+        describe "formatDeploymentCheck" $
+            it "always produces valid strings" $
+            producesValid formatDeploymentCheck
+        describe "formatInstruction" $
+            it "always produces valid strings" $ producesValid formatInstruction
+        describe "formatCleanupInstruction" $
+            it "always produces valid strings" $
+            producesValid formatCleanupInstruction
 
 diagnoseSpec :: Spec
 diagnoseSpec = do
@@ -118,21 +143,10 @@ diagnoseSpec = do
                 it "figures out that /dev/random is weird" $ do
                     diagnoseFp "/dev/random" `shouldReturn` IsWeird
 
-checkSpec :: Spec
-checkSpec =
-    parallel $ do
-        describe "checkAssignment" $
-            it "always produces valid assignments" $
-            validIfSucceeds checkAssignment
-        describe "deriveCheckSettings" $
-            it "always produces valid settings" $
-            validIfSucceeds deriveCheckSettings
-        checkSingleSpec
-        checkDeploymentSpec
-
 checkDeploymentSpec :: Spec
 checkDeploymentSpec = do
     describe "checkDeployment" $ do
+        it "always produces valid check results" $ producesValid checkDeployment
         it "says 'impossible' for deployments with an empty list of sources" $ do
             forAll arbitrary $ \dst ->
                 forAll arbitrary $ \kind ->
@@ -152,6 +166,7 @@ checkDeploymentSpec = do
                         length r1 `shouldSatisfy` (<= (length r2))
                     (r1, r2) -> r1 `shouldBe` r2
     describe "bestResult" $ do
+        it "always produces valid check results" $ producesValid bestResult
         it "says 'impossible' if all checkresults are impossible" $ do
             forAll
                 (arbitrary `suchThat` all isImpossible)
@@ -178,6 +193,7 @@ checkDeploymentSpec = do
 checkSingleSpec :: Spec
 checkSingleSpec =
     describe "checkSingle" $ do
+        it "always produces valid CheckResults" $ producesValid3 checkSingle
         it "says 'impossible' if the source does not exist" $ do
             forAll (arbitraryWith Nonexistent) $ \src ->
                 forAll arbitrary $ \dst ->
