@@ -25,10 +25,11 @@ helpTextSpec =
 
 regularWorkflowSpec :: Spec
 regularWorkflowSpec = do
-    let sandbox = "test_sandbox"
+    here <- runIO getCurrentDirectory
+    let sandbox = here </> "test_sandbox"
     let setup = createDirectoryIfMissing sandbox
     let teardown = removeDirectoryRecursive sandbox
-    let rsc = "test_resources" </> "end-to-end"
+    let rsc = here </> "test_resources" </> "end-to-end"
     beforeAll_ setup $
         afterAll_ teardown $ do
             describe "standard bash card test" $ do
@@ -50,27 +51,33 @@ regularWorkflowSpec = do
                 beforeAll_ up $
                     afterAll_ down $ do
                         it "parses correcty" $ do
-                            withArgs ["parse", cardfile] spark `shouldReturn` ()
+                            withCurrentDirectory sandbox $
+                                withArgs ["parse", cardfile] spark `shouldReturn`
+                                ()
                         it "compiles correctly" $ do
                             let outfile = sandbox </> "bash.sus.res"
-                            withArgs
-                                ["compile", cardfile, "--output", outfile]
-                                spark `shouldReturn`
+                            withCurrentDirectory sandbox $
+                                withArgs
+                                    ["compile", cardfile, "--output", outfile]
+                                    spark `shouldReturn`
                                 ()
                             actual <- readFile outfile
                             expected <- readFile bashrscres
                             actual `shouldBe` expected
                         it "checks without exceptions" $ do
-                            withArgs ["check", cardfile] spark `shouldReturn` ()
-                        it "deploys correctly" $ do
-                            withArgs ["deploy", cardfile] spark `shouldReturn`
+                            withCurrentDirectory sandbox $
+                                withArgs ["check", cardfile] spark `shouldReturn`
                                 ()
-                            let f1 = "subdir" </> ".bashrc"
-                                f2 = "subdir" </> ".bash_aliases"
-                                f3 = "subdir" </> ".bash_profile"
-                            readFile f1 `shouldReturn` "bashrc"
-                            readFile f2 `shouldReturn` "bash_aliases"
-                            readFile f3 `shouldReturn` "bash_profile"
-                            removeLink f1
-                            removeLink f2
-                            removeLink f3
+                        it "deploys correctly" $
+                            withCurrentDirectory sandbox $ do
+                                withArgs ["deploy", cardfile] spark `shouldReturn`
+                                    ()
+                                let f1 = "subdir" </> ".bashrc"
+                                    f2 = "subdir" </> ".bash_aliases"
+                                    f3 = "subdir" </> ".bash_profile"
+                                readFile f1 `shouldReturn` "bashrc"
+                                readFile f2 `shouldReturn` "bash_aliases"
+                                readFile f3 `shouldReturn` "bash_profile"
+                                removeLink f1
+                                removeLink f2
+                                removeLink f3
