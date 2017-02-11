@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module SuperUserSpark.CoreTypes where
 
@@ -13,7 +14,9 @@ type Directory = FilePath
 data DeploymentKind
     = LinkDeployment
     | CopyDeployment
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity DeploymentKind
 
 instance Read DeploymentKind where
     readsPrec _ "link" = [(LinkDeployment, "")]

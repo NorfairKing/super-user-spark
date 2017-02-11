@@ -2,12 +2,13 @@ module SuperUserSpark.SeedSpec where
 
 import TestImport
 
+import System.FilePath.Posix (isAbsolute)
+
 import SuperUserSpark.Compiler.Gen ()
 import SuperUserSpark.Compiler.TestUtils
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.PreCompiler
 import SuperUserSpark.Seed
-import System.FilePath.Posix (isAbsolute)
 import TestUtils
 
 spec :: Spec

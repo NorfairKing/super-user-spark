@@ -16,13 +16,13 @@ import System.FilePath.Posix (takeExtension, (<.>), (</>))
 import TestUtils
 
 spec :: Spec
-spec =
+spec = do
     parallel $ do
         singleCompileDecSpec
         precompileSpec
-        hopTests
-        exactTests
-        compilerBlackBoxTests
+    hopTests
+    exactTests
+    compilerBlackBoxTests
 
 precompileSpec :: Spec
 precompileSpec = describe "pre-compilation" $ do cleanContentSpec

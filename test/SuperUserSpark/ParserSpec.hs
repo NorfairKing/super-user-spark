@@ -1,21 +1,26 @@
+{-# LANGUAGE TypeApplications #-}
+
 module SuperUserSpark.ParserSpec where
 
-import TestImport
+import TestImport hiding (succeeds)
 
-import SuperUserSpark.CoreTypes
 import Data.Either (isLeft, isRight)
 import Data.List (intercalate)
+import System.FilePath.Posix ((</>))
+import Text.Parsec
+
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Language.Gen ()
 import SuperUserSpark.Language.Types
 import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Parser.Internal
 import SuperUserSpark.Parser.TestUtils
-import System.FilePath.Posix ((</>))
 import TestUtils
-import Text.Parsec
 
 spec :: Spec
 spec =
     parallel $ do
+        instanceSpec
         blankspaceParserTests
         enclosingCharacterTests
         delimiterTests
@@ -24,6 +29,7 @@ spec =
         pathParserTests
         declarationParserTests
         parserBlackBoxTests
+        toplevelParserTests
 
 enclosingCharacterTests :: Spec
 enclosingCharacterTests = do
@@ -48,6 +54,21 @@ enclosingCharacterTests = do
                          ("\"" ++ word ++ "\"")
                          word)
 
+instanceSpec :: Spec
+instanceSpec = do
+    eqSpec @Card
+    genValidSpec @Card
+    eqSpec @Declaration
+    genValidSpec @Declaration
+    eqSpec @CardNameReference
+    genValidSpec @CardNameReference
+    eqSpec @CardFileReference
+    genValidSpec @CardFileReference
+    eqSpec @CardReference
+    genValidSpec @CardReference
+    eqSpec @SparkFile
+    genValidSpec @SparkFile
+
 blankspaceParserTests :: Spec
 blankspaceParserTests = do
     describe "eol" $ do
@@ -69,17 +90,11 @@ blankspaceParserTests = do
         let f = shouldSucceed whitespace
         it "fails for line ending characters" $ do
             forAll (listOf $ oneof [generateCarriageReturn, generateLineFeed]) f
-        it "fails for any non-linespace, even if there's linespace in it" $ do
-            forAll
-                (listOf1 generateNormalCharacter)
-                (\ls ->
-                     forAll
-                         generateLineSpace
-                         (\ls1 ->
-                              forAll
-                                  generateLineSpace
-                                  (\ls2 ->
-                                       shouldFail linespace (ls1 ++ ls ++ ls2))))
+        it "fails for any non-linespace, even if there's linespace in it" $
+            forAll (listOf1 generateNormalCharacter) $ \ls ->
+                forAll generateLineSpace $ \ls1 ->
+                    forAll generateLineSpace $ \ls2 ->
+                        shouldFail linespace (ls1 ++ ls ++ ls2)
     describe "whitespace" $ do
         let s = shouldSucceed whitespace
         it "succeeds for spaces" $ do forAll (listOf generateSpace) s
@@ -91,48 +106,30 @@ blankspaceParserTests = do
             "succeeds for mixtures of spaces, tabs, carriage returns and line feeds" $ do
             forAll generateWhiteSpace s
         it "fails for any non-whitespace, even if there's whitespace in it" $ do
-            forAll
-                (listOf1 generateNormalCharacter)
-                (\ls ->
-                     forAll
-                         generateWhiteSpace
-                         (\ws1 ->
-                              forAll
-                                  generateWhiteSpace
-                                  (\ws2 ->
-                                       shouldFail whitespace (ws1 ++ ls ++ ws2))))
+            forAll (listOf1 generateNormalCharacter) $ \ls ->
+                forAll generateWhiteSpace $ \ws1 ->
+                    forAll generateWhiteSpace $ \ws2 ->
+                        shouldFail whitespace (ws1 ++ ls ++ ws2)
     describe "inLineSpace" $ do
         it
             "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
-            forAll
-                generateLineSpace
-                (\ws1 ->
-                     forAll
-                         generateLineSpace
-                         (\ws2 ->
-                              forAll
-                                  (listOf1 generateNormalCharacter)
-                                  (\ls ->
-                                       parseShouldSucceedAs
-                                           (inLineSpace $ string ls)
-                                           (ws1 ++ ls ++ ws2)
-                                           ls)))
+            forAll generateLineSpace $ \ws1 ->
+                forAll generateLineSpace $ \ws2 ->
+                    forAll (listOf1 generateNormalCharacter) $ \ls ->
+                        parseShouldSucceedAs
+                            (inLineSpace $ string ls)
+                            (ws1 ++ ls ++ ws2)
+                            ls
     describe "inWhiteSpace" $ do
         it
             "succeeds for cases where we append whitespace to the front and back of non-whitespace" $ do
-            forAll
-                generateWhiteSpace
-                (\ws1 ->
-                     forAll
-                         generateWhiteSpace
-                         (\ws2 ->
-                              forAll
-                                  (listOf1 generateNormalCharacter)
-                                  (\ls ->
-                                       parseShouldSucceedAs
-                                           (inWhiteSpace $ string ls)
-                                           (ws1 ++ ls ++ ws2)
-                                           ls)))
+            forAll generateWhiteSpace $ \ws1 ->
+                forAll generateWhiteSpace $ \ws2 ->
+                    forAll (listOf1 generateNormalCharacter) $ \ls ->
+                        parseShouldSucceedAs
+                            (inWhiteSpace $ string ls)
+                            (ws1 ++ ls ++ ws2)
+                            ls
 
 delimiterTests :: Spec
 delimiterTests = do
@@ -516,16 +513,17 @@ parserBlackBoxTests = do
                     ["shouldParse", "shouldCompile", "shouldNotCompile"]
         forFileInDirss dirs $
             concerningContents $ \f contents -> do
-                it f $
-                    parseFromSource sparkFile f contents `shouldSatisfy` isRight
+                it f $ parseCardFile f contents `shouldSatisfy` isRight
     describe "Correct unsuccesfull parse examples" $ do
         let dirs = map (tr </>) ["shouldNotParse"]
         forFileInDirss dirs $
             concerningContents $ \f contents -> do
-                it f $
-                    parseFromSource sparkFile f contents `shouldSatisfy` isLeft
+                it f $ parseCardFile f contents `shouldSatisfy` isLeft
 
 toplevelParserTests :: Spec
 toplevelParserTests = do
-    describe "sparkFile" $ do pend
+    describe "sparkFile" $ do
+        it "Only ever produces valid SparkFile's" $
+            validIfSucceeds2 parseCardFile
+        pend
     describe "resetPosition" $ do pend

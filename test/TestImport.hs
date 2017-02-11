@@ -16,3 +16,6 @@ import Debug.Trace as X
 
 import Test.Hspec as X
 import Test.QuickCheck as X
+
+import Data.GenValidity as X
+import Test.Validity as X

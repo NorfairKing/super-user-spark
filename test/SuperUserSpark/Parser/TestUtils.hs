@@ -1,6 +1,6 @@
 module SuperUserSpark.Parser.TestUtils where
 
-import TestImport
+import TestImport hiding (succeeds)
 
 import Data.Either (isRight)
 import SuperUserSpark.Parser.Internal

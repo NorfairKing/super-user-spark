@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module SuperUserSpark.Language.Types where
 
 import Import
@@ -14,7 +16,9 @@ type Destination = FilePath
 data Card = Card
     { cardName :: CardName
     , cardContent :: Declaration
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+
+instance Validity Card
 
 -- ** Declarations
 -- | A declaration in a card
@@ -28,19 +32,25 @@ data Declaration
     | DeployKindOverride DeploymentKind -- ^ Override the deployment kind
     | Alternatives [Directory] -- ^ Provide a list of alternative sources
     | Block [Declaration] -- ^ A scoped block of declarations
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity Declaration
 
 -- * Card references
 -- | Reference a card by name (inside a file)
 data CardNameReference =
     CardNameReference CardName
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity CardNameReference
 
 -- | Reference a card by the file it is in and therein potentially by a name reference
 data CardFileReference =
     CardFileReference FilePath
                       (Maybe CardNameReference)
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity CardFileReference
 
 instance Read CardFileReference where
     readsPrec _ fp =
@@ -55,10 +65,14 @@ instance Read CardFileReference where
 data CardReference
     = CardFile CardFileReference
     | CardName CardNameReference
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
+
+instance Validity CardReference
 
 -- * Card files
 data SparkFile = SparkFile
     { sparkFilePath :: FilePath
     , sparkFileCards :: [Card]
-    } deriving (Show, Eq)
+    } deriving (Show, Eq, Generic)
+
+instance Validity SparkFile

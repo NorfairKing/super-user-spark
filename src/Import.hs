@@ -14,3 +14,5 @@ import Control.Monad.Identity as X
 import Control.Monad.Reader as X
 import Control.Monad.State as X
 import Control.Monad.Writer as X
+
+import Data.Validity as X
