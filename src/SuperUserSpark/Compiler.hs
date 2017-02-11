@@ -17,25 +17,29 @@ import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Parser
 import SuperUserSpark.PreCompiler
+import SuperUserSpark.Utils
 
 compileFromArgs :: CompileArgs -> IO ()
 compileFromArgs ca = do
-    case compileAssignment ca of
+    errOrrAss <- compileAssignment ca
+    case errOrrAss of
         Left ce -> die $ unwords ["Failed to build compile assignment:", ce]
-        Right ca -> compile ca
+        Right ass -> compile ass
 
-compileAssignment :: CompileArgs -> Either String CompileAssignment
+compileAssignment :: CompileArgs -> IO (Either String CompileAssignment)
 compileAssignment CompileArgs {..} =
-    CompileAssignment <$> readEither compileCardRef <*>
+    CompileAssignment <$$> pure (readEither compileCardRef) <**>
     deriveCompileSettings compileFlags
 
-deriveCompileSettings :: CompileFlags -> Either String CompileSettings
+deriveCompileSettings :: CompileFlags -> IO (Either String CompileSettings)
 deriveCompileSettings CompileFlags {..} =
-    CompileSettings <$> pure compileFlagOutput <*>
-    (case compileDefaultKind of
+    CompileSettings compileFlagOutput <$$>
+    (pure $
+     case compileDefaultKind of
          Nothing -> Right LinkDeployment
-         Just s -> readEither s) <*>
-    (case compileKindOverride of
+         Just s -> readEither s) <**>
+    (pure $
+     case compileKindOverride of
          Nothing -> Right Nothing
          Just s -> readEither s)
 
@@ -76,7 +80,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
                             DuringCompilationError $
                             "No cards found for compilation in file:" ++ fp
                             -- TODO more detailed error here
-                        (first:_) -> return first
+                        (fst_:_) -> pure fst_
                 Just (CardNameReference name) -> do
                     case find (\c -> cardName c == name) scope of
                         Nothing ->

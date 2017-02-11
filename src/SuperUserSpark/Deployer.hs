@@ -18,27 +18,31 @@ import SuperUserSpark.Utils
 
 deployFromArgs :: DeployArgs -> IO ()
 deployFromArgs das = do
-    case deployAssignment das of
+    errOrAss <- deployAssignment das
+    case errOrAss of
         Left err -> die $ unwords ["Failed to make Deployment assignment:", err]
         Right ass -> deploy ass
 
-deployAssignment :: DeployArgs -> Either String DeployAssignment
+deployAssignment :: DeployArgs -> IO (Either String DeployAssignment)
 deployAssignment DeployArgs {..} =
-    DeployAssignment <$> readEither deployArgCardRef <*> deriveDeploySettings deployFlags
+    DeployAssignment <$$> pure (readEither deployArgCardRef) <**>
+    deriveDeploySettings deployFlags
 
-deriveDeploySettings :: DeployFlags -> Either String DeploySettings
-deriveDeploySettings DeployFlags{..} = do
-       cs <- deriveCheckSettings deployCheckFlags
-       pure
-               DeploySettings
-               { deploySetsReplaceLinks =
-                     deployFlagReplaceLinks || deployFlagReplaceAll
-               , deploySetsReplaceFiles =
-                     deployFlagReplaceFiles || deployFlagReplaceAll
-               , deploySetsReplaceDirectories =
-                     deployFlagReplaceDirectories || deployFlagReplaceAll
-               , deployCheckSettings = cs
-               }
+deriveDeploySettings :: DeployFlags -> IO (Either String DeploySettings)
+deriveDeploySettings DeployFlags {..} = do
+    ecs <- deriveCheckSettings deployCheckFlags
+    pure $ do
+        cs <- ecs
+        pure
+            DeploySettings
+            { deploySetsReplaceLinks =
+                  deployFlagReplaceLinks || deployFlagReplaceAll
+            , deploySetsReplaceFiles =
+                  deployFlagReplaceFiles || deployFlagReplaceAll
+            , deploySetsReplaceDirectories =
+                  deployFlagReplaceDirectories || deployFlagReplaceAll
+            , deployCheckSettings = cs
+            }
 
 deploy :: DeployAssignment -> IO ()
 deploy DeployAssignment {..} = do

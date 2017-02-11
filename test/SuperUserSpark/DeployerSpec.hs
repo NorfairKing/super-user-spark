@@ -51,12 +51,6 @@ deployerSpec =
     parallel $ do
         describe "defaultDeploySettings" $
             it "is valid" $ isValid defaultDeploySettings
-        describe "deployAssignment" $ do
-            it "only ever produces valid assignments" $
-                validIfSucceeds deployAssignment
-        describe "deriveDeploySettings" $ do
-            it "only ever produces valid settings" $
-                validIfSucceeds deriveDeploySettings
         describe "formatDeployError" $ do
             it "only ever produces valid strings" $
                 producesValid formatDeployError

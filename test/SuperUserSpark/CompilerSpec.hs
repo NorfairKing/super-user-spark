@@ -7,7 +7,7 @@ import TestImport
 
 import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)
-import System.FilePath.Posix (takeExtension, (<.>))
+import System.FilePath.Posix ((<.>))
 
 import SuperUserSpark.Compiler
 import SuperUserSpark.Compiler.Gen ()
@@ -214,12 +214,6 @@ instanceSpec =
 
 compileSpec :: Spec
 compileSpec = do
-    describe "compileAssignment" $
-        it "only every produces valid assignments" $
-        validIfSucceeds compileAssignment
-    describe "deriveCompileSettings" $
-        it "only every produces valid settings" $
-        validIfSucceeds deriveCompileSettings
     describe "formatCompileError" $
         it "only produces valid strings" $ producesValid formatCompileError
     describe "resolveCardReferenceRelativeTo" $

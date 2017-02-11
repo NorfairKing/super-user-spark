@@ -20,21 +20,23 @@ import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Seed
+import SuperUserSpark.Utils
 
 checkFromArgs :: CheckArgs -> IO ()
-checkFromArgs cas =
-    case checkAssignment cas of
+checkFromArgs cas = do
+    errOrAss <- checkAssignment cas
+    case errOrAss of
         Left err -> die $ unwords ["Failed to build Check assignment:", err]
-        Right ca -> check ca
+        Right ass -> check ass
 
-checkAssignment :: CheckArgs -> Either String CheckAssignment
+checkAssignment :: CheckArgs -> IO (Either String CheckAssignment)
 checkAssignment CheckArgs {..} =
-    CheckAssignment <$> readEither checkArgCardRef <*>
+    CheckAssignment <$$> pure (readEither checkArgCardRef) <**>
     deriveCheckSettings checkFlags
 
-deriveCheckSettings :: CheckFlags -> Either String CheckSettings
+deriveCheckSettings :: CheckFlags -> IO (Either String CheckSettings)
 deriveCheckSettings CheckFlags {..} =
-    CheckSettings <$> deriveCompileSettings checkCompileFlags
+    CheckSettings <$$> deriveCompileSettings checkCompileFlags
 
 check :: CheckAssignment -> IO ()
 check CheckAssignment {..} = do

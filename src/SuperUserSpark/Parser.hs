@@ -4,22 +4,26 @@ module SuperUserSpark.Parser where
 
 import Import
 
-import qualified Text.Parsec as Parsec
+import Control.Exception (try)
 
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Parser.Internal
 import SuperUserSpark.Parser.Types
+import SuperUserSpark.Utils
 
 parseFromArgs :: ParseArgs -> IO ()
 parseFromArgs pa = do
-    case parseAssignment pa of
+    errOrAss <- parseAssignment pa
+    case errOrAss of
         Left err -> die $ unwords ["Unable to build parse assignment:", err]
-        Right _ -> pure ()
+        Right ass -> parse ass
 
-parseAssignment :: ParseArgs -> Either String ParseAssignment
+parseAssignment :: ParseArgs -> IO (Either String ParseAssignment)
 parseAssignment ParseArgs {..} =
-    ParseAssignment <$> left show (parseAbsFile parseFilePath)
+    ParseAssignment <$$>
+    ((left (show :: PathParseException -> String)) <$>
+     try (resolveFile' parseFilePath))
 
 parse :: ParseAssignment -> IO ()
 parse ParseAssignment {..} = do

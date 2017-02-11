@@ -53,12 +53,6 @@ instanceSpec = do
 checkSpec :: Spec
 checkSpec =
     parallel $ do
-        describe "checkAssignment" $
-            it "always produces valid assignments" $
-            validIfSucceeds checkAssignment
-        describe "deriveCheckSettings" $
-            it "always produces valid settings" $
-            validIfSucceeds deriveCheckSettings
         describe "formatCheckError" $
             it "always produces valid strings" $ producesValid formatCheckError
         checkSingleSpec
