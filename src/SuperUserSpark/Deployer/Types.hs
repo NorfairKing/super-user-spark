@@ -1,17 +1,31 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module SuperUserSpark.Deployer.Types where
 
 import Import
 
 import System.FilePath.Posix (takeExtension)
 
+import SuperUserSpark.Check.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
+
+data DeployAssignment = DeployAssignment
+    { deployCardReference :: DeployerCardReference
+    , deploySettings :: DeploySettings
+    } deriving (Show, Eq, Generic)
+
+data DeploySettings = DeploySettings
+    { deploySetsReplaceLinks :: Bool
+    , deploySetsReplaceFiles :: Bool
+    , deploySetsReplaceDirectories :: Bool
+    , deployCheckSettings :: CheckSettings
+    } deriving (Show, Eq, Generic)
 
 data DeployerCardReference
     = DeployerCardCompiled FilePath
     | DeployerCardUncompiled CardFileReference
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
 
 instance Read DeployerCardReference where
     readsPrec _ fp =
@@ -32,7 +46,12 @@ instance Read DeployerCardReference where
                    ]
             _ -> []
 
-type SparkDeployer = Sparker
+type SparkDeployer = ExceptT DeployError (ReaderT DeploySettings IO)
+
+data DeployError
+    = DeployCheckError CheckError
+    | DeployError String
+    deriving (Show, Eq, Generic)
 
 data PreDeployment
     = Ready FilePath
@@ -40,9 +59,9 @@ data PreDeployment
             DeploymentKind
     | AlreadyDone
     | Error String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)
 
 data ID
     = Plain String
     | Var String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Generic)

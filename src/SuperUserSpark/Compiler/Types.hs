@@ -1,23 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module SuperUserSpark.Compiler.Types where
 
 import Import
 
-import Control.Monad.Except
-import Control.Monad.Identity
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Writer
-
-import SuperUserSpark.Config.Types
-import SuperUserSpark.Constants
-import Control.Monad (mzero)
-import SuperUserSpark.CoreTypes
 import Data.Aeson
        (FromJSON(..), ToJSON(..), Value(..), object, (.:), (.=))
+import Text.Parsec as Parsec
+
+import SuperUserSpark.Constants
+import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
+import SuperUserSpark.PreCompiler.Types
+
+data CompileAssignment = CompileAssignment
+    { compileCardReference :: CardFileReference
+    , compileSettings :: CompileSettings
+    } deriving (Show, Eq, Generic)
+
+data CompileSettings = CompileSettings
+    { compileOutput :: Maybe FilePath -- Todo make statically typed
+    , compileDefaultKind :: DeploymentKind
+    , compileKindOverride :: Maybe DeploymentKind
+    } deriving (Show, Eq, Generic)
 
 data Deployment = Put
     { deploymentSources :: [FilePath]
@@ -57,17 +63,19 @@ data PrefixPart
     deriving (Show, Eq)
 
 data CompilerState = CompilerState
-    { stateDeploymentKindOverride :: Maybe DeploymentKind
+    { stateDeploymentKindLocalOverride :: Maybe DeploymentKind
     , stateInto :: Directory
     , stateOutof_prefix :: CompilerPrefix
     } deriving (Show, Eq)
 
-type PrecompileError = String
+type ImpureCompiler = ExceptT CompileError (ReaderT CompileSettings IO)
 
-type ImpureCompiler = ExceptT CompileError (ReaderT SparkConfig IO)
-
-type PureCompiler = ExceptT CompileError (ReaderT SparkConfig Identity)
-
-type Precompiler = WriterT [PrecompileError] Identity
+type PureCompiler = ExceptT CompileError (ReaderT CompileSettings Identity)
 
 type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
+
+data CompileError
+    = ParseError Parsec.ParseError
+    | PreCompileErrors [PreCompileError]
+    | DuringCompilationError String
+    deriving (Show, Eq, Generic)

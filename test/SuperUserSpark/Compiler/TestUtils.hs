@@ -2,12 +2,11 @@ module SuperUserSpark.Compiler.TestUtils where
 
 import TestImport
 
+import Data.Either (isLeft, isRight)
+
 import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Config.Types
-import Data.Either (isLeft, isRight)
 import SuperUserSpark.Language.Types
-import SuperUserSpark.Monad
 import SuperUserSpark.PreCompiler
 
 runPreCompiler :: Precompiler () -> [PrecompileError]

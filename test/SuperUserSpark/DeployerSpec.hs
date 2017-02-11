@@ -2,19 +2,19 @@ module SuperUserSpark.DeployerSpec where
 
 import TestImport
 
-import SuperUserSpark.Check.Internal
-import SuperUserSpark.Check.Types
-import SuperUserSpark.Config
-import SuperUserSpark.Config.Types
 import Data.Either (isLeft)
 import Data.Maybe (isNothing)
+
+import System.Directory hiding (createDirectoryIfMissing)
+import System.FilePath.Posix ((</>))
+import System.Posix.Files
+
+import SuperUserSpark.Check.Internal
+import SuperUserSpark.Check.Types
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Monad
 import SuperUserSpark.Parser.Gen
-import System.Directory hiding (createDirectoryIfMissing)
-import System.FilePath.Posix ((</>))
-import System.Posix.Files
 import SuperUserSpark.Utils
 
 spec :: Spec
@@ -53,9 +53,7 @@ cleanSpec = do
                         clean c $ CleanFile file
                         diagnoseFp file `shouldReturn` Nonexistent
                 it "doesn't remove this directory if that's not in the config" $ do
-                    let c =
-                            defaultConfig
-                            {confDeployReplaceDirectories = False}
+                    let c = defaultConfig {confDeployReplaceDirectories = False}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir
@@ -65,9 +63,7 @@ cleanSpec = do
                         removeDirectoryRecursive dir
                         diagnoseFp dir `shouldReturn` Nonexistent
                 it "removes this directory if that's in the config" $ do
-                    let c =
-                            defaultConfig
-                            {confDeployReplaceDirectories = True}
+                    let c = defaultConfig {confDeployReplaceDirectories = True}
                     withCurrentDirectory sandbox $ do
                         let dir = "testdirectory"
                         createDirectoryIfMissing dir

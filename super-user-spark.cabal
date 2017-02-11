@@ -22,22 +22,18 @@ library
       , SuperUserSpark.Compiler.Internal
       , SuperUserSpark.Compiler.Types
       , SuperUserSpark.Compiler.Utils
-      , SuperUserSpark.Config
-      , SuperUserSpark.Config.Types
       , SuperUserSpark.Constants
       , SuperUserSpark.CoreTypes
       , SuperUserSpark.Deployer
       , SuperUserSpark.Deployer.Internal
       , SuperUserSpark.Deployer.Types
-      , SuperUserSpark.Dispatch
-      , SuperUserSpark.Dispatch.Types
       , SuperUserSpark.Language.Types
-      , SuperUserSpark.Monad
       , SuperUserSpark.OptParse
       , SuperUserSpark.OptParse.Types
       , SuperUserSpark.Parser
       , SuperUserSpark.Parser.Internal
       , SuperUserSpark.PreCompiler
+      , SuperUserSpark.PreCompiler.Types
       , SuperUserSpark.Seed
       , SuperUserSpark.Utils
   other-modules:

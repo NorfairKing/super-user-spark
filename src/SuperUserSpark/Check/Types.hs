@@ -1,9 +1,35 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module SuperUserSpark.Check.Types where
 
 import Import
 
-import SuperUserSpark.CoreTypes
 import Data.Digest.Pure.MD5 (MD5Digest)
+
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Language.Types
+
+data CheckAssignment = CheckAssignment
+    { checkCardReference :: CheckCardReference
+    , checkSettings :: CheckSettings
+    } deriving (Show, Eq, Generic)
+
+data CheckCardReference
+    = CheckCardCompiled FilePath
+    | CheckCardUncompiled CardFileReference
+    deriving (Show, Eq, Generic)
+
+data CheckSettings = CheckSettings
+    { checkCompileSettings :: CompileSettings
+    } deriving (Show, Eq, Generic)
+
+type SparkChecker = ExceptT CheckError (ReaderT CheckSettings IO)
+
+data CheckError
+    = CheckCompileError CompileError
+    | CheckError String
+    deriving (Show, Eq, Generic)
 
 type HashDigest = MD5Digest
 
