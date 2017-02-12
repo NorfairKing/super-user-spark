@@ -1,5 +1,17 @@
 {-# LANGUAGE RecordWildCards #-}
 
+{-
+    The Compiler is responsible for transforming an AST into a list of
+    deployments. A deployment knows about the possible sources, the
+    destination, and how to deploy a source to a destination.
+
+    Everything that the compiler does needs to be independent of the host
+    system because compilation could have happened independently of deployment.
+
+    As such, raw deployments still contain references to variables such as:
+    - Environment variables
+    - The home directory: @~@
+ -}
 module SuperUserSpark.Compiler where
 
 import Import hiding ((</>))
@@ -38,7 +50,9 @@ deriveCompileSettings CompileFlags {..} =
     (case compileFlagOutput of
          Nothing -> pure $ pure Nothing
          Just f -> do
-             af <- left (show :: PathParseException -> String) <$> try (resolveFile' f)
+             af <-
+                 left (show :: PathParseException -> String) <$>
+                 try (resolveFile' f)
              pure $ Just <$> af) <**>
     (pure $
      case compileDefaultKind of

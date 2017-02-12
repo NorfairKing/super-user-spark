@@ -1,5 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
+{-
+    The Parser is responsible for transforming a 'String' into an AST.
+-}
 module SuperUserSpark.Parser where
 
 import Import
