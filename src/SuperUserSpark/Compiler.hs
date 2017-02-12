@@ -4,6 +4,7 @@ module SuperUserSpark.Compiler where
 
 import Import hiding ((</>))
 
+import Control.Exception (try)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BS
@@ -33,7 +34,12 @@ compileAssignment CompileArgs {..} =
 
 deriveCompileSettings :: CompileFlags -> IO (Either String CompileSettings)
 deriveCompileSettings CompileFlags {..} =
-    CompileSettings compileFlagOutput <$$>
+    CompileSettings <$$>
+    (case compileFlagOutput of
+         Nothing -> pure $ pure Nothing
+         Just f -> do
+             af <- left (show :: PathParseException -> String) <$> try (resolveFile' f)
+             pure $ Just <$> af) <**>
     (pure $
      case compileDefaultKind of
          Nothing -> Right LinkDeployment
@@ -138,8 +144,8 @@ outputCompiled deps = do
     liftIO $ do
         let bs = encodePretty deps
         case out of
-            Nothing -> BS.putStrLn bs
-            Just fp -> BS.writeFile fp bs
+            Nothing -> putStrLn bs
+            Just fp -> writeFile fp bs
 
 inputCompiled :: FilePath -> ImpureCompiler [Deployment]
 inputCompiled fp = do

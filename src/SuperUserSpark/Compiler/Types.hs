@@ -22,7 +22,7 @@ data CompileAssignment = CompileAssignment
 instance Validity CompileAssignment
 
 data CompileSettings = CompileSettings
-    { compileOutput :: Maybe FilePath -- Todo make statically typed
+    { compileOutput :: Maybe (Path Abs File)
     , compileDefaultKind :: DeploymentKind
     , compileKindOverride :: Maybe DeploymentKind
     } deriving (Show, Eq, Generic)
