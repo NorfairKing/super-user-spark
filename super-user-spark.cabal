@@ -15,6 +15,9 @@ library
   hs-source-dirs:   src
   exposed-modules: 
         SuperUserSpark
+      , SuperUserSpark.Bake
+      , SuperUserSpark.Bake.Internal
+      , SuperUserSpark.Bake.Types
       , SuperUserSpark.Check
       , SuperUserSpark.Check.Internal
       , SuperUserSpark.Check.Types

@@ -41,6 +41,7 @@ parseDispatch =
     mconcat
         [ command "parse" parseParse
         , command "compile" parseCompile
+        , command "bake" parseBake
         , command "check" parseCheck
         , command "deploy" parseDeploy
         ]
@@ -101,6 +102,20 @@ parseCompileFlags =
              , metavar "KIND"
              , help "Override every deployment to be of the given kind"
              ])
+
+parseBake :: ParserInfo Dispatch
+parseBake = info parser modifier
+  where
+    parser = DispatchBake <$> parseBakeArgs
+    modifier = fullDesc <> progDesc "Bake the raw deployment of a spark card."
+
+parseBakeArgs :: Parser BakeArgs
+parseBakeArgs =
+    BakeArgs <$> strArgument (metavar "CARDREF" <> help "the card to bake") <*>
+    parseBakeFlags
+
+parseBakeFlags :: Parser BakeFlags
+parseBakeFlags = BakeFlags <$> parseCompileFlags
 
 parseCheck :: ParserInfo Dispatch
 parseCheck = info parser modifier

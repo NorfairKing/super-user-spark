@@ -34,6 +34,20 @@ instance GenValid CompileFlags
 instance Arbitrary CompileFlags where
     arbitrary = genValid
 
+instance GenUnchecked BakeArgs
+
+instance GenValid BakeArgs
+
+instance Arbitrary BakeArgs where
+    arbitrary = genValid
+
+instance GenUnchecked BakeFlags
+
+instance GenValid BakeFlags
+
+instance Arbitrary BakeFlags where
+    arbitrary = genValid
+
 instance GenUnchecked CheckArgs
 
 instance GenValid CheckArgs

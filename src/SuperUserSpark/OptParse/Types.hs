@@ -7,6 +7,7 @@ import Import
 data Dispatch
     = DispatchParse ParseArgs
     | DispatchCompile CompileArgs
+    | DispatchBake BakeArgs
     | DispatchCheck CheckArgs
     | DispatchDeploy DeployArgs
     deriving (Show, Eq, Generic)
@@ -33,6 +34,19 @@ data CompileFlags = CompileFlags
     } deriving (Show, Eq, Generic)
 
 instance Validity CompileFlags
+
+data BakeArgs = BakeArgs
+    { bakeCardRef :: String
+    , bakeFlags :: BakeFlags
+    } deriving (Show, Eq, Generic)
+
+instance Validity BakeArgs
+
+data BakeFlags = BakeFlags
+    { bakeCompileFlags :: CompileFlags
+    } deriving (Show, Eq, Generic)
+
+instance Validity BakeFlags
 
 data CheckArgs = CheckArgs
     { checkArgCardRef :: String

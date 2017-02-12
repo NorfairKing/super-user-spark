@@ -4,6 +4,7 @@ module SuperUserSpark
 
 import Import
 
+import SuperUserSpark.Bake
 import SuperUserSpark.Check
 import SuperUserSpark.Compiler
 import SuperUserSpark.Deployer
@@ -16,5 +17,6 @@ spark = getDispatch >>= dispatch
 dispatch :: Dispatch -> IO ()
 dispatch (DispatchParse pas) = parseFromArgs pas
 dispatch (DispatchCompile cas) = compileFromArgs cas
+dispatch (DispatchBake bas) = bakeFromArgs bas
 dispatch (DispatchCheck cas) = checkFromArgs cas
 dispatch (DispatchDeploy das) = deployFromArgs das
