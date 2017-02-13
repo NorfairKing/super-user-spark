@@ -142,6 +142,7 @@ test-suite spark-tests
       , path
       , path-io
       , iostring
+      , hashable
   default-language:  Haskell2010
   default-extensions: NoImplicitPrelude
   

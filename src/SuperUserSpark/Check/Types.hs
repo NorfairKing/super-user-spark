@@ -52,7 +52,7 @@ data Diagnostics
     = Nonexistent
     | IsFile
     | IsDirectory
-    | IsLinkTo AbsP
+    | IsLinkTo AbsP -- Could point to directory too.
     | IsWeird
     deriving (Show, Eq, Generic)
 
@@ -76,10 +76,10 @@ data Instruction =
 
 instance Validity Instruction
 
-data CleanupInstruction -- TODO use better paths!
-    = CleanFile AbsP
-    | CleanDirectory AbsP
-    | CleanLink AbsP
+data CleanupInstruction
+    = CleanFile (Path Abs File)
+    | CleanDirectory (Path Abs Dir)
+    | CleanLink (Path Abs File)
     deriving (Show, Eq, Generic)
 
 instance Validity CleanupInstruction

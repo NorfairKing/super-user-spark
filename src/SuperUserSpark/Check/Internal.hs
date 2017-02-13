@@ -172,13 +172,15 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
     ins = Instruction src dst kind
     ready = Ready ins
     i = Impossible . unlines
-    e s = Dirty (unlines s) ins cins
-    cins =
+    e s =
         case dstd of
-            IsFile -> CleanFile dst
-            IsLinkTo _ -> CleanLink dst
-            IsDirectory -> CleanDirectory dst
-            _ -> error "should not occur"
+            IsFile -> Dirty (unlines s) ins $ CleanFile $ unAbsP dst
+            IsLinkTo _ -> Dirty (unlines s) ins $ CleanLink $ unAbsP dst
+            IsDirectory ->
+                case parseAbsDir $ toPath dst of
+                    Left err -> Impossible $ show err -- Should not happen, but just in case.
+                    Right dir -> Dirty (unlines s) ins $ CleanDirectory dir
+            _ -> Impossible "should not occur"
 
 diagnoseDeployment :: BakedDeployment -> IO DiagnosedDeployment
 diagnoseDeployment (BakedDeployment bds kind) = do
@@ -211,6 +213,7 @@ diagnoseFp ap = do
                     if isSymbolicLink s
                         then do
                             point <- readSymbolicLink fp
+                            -- TODO check what happens with relative links.
                             apoint <- AbsP <$> parseAbsFile point
                             return $ IsLinkTo apoint
                         else if isDirectory s
@@ -228,6 +231,7 @@ diagnoseFp ap = do
                 -- Need to do a manual call because readSymbolicLink fails for nonexistent destinations
                  -> do
                     point <- readProcess "readlink" [fp] ""
+                    -- TODO check what happens with relative links.
                     apoint <- AbsP <$> parseAbsFile (init point) -- remove newline
                     return $ IsLinkTo apoint
                 ExitFailure _ -> return Nonexistent
@@ -303,7 +307,7 @@ formatInstruction (Instruction src dst k) =
     kindSymbol CopyDeployment = copyKindSymbol
 
 formatCleanupInstruction :: CleanupInstruction -> String
-formatCleanupInstruction (CleanFile fp) = "remove file " ++ toPath fp
+formatCleanupInstruction (CleanFile fp) = "remove file " ++ toFilePath fp
 formatCleanupInstruction (CleanDirectory dir) =
-    "remove directory " ++ toPath dir
-formatCleanupInstruction (CleanLink link) = "remove link " ++ toPath link
+    "remove directory " ++ toFilePath dir
+formatCleanupInstruction (CleanLink link) = "remove link " ++ toFilePath link

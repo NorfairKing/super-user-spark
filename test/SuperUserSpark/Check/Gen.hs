@@ -63,7 +63,8 @@ instance Arbitrary CleanupInstruction where
 
 instance GenUnchecked DiagnosedDeployment
 
-instance GenValid DiagnosedDeployment
+instance GenValid DiagnosedDeployment where
+    genValid = Diagnosed <$> genValid <*> genValid
 
 instance Arbitrary DiagnosedDeployment where
     arbitrary = genValid
@@ -77,7 +78,8 @@ instance Arbitrary Diagnostics where
 
 instance GenUnchecked DiagnosedFp
 
-instance GenValid DiagnosedFp
+instance GenValid DiagnosedFp where
+    genValid = D <$> genValid <*> genValid <*> genValid
 
 instance Arbitrary DiagnosedFp where
     arbitrary = genValid

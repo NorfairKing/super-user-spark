@@ -1,12 +1,11 @@
 module SuperUserSpark.Deployer.Internal where
 
-import Import hiding ((</>), removeFile)
+import Import hiding ((</>))
 
 import Data.List (isPrefixOf)
 import Data.Text (pack)
 import Shelly (cp_r, fromText, shelly)
-import System.Directory
-       (getHomeDirectory, removeDirectoryRecursive, removeFile)
+import System.Directory (getHomeDirectory)
 import System.Environment (getEnvironment)
 import System.FilePath (normalise, (</>))
 import System.FilePath.Posix (dropFileName)
@@ -25,14 +24,14 @@ performClean (CleanDirectory fp) =
     incase deploySetsReplaceDirectories $ rmDir fp
 performClean (CleanLink fp) = incase deploySetsReplaceLinks $ unlink fp
 
-unlink :: AbsP -> SparkDeployer ()
-unlink = liftIO . removeLink . toPath
+unlink :: Path Abs File -> SparkDeployer ()
+unlink = liftIO . removeLink . toFilePath
 
-rmFile :: AbsP -> SparkDeployer ()
-rmFile = liftIO . removeFile . toPath
+rmFile :: Path Abs File -> SparkDeployer ()
+rmFile = liftIO . removeFile
 
-rmDir :: AbsP -> SparkDeployer ()
-rmDir = liftIO . removeDirectoryRecursive . toPath
+rmDir :: Path Abs Dir -> SparkDeployer ()
+rmDir = liftIO . removeDirRecur
 
 performDeployment :: Instruction -> IO ()
 performDeployment (Instruction source destination LinkDeployment) =
