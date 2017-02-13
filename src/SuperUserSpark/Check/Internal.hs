@@ -2,6 +2,7 @@ module SuperUserSpark.Check.Internal where
 
 import Import hiding ((</>))
 
+import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as SBC
 import qualified Data.ByteString.Lazy as LB
 import Data.Hashable
@@ -248,7 +249,7 @@ hashFilePath fp = do
         Nonexistent -> return $ HashDigest $ hash ()
 
 hashFile :: AbsP -> IO HashDigest
-hashFile fp = (HashDigest . hash) <$> LB.readFile (toPath fp)
+hashFile fp = (HashDigest . hash) <$> SB.readFile (toPath fp)
 
 hashDirectory :: AbsP -> IO HashDigest
 hashDirectory fp = do

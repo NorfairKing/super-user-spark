@@ -171,7 +171,8 @@ checkDeploymentSpec = do
                         length r1 `shouldSatisfy` (<= (length r2))
                     (r1, r2) -> r1 `shouldBe` r2
     describe "bestResult" $ do
-        it "always produces valid check results" $ producesValid bestResult
+        it "always produces valid check results" $
+            producesValidsOnValids bestResult
         it "says 'impossible' if all checkresults are impossible" $ do
             forAll
                 (arbitrary `suchThat` all isImpossible)
@@ -198,7 +199,8 @@ checkDeploymentSpec = do
 checkSingleSpec :: Spec
 checkSingleSpec =
     describe "checkSingle" $ do
-        it "always produces valid CheckResults" $ producesValid3 checkSingle
+        it "always produces valid CheckResults" $
+            producesValidsOnValids3 checkSingle
         it "says 'impossible' if the source does not exist" $ do
             forAll (validWith Nonexistent) $ \src ->
                 forAll arbitrary $ \dst ->
@@ -355,5 +357,6 @@ tooManyFilesTest = do
                     it
                         ("has no problem with hashing a directory of " ++
                          show aLot ++ " files") $ do
-                        let d = AbsP $ sandbox </> $(mkRelFile "test_sandbox")
+                        sb <- resolveFile' "test_sandbox"
+                        let d = AbsP sb
                         hashFilePath d `shouldNotReturn` HashDigest (hash ())

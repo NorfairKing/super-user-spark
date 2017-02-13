@@ -40,9 +40,23 @@ instance Arbitrary HashDigest where
 instance Arbitrary CheckError where
     arbitrary = genValid
 
-instance GenUnchecked CheckResult
+instance GenUnchecked CheckResult where
+    genUnchecked =
+        oneof
+            [ pure AlreadyDone
+            , Ready <$> genUnchecked
+            , Dirty <$> genUnchecked <*> genUnchecked <*> genUnchecked
+            , Impossible <$> genUnchecked
+            ]
 
-instance GenValid CheckResult
+instance GenValid CheckResult where
+    genValid =
+        oneof
+            [ pure AlreadyDone
+            , Ready <$> genValid
+            , Dirty <$> genValid <*> genValid <*> genValid
+            , Impossible <$> genValid
+            ]
 
 instance Arbitrary CheckResult where
     arbitrary = genValid
@@ -84,7 +98,14 @@ instance GenValid DiagnosedFp where
 instance Arbitrary DiagnosedFp where
     arbitrary = genValid
 
-instance GenUnchecked DeploymentCheckResult
+instance GenUnchecked DeploymentCheckResult where
+    genUnchecked =
+        oneof
+            [ pure DeploymentDone
+            , ReadyToDeploy <$> genUnchecked
+            , DirtySituation <$> genUnchecked <*> genUnchecked <*> genUnchecked
+            , ImpossibleDeployment <$> genUnchecked
+            ]
 
 instance GenValid DeploymentCheckResult
 
