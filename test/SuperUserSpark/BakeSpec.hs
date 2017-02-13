@@ -53,6 +53,8 @@ instanceSpec =
 bakeSpec :: Spec
 bakeSpec =
     parallel $ do
+        describe "defaultBakeSettings" $
+            it "is valid" $ isValid defaultBakeSettings
         describe "formatBakeError" $ do
             it "only ever produces valid strings" $
                 producesValid formatBakeError

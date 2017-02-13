@@ -3,6 +3,7 @@ module SuperUserSpark.Check.TestUtils where
 import TestImport
 
 import SuperUserSpark.Check.Gen ()
+import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
 import SuperUserSpark.CoreTypes

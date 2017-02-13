@@ -31,8 +31,6 @@ spec = do
 
 instanceSpec :: Spec
 instanceSpec = do
-    eqSpec @CheckCardReference
-    genValidSpec @CheckCardReference
     eqSpec @CheckSettings
     genValidSpec @CheckSettings
     eqSpec @Diagnostics
@@ -83,7 +81,7 @@ diagnoseSpec = do
                         forAll (resize 5 $ listOf generateWord) $ \srcs -> do
                             forAll generateWord $ \dst -> do
                                 forAll arbitrary $ \kind -> do
-                                    (Diagnosed dsrcs ddst dkind) <-
+                                    (Diagnosed (Directions dsrcs ddst) dkind) <-
                                         diagnoseDeployment $ Put srcs dst kind
                                     map diagnosedFilePath dsrcs `shouldBe` srcs
                                     diagnosedFilePath ddst `shouldBe` dst

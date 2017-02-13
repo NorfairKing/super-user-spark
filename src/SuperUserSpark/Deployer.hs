@@ -4,6 +4,9 @@ module SuperUserSpark.Deployer where
 
 import Import
 
+import SuperUserSpark.Bake
+import SuperUserSpark.Bake.Internal
+import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
@@ -58,33 +61,19 @@ formatDeployError :: DeployError -> String
 formatDeployError (DeployCheckError e) = formatCheckError e
 formatDeployError (DeployError s) = unwords ["Deployment failed:", s]
 
-deployByCardRef :: DeployerCardReference -> SparkDeployer ()
+deployByCardRef :: BakeCardReference -> SparkDeployer ()
 deployByCardRef dcr = do
-    deps <- compileDeployerCardRef dcr
-    seeded <- liftIO $ seedByCompiledCardRef dcr deps
-    dcrs <- liftIO $ checkDeployments seeded
-    deploySeeded $ zip seeded dcrs
+    deps <- deployerBake $ compileBakeCardRef dcr >>= bakeDeployments
+    dcrs <- liftIO $ checkDeployments deps
+    deployAbss $ zip deps dcrs
 
-compileDeployerCardRef :: DeployerCardReference -> SparkDeployer [Deployment]
-compileDeployerCardRef (DeployerCardCompiled fp) =
-    deployerCompile $ inputCompiled fp
-compileDeployerCardRef (DeployerCardUncompiled cfr) =
-    deployerCompile $ compileJob cfr
+deployerBake :: SparkBaker a -> SparkDeployer a
+deployerBake =
+    withExceptT (DeployCheckError . CheckBakeError) .
+    mapExceptT (withReaderT $ checkBakeSettings . deployCheckSettings)
 
-seedByCompiledCardRef :: DeployerCardReference
-                      -> [Deployment]
-                      -> IO [Deployment]
-seedByCompiledCardRef (DeployerCardCompiled fp) = seedByRel fp
-seedByCompiledCardRef (DeployerCardUncompiled (CardFileReference fp _)) =
-    seedByRel fp
-
-deployerCompile :: ImpureCompiler a -> SparkDeployer a
-deployerCompile =
-    withExceptT (DeployCheckError . CheckCompileError) .
-    mapExceptT (withReaderT $ checkCompileSettings . deployCheckSettings)
-
-deploySeeded :: [(Deployment, DeploymentCheckResult)] -> SparkDeployer ()
-deploySeeded dcrs = do
+deployAbss :: [(BakedDeployment, DeploymentCheckResult)] -> SparkDeployer ()
+deployAbss dcrs = do
     let crs = map snd dcrs
     -- Check for impossible deployments
     when (any impossibleDeployment crs) $ err dcrs "Deployment is impossible."
@@ -112,7 +101,7 @@ deploySeeded dcrs = do
             (zip ds dcrsf)
             "Something went wrong during deployment. It's not done yet."
   where
-    err :: [(Deployment, DeploymentCheckResult)] -> String -> SparkDeployer ()
+    err :: [(BakedDeployment, DeploymentCheckResult)] -> String -> SparkDeployer ()
     err dcrs_ text = do
         liftIO $ putStrLn $ formatDeploymentChecks dcrs_
         throwError $ DeployError text

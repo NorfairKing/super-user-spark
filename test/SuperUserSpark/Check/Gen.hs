@@ -6,6 +6,8 @@ import TestImport
 
 import qualified Data.ByteString.Lazy as LB
 import Data.Digest.Pure.MD5
+
+import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Gen ()
 import SuperUserSpark.Language.Gen ()
@@ -15,13 +17,6 @@ instance GenUnchecked CheckAssignment
 instance GenValid CheckAssignment
 
 instance Arbitrary CheckAssignment where
-    arbitrary = genValid
-
-instance GenUnchecked CheckCardReference
-
-instance GenValid CheckCardReference
-
-instance Arbitrary CheckCardReference where
     arbitrary = genValid
 
 instance GenUnchecked CheckSettings
@@ -34,6 +29,13 @@ instance Arbitrary CheckSettings where
 instance GenUnchecked CheckError
 
 instance GenValid CheckError
+
+instance GenUnchecked HashDigest
+
+instance GenValid HashDigest
+
+instance Arbitrary HashDigest where
+    arbitrary = genValid
 
 instance Arbitrary CheckError where
     arbitrary = genValid

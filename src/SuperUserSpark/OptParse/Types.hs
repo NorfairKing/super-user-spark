@@ -56,7 +56,7 @@ data CheckArgs = CheckArgs
 instance Validity CheckArgs
 
 data CheckFlags = CheckFlags
-    { checkCompileFlags :: CompileFlags
+    { checkBakeFlags :: BakeFlags
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckFlags

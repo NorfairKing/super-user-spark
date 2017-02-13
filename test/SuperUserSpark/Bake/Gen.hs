@@ -5,7 +5,7 @@ module SuperUserSpark.Bake.Gen where
 import TestImport
 
 import SuperUserSpark.Bake.Types
-import SuperUserSpark.Check.Gen ()
+import SuperUserSpark.Compiler.Gen ()
 
 instance GenUnchecked BakeAssignment
 
@@ -31,6 +31,9 @@ instance GenValid BakedDeployment where
 instance GenUnchecked AbsP
 
 instance GenValid AbsP
+
+instance Arbitrary AbsP where
+    arbitrary = genValid
 
 instance (GenUnchecked a, GenUnchecked b) =>
          GenUnchecked (DeploymentDirections a b)

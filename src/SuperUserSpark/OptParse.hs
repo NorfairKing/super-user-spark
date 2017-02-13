@@ -129,7 +129,7 @@ parseCheckArgs =
     parseCheckFlags
 
 parseCheckFlags :: Parser CheckFlags
-parseCheckFlags = CheckFlags <$> parseCompileFlags
+parseCheckFlags = CheckFlags <$> parseBakeFlags
 
 parseDeploy :: ParserInfo Dispatch
 parseDeploy = info parser modifier

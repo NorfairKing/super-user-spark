@@ -51,6 +51,11 @@ data BakeSettings = BakeSettings
 
 instance Validity BakeSettings
 
+defaultBakeSettings :: BakeSettings
+defaultBakeSettings =
+    BakeSettings
+    {bakeEnvironment = [], bakeCompileSettings = defaultCompileSettings}
+
 type SparkBaker = ExceptT BakeError (ReaderT BakeSettings IO)
 
 data BakeError
@@ -79,6 +84,7 @@ newtype AbsP = AbsP
     { unAbsP :: Path Abs File
     } deriving (Show, Eq, Generic)
 
+
 instance Validity AbsP
 
 instance ToJSON AbsP where
@@ -86,6 +92,9 @@ instance ToJSON AbsP where
 
 instance FromJSON AbsP where
     parseJSON v = AbsP <$> parseJSON v
+
+toPath :: AbsP -> FilePath
+toPath = toFilePath . unAbsP
 
 data DeploymentDirections a b = Directions
     { directionSources :: [a]

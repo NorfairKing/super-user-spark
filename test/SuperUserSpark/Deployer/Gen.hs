@@ -21,13 +21,6 @@ instance GenValid DeploySettings
 instance Arbitrary DeploySettings where
     arbitrary = genValid
 
-instance GenUnchecked DeployerCardReference
-
-instance GenValid DeployerCardReference
-
-instance Arbitrary DeployerCardReference where
-    arbitrary = genValid
-
 instance GenUnchecked DeployError
 
 instance GenValid DeployError

@@ -6,12 +6,13 @@ import Import
 
 import System.FilePath.Posix (takeExtension)
 
+import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 
 data DeployAssignment = DeployAssignment
-    { deployCardReference :: DeployerCardReference
+    { deployCardReference :: BakeCardReference
     , deploySettings :: DeploySettings
     } deriving (Show, Eq, Generic)
 
@@ -35,32 +36,6 @@ defaultDeploySettings =
     , deployCheckSettings = defaultCheckSettings
     }
 
-data DeployerCardReference
-    = DeployerCardCompiled FilePath
-    | DeployerCardUncompiled CardFileReference
-    deriving (Show, Eq, Generic)
-
-instance Validity DeployerCardReference
-
-instance Read DeployerCardReference where
-    readsPrec _ fp =
-        case length (words fp) of
-            0 -> []
-            1 ->
-                if takeExtension fp == ".sus"
-                    then [ ( DeployerCardUncompiled
-                                 (CardFileReference fp Nothing)
-                           , "")
-                         ]
-                    else [(DeployerCardCompiled fp, "")]
-            2 ->
-                let [f, c] = words fp
-                in [ ( DeployerCardUncompiled
-                           (CardFileReference f (Just $ CardNameReference c))
-                     , "")
-                   ]
-            _ -> []
-
 type SparkDeployer = ExceptT DeployError (ReaderT DeploySettings IO)
 
 data DeployError
@@ -79,4 +54,3 @@ data PreDeployment
     deriving (Show, Eq, Generic)
 
 instance Validity PreDeployment
-

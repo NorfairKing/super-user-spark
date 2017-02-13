@@ -5,78 +5,61 @@ module SuperUserSpark.Check.Types where
 
 import Import
 
-import Data.Digest.Pure.MD5 (MD5Digest)
+import Data.Hashable
 import System.FilePath hiding (isValid)
 
-import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Bake.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 
 data CheckAssignment = CheckAssignment
-    { checkCardReference :: CheckCardReference
+    { checkCardReference :: BakeCardReference
     , checkSettings :: CheckSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckAssignment
 
-data CheckCardReference
-    = CheckCardCompiled FilePath
-    | CheckCardUncompiled CardFileReference
-    deriving (Show, Eq, Generic)
-
-instance Validity CheckCardReference
-
-instance Read CheckCardReference where
-    readsPrec _ fp =
-        case length (words fp) of
-            0 -> []
-            1 ->
-                if takeExtension fp == ".sus"
-                    then [ ( CheckCardUncompiled (CardFileReference fp Nothing)
-                           , "")
-                         ]
-                    else [(CheckCardCompiled fp, "")]
-            2 ->
-                let [f, c] = words fp
-                in [ ( CheckCardUncompiled
-                           (CardFileReference f (Just $ CardNameReference c))
-                     , "")
-                   ]
-            _ -> []
-
 data CheckSettings = CheckSettings
-    { checkCompileSettings :: CompileSettings
+    { checkBakeSettings :: BakeSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckSettings
 
 defaultCheckSettings :: CheckSettings
-defaultCheckSettings =
-    CheckSettings {checkCompileSettings = defaultCompileSettings}
+defaultCheckSettings = CheckSettings {checkBakeSettings = defaultBakeSettings}
 
 type SparkChecker = ExceptT CheckError (ReaderT CheckSettings IO)
 
 data CheckError
-    = CheckCompileError CompileError
+    = CheckBakeError BakeError
     | CheckError String
     deriving (Show, Eq, Generic)
 
 instance Validity CheckError
 
-type HashDigest = MD5Digest
+newtype HashDigest =
+    HashDigest Int
+    deriving (Show, Eq, Generic)
+
+instance Validity HashDigest
+
+instance Monoid HashDigest where
+    (HashDigest h1) `mappend` (HashDigest h2) = HashDigest $ h1 * 31 + h2
+
+instance Hashable HashDigest
 
 data Diagnostics
     = Nonexistent
     | IsFile
     | IsDirectory
-    | IsLinkTo FilePath
+    | IsLinkTo AbsP
     | IsWeird
     deriving (Show, Eq, Generic)
 
 instance Validity Diagnostics
 
 data DiagnosedFp = D
-    { diagnosedFilePath :: FilePath
+    { diagnosedFilePath :: AbsP
     , diagnosedDiagnostics :: Diagnostics
     , diagnosedHashDigest :: HashDigest
     } deriving (Show, Eq, Generic)
@@ -86,17 +69,17 @@ instance Validity DiagnosedFp where
         and [isValid diagnosedFilePath, isValid diagnosedDiagnostics]
 
 data Instruction =
-    Instruction FilePath
-                FilePath
+    Instruction AbsP
+                AbsP
                 DeploymentKind
     deriving (Show, Eq, Generic)
 
 instance Validity Instruction
 
-data CleanupInstruction
-    = CleanFile FilePath
-    | CleanDirectory FilePath
-    | CleanLink FilePath
+data CleanupInstruction -- TODO use better paths!
+    = CleanFile AbsP
+    | CleanDirectory AbsP
+    | CleanLink AbsP
     deriving (Show, Eq, Generic)
 
 instance Validity CleanupInstruction
@@ -124,8 +107,7 @@ data CheckResult
 instance Validity CheckResult
 
 data DiagnosedDeployment = Diagnosed
-    { diagnosedSrcs :: [DiagnosedFp]
-    , diagnosedDst :: DiagnosedFp
+    { diagnosedDirections :: DeploymentDirections DiagnosedFp DiagnosedFp
     , diagnosedKind :: DeploymentKind
     } deriving (Show, Eq, Generic)
 
