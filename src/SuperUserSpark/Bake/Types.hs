@@ -5,9 +5,11 @@ module SuperUserSpark.Bake.Types where
 
 import Import
 
+import Data.Aeson
 import System.FilePath (takeExtension)
 
 import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 
 data BakeAssignment = BakeAssignment
@@ -57,14 +59,32 @@ data BakeError
 
 instance Validity BakeError
 
-data BakedDeployment
-    = CopyFile (DeploymentDirections (Path Abs File) (Path Abs File))
-    | CopyDir (DeploymentDirections (Path Abs Dir) (Path Abs Dir))
-    | LinkFile (DeploymentDirections (Path Abs File) (Path Abs File))
-    | LinkDir (DeploymentDirections (Path Abs Dir) (Path Abs File))
-    deriving (Show, Eq, Generic)
+data BakedDeployment = BakedDeployment
+    { bakedDirections :: DeploymentDirections AbsP AbsP
+    , bakedKind :: DeploymentKind
+    } deriving (Show, Eq, Generic)
 
 instance Validity BakedDeployment
+
+instance ToJSON BakedDeployment
+
+instance FromJSON BakedDeployment
+
+-- | An absolute path.
+--
+-- This is kept as a 'Path Abs File' to avoid existential quantification, but
+-- that is an implementation detail and should not be exposed as functionality.
+newtype AbsP = AbsP
+    { unAbsP :: Path Abs File
+    } deriving (Show, Eq, Generic)
+
+instance Validity AbsP
+
+instance ToJSON AbsP where
+    toJSON (AbsP p) = toJSON p
+
+instance FromJSON AbsP where
+    parseJSON v = AbsP <$> parseJSON v
 
 data DeploymentDirections a b = Directions
     { directionSources :: [a]
@@ -73,3 +93,9 @@ data DeploymentDirections a b = Directions
 
 instance (Validity a, Validity b) =>
          Validity (DeploymentDirections a b)
+
+instance (ToJSON a, ToJSON b) =>
+         ToJSON (DeploymentDirections a b)
+
+instance (FromJSON a, FromJSON b) =>
+         FromJSON (DeploymentDirections a b)

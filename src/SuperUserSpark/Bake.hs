@@ -1,8 +1,22 @@
 {-# LANGUAGE RecordWildCards #-}
 
+{-
+    The responsibility of the baker is to turn raw deployments into baked
+    deployments. This takes care of everything that couldn't happen during
+    compilation yet. The differences between raw deployments and baked
+    deployments are:
+    - Baked deployments only deal with absolute filepaths so as to be
+      working-directory-independent.
+    - Baked deployments are aware of the kind of things the checker/deployer
+      will be operating on (files versus directories).
+
+    The baker is not responsible for checking any existences.
+-}
 module SuperUserSpark.Bake where
 
 import Import
+
+import qualified Data.Aeson.Encode.Pretty as JSON
 
 import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
@@ -42,7 +56,8 @@ formatBakeError (BakeError s) = unwords ["Bake failed:", s]
 bakeByCardRef :: BakeCardReference -> SparkBaker ()
 bakeByCardRef bakeCardReference = do
     deps <- compileBakeCardRef bakeCardReference
-    liftIO $ print deps
+    bdeps <- bakeDeployments deps
+    putStrLn $ JSON.encodePretty bdeps
 
 compileBakeCardRef :: BakeCardReference -> SparkBaker [Deployment]
 compileBakeCardRef (BakeCardCompiled fp) = bakerCompile $ inputCompiled fp
