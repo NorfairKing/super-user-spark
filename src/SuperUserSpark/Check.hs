@@ -22,7 +22,6 @@ import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
-import SuperUserSpark.Seed
 import SuperUserSpark.Utils
 
 checkFromArgs :: CheckArgs -> IO ()

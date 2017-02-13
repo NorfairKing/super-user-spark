@@ -16,7 +16,6 @@ import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
-import SuperUserSpark.Seed
 import SuperUserSpark.Utils
 
 deployFromArgs :: DeployArgs -> IO ()
@@ -101,7 +100,9 @@ deployAbss dcrs = do
             (zip ds dcrsf)
             "Something went wrong during deployment. It's not done yet."
   where
-    err :: [(BakedDeployment, DeploymentCheckResult)] -> String -> SparkDeployer ()
+    err :: [(BakedDeployment, DeploymentCheckResult)]
+        -> String
+        -> SparkDeployer ()
     err dcrs_ text = do
         liftIO $ putStrLn $ formatDeploymentChecks dcrs_
         throwError $ DeployError text
