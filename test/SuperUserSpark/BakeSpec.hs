@@ -69,6 +69,9 @@ bakeSpec =
                             Right (home </> fp)
         describe "parseId" $ do
             it "only ever produces valid IDs" $ producesValid parseId
+            it "Figures out the home directory in these cases" $ do
+                parseId "~" `shouldBe` [Var "HOME"]
+                parseId "~/ab" `shouldBe` [Var "HOME", Plain "/ab"]
             it "Works for these cases" $ do
                 parseId "" `shouldBe` []
                 parseId "file" `shouldBe` [Plain "file"]
