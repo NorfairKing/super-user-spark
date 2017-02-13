@@ -150,7 +150,8 @@ diagnoseSpec = do
 checkDeploymentSpec :: Spec
 checkDeploymentSpec = do
     describe "checkDeployment" $ do
-        it "always produces valid check results" $ producesValid checkDeployment
+        it "always produces valid check results" $
+            producesValidsOnValids checkDeployment
         it "says 'impossible' for deployments with an empty list of sources" $ do
             forAll genUnchecked $ \dst ->
                 forAll genUnchecked $ \kind ->

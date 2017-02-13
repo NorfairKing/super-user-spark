@@ -44,6 +44,7 @@ newtype HashDigest =
 instance Validity HashDigest
 
 instance Monoid HashDigest where
+    mempty = HashDigest (hash ())
     (HashDigest h1) `mappend` (HashDigest h2) = HashDigest $ h1 * 31 + h2
 
 instance Hashable HashDigest
