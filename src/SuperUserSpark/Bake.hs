@@ -17,6 +17,7 @@ module SuperUserSpark.Bake where
 import Import
 
 import qualified Data.Aeson.Encode.Pretty as JSON
+import System.Environment (getEnvironment)
 
 import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
@@ -39,7 +40,8 @@ bakeAssignment BakeArgs {..} =
 
 deriveBakeSettings :: BakeFlags -> IO (Either String BakeSettings)
 deriveBakeSettings BakeFlags {..} =
-    BakeSettings <$$> deriveCompileSettings bakeCompileFlags
+    BakeSettings <$$> (Right <$> getEnvironment) <**>
+    deriveCompileSettings bakeCompileFlags
 
 bake :: BakeAssignment -> IO ()
 bake BakeAssignment {..} = do

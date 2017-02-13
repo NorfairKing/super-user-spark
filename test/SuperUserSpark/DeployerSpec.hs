@@ -28,7 +28,6 @@ spec = do
     deployerSpec
     cleanSpec
     deploymentSpec
-    completionSpec
 
 instanceSpec :: Spec
 instanceSpec =
@@ -43,8 +42,6 @@ instanceSpec =
         genValidSpec @DeployError
         eqSpec @PreDeployment
         genValidSpec @PreDeployment
-        eqSpec @ID
-        genValidSpec @ID
 
 deployerSpec :: Spec
 deployerSpec =
@@ -54,17 +51,6 @@ deployerSpec =
         describe "formatDeployError" $ do
             it "only ever produces valid strings" $
                 producesValid formatDeployError
-        describe "completeDeployment" $
-            it "only ever produces a valid deployment" $
-            validIfSucceeds3 completeDeployment
-        describe "complete" $
-            it "only ever produces a valid filepath" $ validIfSucceeds3 complete
-        describe "parseId" $
-            it "only ever produces valid IDs" $ producesValid parseId
-        describe "replaceId" $
-            it "only ever produces valid FilePaths" $ validIfSucceeds2 replaceId
-        describe "replaceHome" $
-            it "only ever produces valid FilePaths" $ producesValid2 replaceHome
 
 cleanSpec :: Spec
 cleanSpec = do
@@ -249,40 +235,3 @@ deploymentSpec = do
                         removeLink dst
                         diagnoseFp src `shouldReturn` Nonexistent
                         diagnoseFp dst `shouldReturn` Nonexistent
-
-completionSpec :: Spec
-completionSpec = do
-    describe "complete" $
-        -- Necessary because not all utilities can handle paths with '~' in them.
-     do
-        it
-            "replaces the home directory as specified for simple home directories and simple paths" $ do
-            forAll arbitrary $ \env ->
-                forAll generateWord $ \home ->
-                    forAll generateWord $ \fp ->
-                        complete home env ("~" </> fp) `shouldBe`
-                        Right (home </> fp)
-    describe "parseId" $ do
-        it "Works for these cases" $ do
-            parseId "" `shouldBe` []
-            parseId "file" `shouldBe` [Plain "file"]
-            parseId "something$(with)variable" `shouldBe`
-                [Plain "something", Var "with", Plain "variable"]
-            parseId "$(one)$(two)$(three)" `shouldBe`
-                [Var "one", Var "two", Var "three"]
-    describe "replaceId" $ do
-        it "leaves plain ID's unchanged in any environment" $ do
-            forAll arbitrary $ \env ->
-                forAll arbitrary $ \s ->
-                    replaceId env (Plain s) `shouldBe` Right s
-        it "returns Left if a variable is not in the environment" $ do
-            forAll arbitrary $ \var ->
-                forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env ->
-                    replaceId env (Var var) `shouldSatisfy` isLeft
-        it "replaces a variable if it's in the environment" $ do
-            forAll arbitrary $ \var ->
-                forAll arbitrary $ \val ->
-                    forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env1 ->
-                        forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env2 ->
-                            replaceId (env1 ++ [(var, val)] ++ env2) (Var var) `shouldBe`
-                            Right val

@@ -93,7 +93,9 @@ test-suite spark-tests
   main-is:          MainTest.hs
   hs-source-dirs:   test
   other-modules:    
-        SuperUserSpark.Check.Gen
+        SuperUserSpark.Bake.Gen
+      , SuperUserSpark.BakeSpec
+      , SuperUserSpark.Check.Gen
       , SuperUserSpark.Check.TestUtils
       , SuperUserSpark.CheckSpec
       , SuperUserSpark.Compiler.Gen

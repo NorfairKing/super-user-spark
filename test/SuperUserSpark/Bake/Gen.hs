@@ -1,57 +1,44 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module SuperUserSpark.Compiler.Gen where
+module SuperUserSpark.Bake.Gen where
 
 import TestImport
 
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Language.Gen ()
-import SuperUserSpark.PreCompiler.Gen ()
+import SuperUserSpark.Bake.Types
+import SuperUserSpark.Check.Gen ()
 
-instance GenUnchecked CompileAssignment
+instance GenUnchecked BakeAssignment
 
-instance GenValid CompileAssignment
+instance GenValid BakeAssignment
 
-instance Arbitrary CompileAssignment where
-    arbitrary = genValid
+instance GenUnchecked BakeCardReference
 
-instance GenUnchecked CompileSettings
+instance GenValid BakeCardReference
 
-instance GenValid CompileSettings
+instance GenUnchecked BakeSettings
 
-instance Arbitrary CompileSettings where
-    arbitrary = genValid
+instance GenValid BakeSettings
 
-instance GenUnchecked Deployment where
-    genUnchecked = Put <$> genUnchecked <*> genUnchecked <*> genUnchecked
+instance GenUnchecked BakeError
 
-instance GenValid Deployment
+instance GenValid BakeError
 
-instance Arbitrary Deployment where
-    arbitrary = genValid
+instance GenUnchecked BakedDeployment
 
-instance GenUnchecked PrefixPart
+instance GenValid BakedDeployment where
+    genValid = BakedDeployment <$> genValid <*> genValid
 
-instance GenValid PrefixPart
+instance GenUnchecked AbsP
 
-instance Arbitrary PrefixPart where
-    arbitrary = genValid
+instance GenValid AbsP
 
-instance GenUnchecked CompilerState
+instance (GenUnchecked a, GenUnchecked b) =>
+         GenUnchecked (DeploymentDirections a b)
 
-instance GenValid CompilerState
+instance (GenValid a, GenValid b) =>
+         GenValid (DeploymentDirections a b) where
+    genValid = Directions <$> genValid <*> genValid
 
-instance Arbitrary CompilerState where
-    arbitrary = genValid
+instance GenUnchecked ID
 
-instance GenUnchecked CompileError where
-    genUnchecked =
-        oneof
-            [ PreCompileErrors <$> genUnchecked
-            , DuringCompilationError <$> genUnchecked
-            ]
-
-instance GenValid CompileError
-
-instance Arbitrary CompileError where
-    arbitrary = genValid
+instance GenValid ID

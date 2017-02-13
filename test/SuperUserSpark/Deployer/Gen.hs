@@ -41,10 +41,3 @@ instance GenValid PreDeployment
 
 instance Arbitrary PreDeployment where
     arbitrary = genValid
-
-instance GenUnchecked ID
-
-instance GenValid ID
-
-instance Arbitrary ID where
-    arbitrary = genValid

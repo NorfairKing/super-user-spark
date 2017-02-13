@@ -74,6 +74,5 @@ checkerCompile =
 
 checkDeployments :: [Deployment] -> IO [DeploymentCheckResult]
 checkDeployments ds = do
-    completed <- completeDeployments ds
-    diagnosed <- mapM diagnoseDeployment completed
+    diagnosed <- mapM diagnoseDeployment ds
     return $ map checkDeployment diagnosed

@@ -80,9 +80,3 @@ data PreDeployment
 
 instance Validity PreDeployment
 
-data ID
-    = Plain String
-    | Var String
-    deriving (Show, Eq, Generic)
-
-instance Validity ID

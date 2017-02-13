@@ -45,7 +45,8 @@ instance Read BakeCardReference where
             _ -> []
 
 data BakeSettings = BakeSettings
-    { bakeCompileSettings :: CompileSettings
+    { bakeEnvironment :: [(String, String)]
+    , bakeCompileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity BakeSettings
@@ -99,3 +100,10 @@ instance (ToJSON a, ToJSON b) =>
 
 instance (FromJSON a, FromJSON b) =>
          FromJSON (DeploymentDirections a b)
+
+data ID
+    = Plain String
+    | Var String
+    deriving (Show, Eq, Generic)
+
+instance Validity ID
