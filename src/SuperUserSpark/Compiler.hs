@@ -80,62 +80,76 @@ formatCompileError (PreCompileErrors ss) =
 formatCompileError (DuringCompilationError s) =
     unlines ["Compilation failed:", s]
 
-compileJob :: CardFileReference -> ImpureCompiler [Deployment]
-compileJob cr@(CardFileReference root _) = go "" cr
-  where
-    go :: FilePath -> CardFileReference -> ImpureCompiler [Deployment]
-    go base (CardFileReference fp mcn) = do
-        sf <- compilerParse fp
-        let scope = sparkFileCards sf
-        unit <-
-            case mcn of
-                Nothing ->
-                    case scope of
-                        [] ->
-                            throwError $
-                            DuringCompilationError $
-                            "No cards found for compilation in file:" ++ fp
+decideCardToCompile :: CardFileReference -> [Card] -> Either CompileError Card
+decideCardToCompile (CardFileReference fp mcn) scope =
+    case mcn of
+        Nothing ->
+            case scope of
+                [] ->
+                    Left $
+                    DuringCompilationError $
+                    "No cards found for compilation in file:" ++ fp
                             -- TODO more detailed error here
-                        (fst_:_) -> pure fst_
-                Just (CardNameReference name) -> do
-                    case find (\c -> cardName c == name) scope of
-                        Nothing ->
-                            throwError $
-                            DuringCompilationError $
-                            unwords ["Card", name, "not found for compilation."] -- TODO more detailed error here
-                        Just cu -> return cu
-        -- Inject base outofDir
-        let injected = injectBase unit
-        -- Precompile checks
-        let pces = preCompileChecks injected
-        when (not . null $ pces) $ throwError $ PreCompileErrors pces
-        -- Compile this unit
-        (deps, crfs) <- embedPureCompiler $ compileUnit injected
-        -- Compile the rest of the units
-        restDeps <-
-            fmap concat $
-            mapM compileCardReference $
-            map (resolveCardReferenceRelativeTo fp) crfs
-        return $ deps ++ restDeps
-      where
-        injectBase :: Card -> Card
-        injectBase c@(Card name s)
-            | null base = c
-            | otherwise = Card name $ Block [OutofDir base, s]
-        stripRoot :: FilePath -> FilePath
-        stripRoot orig =
-            case stripPrefix (takeDirectory root) orig of
-                Nothing -> orig
-                Just ('/':new) -> new
-                Just new -> new
-        composeBases :: FilePath -> FilePath -> FilePath
-        composeBases base_ [] = base_
-        composeBases _ base2 = takeDirectory (stripRoot base2)
-        compileCardReference :: CardReference -> ImpureCompiler [Deployment]
-        compileCardReference (CardFile cfr@(CardFileReference base2 _)) =
-            go (composeBases base base2) cfr
-        compileCardReference (CardName cnr) =
-            go base (CardFileReference fp $ Just cnr)
+                (fst_:_) -> pure fst_
+        Just (CardNameReference name) -> do
+            case find (\c -> cardName c == name) scope of
+                Nothing ->
+                    Left $
+                    DuringCompilationError $
+                    unwords ["Card", name, "not found for compilation."] -- TODO more detailed error here
+                Just cu -> return cu
+
+throwEither :: Either CompileError a -> ImpureCompiler a
+throwEither (Left e) = throwError e
+throwEither (Right a) = pure a
+
+injectBase :: FilePath -> Card -> Card
+injectBase base c@(Card name s)
+    | null base = c
+    | otherwise = Card name $ Block [OutofDir base, s]
+
+composeBases :: FilePath -> FilePath -> FilePath -> FilePath
+composeBases _ base_ [] = base_
+composeBases root _ base2 = takeDirectory (stripRoot root base2)
+
+stripRoot :: FilePath -> FilePath -> FilePath
+stripRoot root orig =
+    case stripPrefix (takeDirectory root) orig of
+        Nothing -> orig
+        Just ('/':new) -> new
+        Just new -> new
+
+compileJob :: CardFileReference -> ImpureCompiler [Deployment]
+compileJob cr@(CardFileReference root _) = compileJobWithRoot root "" cr
+
+compileJobWithRoot :: FilePath
+                   -> FilePath
+                   -> CardFileReference
+                   -> ImpureCompiler [Deployment]
+compileJobWithRoot root base cfr@(CardFileReference fp _) = do
+    sf <- compilerParse fp
+    unit <- throwEither $ decideCardToCompile cfr $ sparkFileCards sf
+    -- Inject base outofDir
+    let injected = injectBase base unit
+    -- Precompile checks
+    let pces = preCompileChecks injected
+    when (not . null $ pces) $ throwError $ PreCompileErrors pces
+    -- Compile this unit
+    (deps, crfs) <- embedPureCompiler $ compileUnit injected
+    -- Compile the rest of the units
+    let rcrfs = map (resolveCardReferenceRelativeTo fp) crfs
+    restDeps <-
+        fmap concat $
+        forM rcrfs $ \rcrf ->
+            case rcrf of
+                (CardFile cfr_@(CardFileReference base2 _)) ->
+                    compileJobWithRoot root (composeBases root base base2) cfr_
+                (CardName cnr) ->
+                    compileJobWithRoot
+                        root
+                        base
+                        (CardFileReference fp $ Just cnr)
+    return $ deps ++ restDeps
 
 resolveCardReferenceRelativeTo :: FilePath -> CardReference -> CardReference
 resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) =
