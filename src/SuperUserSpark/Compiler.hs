@@ -85,11 +85,7 @@ compileJob cr@(CardFileReference root _) = go "" cr
   where
     go :: FilePath -> CardFileReference -> ImpureCompiler [Deployment]
     go base (CardFileReference fp mcn) = do
-        esf <- liftIO $ parseAbsFile fp >>= parseFile
-        sf <-
-            case esf of
-                Left pe -> throwError $ CompileParseError pe
-                Right sf_ -> pure sf_
+        sf <- compilerParse fp
         let scope = sparkFileCards sf
         unit <-
             case mcn of
@@ -145,6 +141,13 @@ resolveCardReferenceRelativeTo :: FilePath -> CardReference -> CardReference
 resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) =
     CardFile $ CardFileReference (takeDirectory fp </> cfp) mcn
 resolveCardReferenceRelativeTo _ cn = cn
+
+compilerParse :: FilePath -> ImpureCompiler SparkFile
+compilerParse fp = do
+    esf <- liftIO $ parseAbsFile fp >>= parseFile
+    case esf of
+        Left pe -> throwError $ CompileParseError pe
+        Right sf_ -> pure sf_
 
 embedPureCompiler :: PureCompiler a -> ImpureCompiler a
 embedPureCompiler = withExceptT id . mapExceptT (mapReaderT idToIO)
