@@ -135,6 +135,7 @@ test-suite spark-tests
       , genvalidity >= 0.3.1 && < 0.4
       , genvalidity-path >= 0.1 && < 0.2
       , genvalidity-hspec >= 0.3.1 && < 0.4
+      , genvalidity-hspec-aeson >= 0.0 && < 0.1
       , validity
       , validity-path
       , path

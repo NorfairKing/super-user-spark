@@ -47,6 +47,7 @@ instanceSpec =
         genValidSpec @AbsP
         eqSpec @(DeploymentDirections AbsP AbsP)
         genValidSpec @(DeploymentDirections AbsP AbsP)
+        jsonSpecOnValid @(DeploymentDirections AbsP AbsP)
         eqSpec @ID
         genValidSpec @ID
 
