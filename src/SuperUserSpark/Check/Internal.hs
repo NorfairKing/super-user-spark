@@ -189,8 +189,8 @@ diagnoseDeployment (BakedDeployment bds kind) = do
     return $ Diagnosed ddirs kind
 
 diagnoseDirs
-    :: DeploymentDirections AbsP AbsP
-    -> IO (DeploymentDirections DiagnosedFp DiagnosedFp)
+    :: DeploymentDirections AbsP
+    -> IO (DeploymentDirections DiagnosedFp)
 diagnoseDirs (Directions srcs dst) =
     Directions <$> mapM diagnose srcs <*> diagnose dst
 

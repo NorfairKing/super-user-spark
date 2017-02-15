@@ -21,7 +21,7 @@ bakeDeployment Put {..} = do
 
 bakeDirections :: [FilePath]
                -> FilePath
-               -> SparkBaker (DeploymentDirections AbsP AbsP)
+               -> SparkBaker (DeploymentDirections AbsP)
 bakeDirections srcs dst =
     Directions <$> mapM bakeFilePath srcs <*> bakeFilePath dst
 

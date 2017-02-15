@@ -108,7 +108,7 @@ data CheckResult
 instance Validity CheckResult
 
 data DiagnosedDeployment = Diagnosed
-    { diagnosedDirections :: DeploymentDirections DiagnosedFp DiagnosedFp
+    { diagnosedDirections :: DeploymentDirections DiagnosedFp
     , diagnosedKind :: DeploymentKind
     } deriving (Show, Eq, Generic)
 

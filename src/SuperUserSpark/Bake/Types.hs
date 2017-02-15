@@ -53,7 +53,7 @@ data BakeError
 instance Validity BakeError
 
 data BakedDeployment = BakedDeployment
-    { bakedDirections :: DeploymentDirections AbsP AbsP
+    { bakedDirections :: DeploymentDirections AbsP
     , bakedKind :: DeploymentKind
     } deriving (Show, Eq, Generic)
 
@@ -82,19 +82,19 @@ instance FromJSON AbsP where
 toPath :: AbsP -> FilePath
 toPath = toFilePath . unAbsP
 
-data DeploymentDirections a b = Directions
+data DeploymentDirections a = Directions
     { directionSources :: [a]
-    , directionDestination :: b
+    , directionDestination :: a
     } deriving (Show, Eq, Generic)
 
-instance (Validity a, Validity b) =>
-         Validity (DeploymentDirections a b)
+instance Validity a =>
+         Validity (DeploymentDirections a)
 
-instance (ToJSON a, ToJSON b) =>
-         ToJSON (DeploymentDirections a b)
+instance ToJSON a =>
+         ToJSON (DeploymentDirections a)
 
-instance (FromJSON a, FromJSON b) =>
-         FromJSON (DeploymentDirections a b)
+instance FromJSON a =>
+         FromJSON (DeploymentDirections a)
 
 data ID
     = Plain String
