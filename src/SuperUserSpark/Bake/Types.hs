@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -59,9 +60,14 @@ data BakedDeployment = BakedDeployment
 
 instance Validity BakedDeployment
 
-instance ToJSON BakedDeployment
+instance ToJSON BakedDeployment where
+    toJSON BakedDeployment {..} =
+        object ["directions" .= bakedDirections, "deployment kind" .= bakedKind]
 
-instance FromJSON BakedDeployment
+instance FromJSON BakedDeployment where
+    parseJSON =
+        withObject "Baked Deployment" $ \o ->
+            BakedDeployment <$> o .: "directions" <*> o .: "deployment kind"
 
 -- | An absolute path.
 --

@@ -18,10 +18,10 @@ import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Deployer
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
-import SuperUserSpark.Compiler.Types
 import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Utils
@@ -44,6 +44,7 @@ instanceSpec =
         genValidSpec @BakeError
         eqSpec @BakedDeployment
         genValidSpec @BakedDeployment
+        jsonSpecOnValid @BakedDeployment
         eqSpec @AbsP
         genValidSpec @AbsP
         eqSpec @(DeploymentDirections AbsP)

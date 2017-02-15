@@ -6,7 +6,7 @@ module SuperUserSpark.Compiler.Types where
 import Import
 
 import Data.Aeson
-       (FromJSON(..), ToJSON(..), Value(..), object, (.:), (.=))
+       (FromJSON(..), ToJSON(..), object, (.:), (.=), withObject)
 
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
@@ -59,9 +59,9 @@ data Deployment = Put
 instance Validity Deployment
 
 instance FromJSON Deployment where
-    parseJSON (Object o) =
-        Put <$> o .: "directions" <*> o .: "deployment kind"
-    parseJSON _ = mzero
+    parseJSON =
+        withObject "Deployment" $ \o ->
+            Put <$> o .: "directions" <*> o .: "deployment kind"
 
 instance ToJSON Deployment where
     toJSON depl =
@@ -79,10 +79,15 @@ instance Validity a =>
          Validity (DeploymentDirections a)
 
 instance ToJSON a =>
-         ToJSON (DeploymentDirections a)
+         ToJSON (DeploymentDirections a) where
+    toJSON (Directions srcs dst) =
+        object ["sources" .= srcs, "destination" .= dst]
 
 instance FromJSON a =>
-         FromJSON (DeploymentDirections a)
+         FromJSON (DeploymentDirections a) where
+    parseJSON =
+        withObject "Deployment Directions" $ \o ->
+            Directions <$> o .: "sources" <*> o .: "destination"
 
 type CompilerPrefix = [PrefixPart]
 
