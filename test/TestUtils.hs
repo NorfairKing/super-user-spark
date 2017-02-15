@@ -1,28 +1,33 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module TestUtils where
 
 import TestImport
 
-import System.Directory
-       (doesDirectoryExist, doesFileExist, getDirectoryContents)
-import System.FilePath.Posix ((</>))
+shouldParseDir :: Path Rel Dir
+shouldParseDir = $(mkRelDir "shouldParseDir")
 
-concerningContents :: (FilePath -> String -> SpecWith a)
-                   -> (FilePath -> SpecWith a)
+shouldNotParseDir :: Path Rel Dir
+shouldNotParseDir = $(mkRelDir "shouldNotParseDir")
+
+shouldCompileDir :: Path Rel Dir
+shouldCompileDir = $(mkRelDir "shouldCompileDir")
+
+shouldNotCompileDir :: Path Rel Dir
+shouldNotCompileDir = $(mkRelDir "shouldNotCompileDir")
+
+concerningContents :: (Path Abs File -> String -> SpecWith a)
+                   -> (Path Abs File -> SpecWith a)
 concerningContents func file = (runIO $ readFile file) >>= func file
 
-forFileInDirss :: [FilePath] -> (FilePath -> SpecWith a) -> SpecWith a
+forFileInDirss :: [Path Abs Dir] -> (Path Abs File -> SpecWith a) -> SpecWith a
 forFileInDirss [] _ = return ()
 forFileInDirss dirs func =
     forM_ dirs $ \dir -> do
-        exists <- runIO $ doesDirectoryExist dir
+        exists <- runIO $ doesDirExist dir
         when exists $ do
-            files <- runIO $ getDirectoryContents dir
-            let ffiles = filter (`notElem` [".", ".."]) files
-            let fullFiles = map (dir </>) ffiles
-            fs <- runIO $ filterM doesFileExist fullFiles
-            forM_ fs func
-            recdirs <- runIO $ filterM doesDirectoryExist fullFiles
-            forFileInDirss recdirs func
+            files <- runIO $ snd <$> listDirRecur dir
+            forM_ files func
 
 pend :: SpecWith ()
 pend = it "is still missing some tests" pending

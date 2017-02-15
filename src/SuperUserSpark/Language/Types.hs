@@ -38,7 +38,7 @@ instance Validity Declaration
 
 -- * Card references
 -- | Reference a card by name (inside a file)
-data CardNameReference =
+newtype CardNameReference =
     CardNameReference CardName
     deriving (Show, Eq, Generic)
 
@@ -71,7 +71,7 @@ instance Validity CardReference
 
 -- * Card files
 data SparkFile = SparkFile
-    { sparkFilePath :: FilePath
+    { sparkFilePath :: Path Abs File
     , sparkFileCards :: [Card]
     } deriving (Show, Eq, Generic)
 

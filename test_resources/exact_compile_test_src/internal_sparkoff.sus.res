@@ -1,37 +1,47 @@
 [
     {
-        "destination": "two",
-        "sources": [
-            "two"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "two",
+            "sources": [
+                "two"
+            ]
+        }
     },
     {
-        "destination": "three",
-        "sources": [
-            "three"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "three",
+            "sources": [
+                "three"
+            ]
+        }
     },
     {
-        "destination": "four",
-        "sources": [
-            "four"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "four",
+            "sources": [
+                "four"
+            ]
+        }
     },
     {
-        "destination": "five",
-        "sources": [
-            "five"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "five",
+            "sources": [
+                "five"
+            ]
+        }
     },
     {
-        "destination": "six",
-        "sources": [
-            "six"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "six",
+            "sources": [
+                "six"
+            ]
+        }
     }
 ]

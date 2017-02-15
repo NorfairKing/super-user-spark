@@ -1,6 +1,6 @@
 module SuperUserSpark.Compiler.Utils where
 
-import Import
+import Import hiding ((</>))
 
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Language.Types
@@ -14,7 +14,7 @@ initialState =
     , stateOutof_prefix = []
     }
 
-addDeployment :: Deployment -> InternalCompiler ()
+addDeployment :: RawDeployment -> InternalCompiler ()
 addDeployment d = tell ([d], [])
 
 addCardRef :: CardReference -> InternalCompiler ()

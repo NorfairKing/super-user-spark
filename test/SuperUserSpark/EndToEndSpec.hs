@@ -2,7 +2,9 @@ module SuperUserSpark.EndToEndSpec
     ( spec
     ) where
 
-import TestImport
+import TestImport hiding ((</>), removeFile, copyFile)
+
+import qualified Prelude as P (writeFile, readFile)
 
 import SuperUserSpark
 import SuperUserSpark.Utils
@@ -41,9 +43,9 @@ regularWorkflowSpec = do
                         withCurrentDirectory sandbox $ do
                             createDirectoryIfMissing "bash"
                             withCurrentDirectory "bash" $ do
-                                writeFile "bash_aliases" "bash_aliases"
-                                writeFile "bashrc" "bashrc"
-                                writeFile "bash_profile" "bash_profile"
+                                P.writeFile "bash_aliases" "bash_aliases"
+                                P.writeFile "bashrc" "bashrc"
+                                P.writeFile "bash_profile" "bash_profile"
                 let down = do
                         removeFile cardfile
                         withCurrentDirectory sandbox $ do
@@ -61,9 +63,9 @@ regularWorkflowSpec = do
                                     ["compile", cardfile, "--output", outfile]
                                     spark `shouldReturn`
                                 ()
-                            actual <- readFile outfile
-                            expected <- readFile bashrscres
-                            actual `shouldBe` expected
+                            actual <- P.readFile outfile
+                            expected <- P.readFile bashrscres
+                            unless (actual == expected) $ expectationFailure $ unlines ["Expected and actual differ:", expected, actual]
                         it "checks without exceptions" $ do
                             withCurrentDirectory sandbox $
                                 withArgs ["check", cardfile] spark `shouldReturn`
@@ -75,9 +77,9 @@ regularWorkflowSpec = do
                                 let f1 = "subdir" </> ".bashrc"
                                     f2 = "subdir" </> ".bash_aliases"
                                     f3 = "subdir" </> ".bash_profile"
-                                readFile f1 `shouldReturn` "bashrc"
-                                readFile f2 `shouldReturn` "bash_aliases"
-                                readFile f3 `shouldReturn` "bash_profile"
+                                P.readFile f1 `shouldReturn` "bashrc"
+                                P.readFile f2 `shouldReturn` "bash_aliases"
+                                P.readFile f3 `shouldReturn` "bash_profile"
                                 removeLink f1
                                 removeLink f2
                                 removeLink f3

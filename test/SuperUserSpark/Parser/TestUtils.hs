@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module SuperUserSpark.Parser.TestUtils where
 
 import TestImport hiding (succeeds)
@@ -33,8 +35,8 @@ succeedsAnywhere p s = or $ map (succeedsWithLeftover p) (tails s)
 fails :: Parser a -> String -> Bool
 fails parser input = not $ succeeds parser input
 
-testInputSource :: String
-testInputSource = "Test input"
+testInputSource :: Path Abs File
+testInputSource = $(mkAbsFile "/Test/input/file")
 
 parseShouldSucceedAs
     :: (Show a, Eq a)

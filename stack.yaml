@@ -4,7 +4,13 @@ packages:
 - '.'
 extra-deps:
 - aeson-1.1.0.0
+- genvalidity-0.3.1.0
+- genvalidity-hspec-0.3.1.0
+- genvalidity-hspec-aeson-0.0.1.0
+- genvalidity-path-0.1.0.0
+- iostring-0.0.0.0
 - optparse-applicative-0.13.1.0
 - process-1.5.0.0
-- validity-0.3.2
+- validity-0.3.2.0
+- validity-path-0.1.0.0
 resolver: lts-7.19

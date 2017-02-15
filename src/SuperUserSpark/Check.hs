@@ -12,29 +12,34 @@ module SuperUserSpark.Check
 
 import Import
 
+import SuperUserSpark.Bake
+import SuperUserSpark.Bake.Internal
+import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Deployer.Internal
-import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
-import SuperUserSpark.Seed
+import SuperUserSpark.Utils
 
 checkFromArgs :: CheckArgs -> IO ()
-checkFromArgs cas =
-    case checkAssignment cas of
+checkFromArgs cas = do
+    errOrAss <- checkAssignment cas
+    case errOrAss of
         Left err -> die $ unwords ["Failed to build Check assignment:", err]
-        Right ca -> check ca
+        Right ass -> check ass
 
-checkAssignment :: CheckArgs -> Either String CheckAssignment
-checkAssignment CheckArgs {..} =
-    CheckAssignment <$> readEither checkArgCardRef <*>
-    deriveCheckSettings checkFlags
+checkAssignment :: CheckArgs -> IO (Either String CheckAssignment)
+checkAssignment CheckArgs {..} = do
+    errOrCardRef <- parseBakeCardReference checkArgCardRef
+    case errOrCardRef of
+        Left err -> pure $ Left err
+        Right cardRef ->
+            CheckAssignment cardRef <$$> deriveCheckSettings cardRef checkFlags
 
-deriveCheckSettings :: CheckFlags -> Either String CheckSettings
-deriveCheckSettings CheckFlags {..} =
-    CheckSettings <$> deriveCompileSettings checkCompileFlags
+deriveCheckSettings :: BakeCardReference
+                    -> CheckFlags
+                    -> IO (Either String CheckSettings)
+deriveCheckSettings bcr CheckFlags {..} =
+    CheckSettings <$$> deriveBakeSettings bcr checkBakeFlags
 
 check :: CheckAssignment -> IO ()
 check CheckAssignment {..} = do
@@ -47,31 +52,21 @@ check CheckAssignment {..} = do
         Right () -> pure ()
 
 formatCheckError :: CheckError -> String
-formatCheckError (CheckCompileError ce) = formatCompileError ce
+formatCheckError (CheckBakeError ce) = formatBakeError ce
 formatCheckError (CheckError s) = unwords ["Check failed:", s]
 
-checkByCardRef :: CheckCardReference -> SparkChecker ()
+checkByCardRef :: BakeCardReference -> SparkChecker ()
 checkByCardRef checkCardReference = do
-    deps <- compileCheckCardRef checkCardReference
-    seeded <- liftIO $ seedByCheckCardRef checkCardReference deps
-    dcrs <- liftIO $ checkDeployments seeded
-    liftIO $ putStrLn $ formatDeploymentChecks $ zip seeded dcrs
+    deps <-
+        checkerBake $ compileBakeCardRef checkCardReference >>= bakeDeployments
+    dcrs <- liftIO $ checkDeployments deps
+    liftIO $ putStrLn $ formatDeploymentChecks $ zip deps dcrs
 
-compileCheckCardRef :: CheckCardReference -> SparkChecker [Deployment]
-compileCheckCardRef (CheckCardCompiled fp) = checkerCompile $ inputCompiled fp
-compileCheckCardRef (CheckCardUncompiled cfr) = checkerCompile $ compileJob cfr
+checkerBake :: SparkBaker a -> SparkChecker a
+checkerBake =
+    withExceptT CheckBakeError . mapExceptT (withReaderT checkBakeSettings)
 
-seedByCheckCardRef :: CheckCardReference -> [Deployment] -> IO [Deployment]
-seedByCheckCardRef (CheckCardCompiled fp) = seedByRel fp
-seedByCheckCardRef (CheckCardUncompiled (CardFileReference fp _)) = seedByRel fp
-
-checkerCompile :: ImpureCompiler a -> SparkChecker a
-checkerCompile =
-    withExceptT CheckCompileError .
-    mapExceptT (withReaderT checkCompileSettings)
-
-checkDeployments :: [Deployment] -> IO [DeploymentCheckResult]
+checkDeployments :: [BakedDeployment] -> IO [DeploymentCheckResult]
 checkDeployments ds = do
-    completed <- completeDeployments ds
-    diagnosed <- mapM diagnoseDeployment completed
+    diagnosed <- mapM diagnoseDeployment ds
     return $ map checkDeployment diagnosed

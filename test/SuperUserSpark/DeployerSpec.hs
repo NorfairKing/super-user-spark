@@ -1,16 +1,13 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module SuperUserSpark.DeployerSpec where
 
 import TestImport
 
-import Data.Either (isLeft)
-import Data.Maybe (isNothing)
-
-import System.Directory hiding (createDirectoryIfMissing)
-import System.FilePath.Posix ((</>))
 import System.Posix.Files
 
+import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Deployer
@@ -18,8 +15,7 @@ import SuperUserSpark.Deployer.Gen ()
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.OptParse.Gen ()
-import SuperUserSpark.Parser.Gen
-import SuperUserSpark.Utils
+import SuperUserSpark.Parser.Gen ()
 
 spec :: Spec
 spec = do
@@ -27,7 +23,6 @@ spec = do
     deployerSpec
     cleanSpec
     deploymentSpec
-    completionSpec
 
 instanceSpec :: Spec
 instanceSpec =
@@ -36,45 +31,26 @@ instanceSpec =
         genValidSpec @DeployAssignment
         eqSpec @DeploySettings
         genValidSpec @DeploySettings
-        eqSpec @DeployerCardReference
-        genValidSpec @DeployerCardReference
         eqSpec @DeployError
         genValidSpec @DeployError
         eqSpec @PreDeployment
         genValidSpec @PreDeployment
-        eqSpec @ID
-        genValidSpec @ID
 
 deployerSpec :: Spec
 deployerSpec =
     parallel $ do
-        describe "defaultDeploySettings" $ it "is valid" $ isValid defaultDeploySettings
-        describe "deployAssignment" $ do
-            it "only ever produces valid assignments" $
-                validIfSucceeds deployAssignment
-        describe "deriveDeploySettings" $ do
-            it "only ever produces valid settings" $
-                validIfSucceeds deriveDeploySettings
+        describe "defaultDeploySettings" $
+            it "is valid" $ isValid defaultDeploySettings
         describe "formatDeployError" $ do
             it "only ever produces valid strings" $
                 producesValid formatDeployError
-        describe "completeDeployment" $
-            it "only ever produces a valid deployment" $
-            validIfSucceeds3 completeDeployment
-        describe "complete" $
-            it "only ever produces a valid filepath" $ validIfSucceeds3 complete
-        describe "parseId" $
-            it "only ever produces valid IDs" $ producesValid parseId
-        describe "replaceId" $
-            it "only ever produces valid FilePaths" $ validIfSucceeds2 replaceId
-        describe "replaceHome" $
-            it "only ever produces valid FilePaths" $ producesValid2 replaceHome
 
 cleanSpec :: Spec
 cleanSpec = do
-    let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing sandbox
-    let teardown = removeDirectoryRecursive sandbox
+    here <- runIO getCurrentDir
+    let sandbox = here </> $(mkRelDir "test_sandbox")
+    let setup = ensureDir sandbox
+    let teardown = removeDirRecur sandbox
     let clean :: DeploySettings -> CleanupInstruction -> IO ()
         clean sets ci =
             runReaderT (runExceptT $ performClean ci) sets `shouldReturn`
@@ -86,207 +62,192 @@ cleanSpec = do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceFiles = False}
-                    withCurrentDirectory sandbox $ do
-                        let file = "test.txt"
+                    withCurrentDir sandbox $ do
+                        let file = sandbox </> $(mkRelFile "test.txt")
+                        let fp = AbsP file
                         writeFile file "This is a test"
-                        diagnoseFp file `shouldReturn` IsFile
+                        diagnoseFp fp `shouldReturn` IsFile
                         clean c $ CleanFile file
-                        diagnoseFp file `shouldReturn` IsFile
+                        diagnoseFp fp `shouldReturn` IsFile
                         removeFile file
-                        diagnoseFp file `shouldReturn` Nonexistent
+                        diagnoseFp fp `shouldReturn` Nonexistent
                 it "removes this file if that's in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceFiles = True}
-                    withCurrentDirectory sandbox $ do
-                        let file = "test.txt"
+                    withCurrentDir sandbox $ do
+                        let file = sandbox </> $(mkRelFile "test.txt")
+                        let fp = AbsP file
                         writeFile file "This is a test"
-                        diagnoseFp file `shouldReturn` IsFile
+                        diagnoseFp fp `shouldReturn` IsFile
                         clean c $ CleanFile file
-                        diagnoseFp file `shouldReturn` Nonexistent
+                        diagnoseFp fp `shouldReturn` Nonexistent
                 it "doesn't remove this directory if that's not in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceDirectories = False}
-                    withCurrentDirectory sandbox $ do
-                        let dir = "testdirectory"
-                        createDirectoryIfMissing dir
-                        diagnoseFp dir `shouldReturn` IsDirectory
+                    withCurrentDir sandbox $ do
+                        let dir = sandbox </> $(mkRelDir "testdirectory")
+                        let dirf =
+                                AbsP $ sandbox </> $(mkRelFile "testdirectory")
+                        ensureDir dir
+                        diagnoseFp dirf `shouldReturn` IsDirectory
                         clean c $ CleanDirectory dir
-                        diagnoseFp dir `shouldReturn` IsDirectory
-                        removeDirectoryRecursive dir
-                        diagnoseFp dir `shouldReturn` Nonexistent
+                        diagnoseFp dirf `shouldReturn` IsDirectory
+                        removeDirRecur dir
+                        diagnoseFp dirf `shouldReturn` Nonexistent
                 it "removes this directory if that's in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceDirectories = True}
-                    withCurrentDirectory sandbox $ do
-                        let dir = "testdirectory"
-                        createDirectoryIfMissing dir
-                        diagnoseFp dir `shouldReturn` IsDirectory
+                    withCurrentDir sandbox $ do
+                        let dir = sandbox </> $(mkRelDir "testdirectory")
+                        let dirf =
+                                AbsP $ sandbox </> $(mkRelFile "testdirectory")
+                        ensureDir dir
+                        diagnoseFp dirf `shouldReturn` IsDirectory
                         clean c $ CleanDirectory dir
-                        diagnoseFp dir `shouldReturn` Nonexistent
+                        diagnoseFp dirf `shouldReturn` Nonexistent
                 it "doesn't remove this link if that's not in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceLinks = False}
-                    withCurrentDirectory sandbox $ do
-                        let link_ = "testlink"
-                        let file_ = "testfile"
+                    withCurrentDir sandbox $ do
+                        let link_ = sandbox </> $(mkRelFile "testlink")
+                        let link_' = AbsP link_
+                        let file_ = sandbox </> $(mkRelFile "testfile")
+                        let file_' = AbsP file_
                         writeFile file_ "This is a test"
-                        createSymbolicLink file_ link_
-                        diagnoseFp link_ `shouldReturn` IsLinkTo file_
+                        createSymbolicLink (toFilePath file_) (toFilePath link_)
+                        diagnoseFp link_' `shouldReturn` IsLinkTo file_'
                         clean c $ CleanLink link_
-                        diagnoseFp link_ `shouldReturn` IsLinkTo file_
-                        removeLink link_
-                        diagnoseFp link_ `shouldReturn` Nonexistent
+                        diagnoseFp link_' `shouldReturn` IsLinkTo file_'
+                        removeLink $ toFilePath link_
+                        diagnoseFp link_' `shouldReturn` Nonexistent
                         removeFile file_
-                        diagnoseFp file_ `shouldReturn` Nonexistent
+                        diagnoseFp file_' `shouldReturn` Nonexistent
                 it
                     "removes this link with an existent source if that's in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceLinks = True}
-                    withCurrentDirectory sandbox $ do
-                        let link_ = "testlink"
-                        let file_ = "testfile"
+                    withCurrentDir sandbox $ do
+                        let link_ = sandbox </> $(mkRelFile "testlink")
+                        let link_' = AbsP link_
+                        let file_ = sandbox </> $(mkRelFile "testfile")
+                        let file_' = AbsP file_
                         writeFile file_ "This is a test"
-                        createSymbolicLink file_ link_
-                        diagnoseFp link_ `shouldReturn` IsLinkTo file_
+                        createSymbolicLink (toFilePath file_) (toFilePath link_)
+                        diagnoseFp link_' `shouldReturn` IsLinkTo file_'
                         clean c $ CleanLink link_
-                        diagnoseFp link_ `shouldReturn` Nonexistent
+                        diagnoseFp link_' `shouldReturn` Nonexistent
+                        diagnoseFp file_' `shouldReturn` IsFile
                         removeFile file_
-                        diagnoseFp file_ `shouldReturn` Nonexistent
+                        diagnoseFp file_' `shouldReturn` Nonexistent
                 it
                     "removes this link with a nonexistent source if that's in the config" $ do
                     let c =
                             defaultDeploySettings
                             {deploySetsReplaceLinks = True}
-                    withCurrentDirectory sandbox $ do
-                        let link_ = "testlink"
-                        let file_ = "testfile"
-                        createSymbolicLink file_ link_
-                        diagnoseFp link_ `shouldReturn` IsLinkTo file_
-                        diagnoseFp file_ `shouldReturn` Nonexistent
+                    withCurrentDir sandbox $ do
+                        let link_ = sandbox </> $(mkRelFile "testlink")
+                        let link_' = AbsP link_
+                        let file_ = sandbox </> $(mkRelFile "testfile")
+                        let file_' = AbsP file_
+                        createSymbolicLink (toFilePath file_) (toFilePath link_)
+                        diagnoseFp link_' `shouldReturn` IsLinkTo file_'
+                        diagnoseFp file_' `shouldReturn` Nonexistent
                         clean c $ CleanLink link_
-                        diagnoseFp link_ `shouldReturn` Nonexistent
-                        diagnoseFp file_ `shouldReturn` Nonexistent
+                        diagnoseFp link_' `shouldReturn` Nonexistent
+                        diagnoseFp file_' `shouldReturn` Nonexistent
 
 deploymentSpec :: Spec
 deploymentSpec = do
-    let sandbox = "test_sandbox"
-    let setup = createDirectoryIfMissing sandbox
-    let teardown = removeDirectoryRecursive sandbox
+    here <- runIO $ getCurrentDir
+    let sandbox = here </> $(mkRelDir "test_sandbox")
+    let setup = ensureDir sandbox
+    let teardown = removeDirRecur sandbox
     beforeAll_ setup $
         afterAll_ teardown $ do
             describe "copy" $ do
                 it "succcesfully copies this file" $ do
-                    withCurrentDirectory sandbox $ do
-                        let src = "testfile"
-                        let dst = "testcopy"
+                    withCurrentDir sandbox $ do
+                        let src = sandbox </> $(mkRelFile "testfile")
+                        let src' = AbsP src
+                        let dst = sandbox </> $(mkRelFile "testcopy")
+                        let dst' = AbsP dst
                         writeFile src "This is a file."
-                        diagnoseFp src `shouldReturn` IsFile
-                        diagnoseFp dst `shouldReturn` Nonexistent
-                    -- Under test
-                        copy src dst
-                        diagnoseFp src `shouldReturn` IsFile
-                        diagnoseFp dst `shouldReturn` IsFile
-                        dsrc <- diagnose src
-                        ddst <- diagnose dst
+                        diagnoseFp src' `shouldReturn` IsFile
+                        diagnoseFp dst' `shouldReturn` Nonexistent
+                        -- Under test
+                        copy src' dst'
+                        diagnoseFp src' `shouldReturn` IsFile
+                        diagnoseFp dst' `shouldReturn` IsFile
+                        dsrc <- diagnose src'
+                        ddst <- diagnose dst'
                         diagnosedHashDigest ddst `shouldBe`
                             diagnosedHashDigest dsrc
                         removeFile src
                         removeFile dst
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
                 it "succcesfully copies this directory" $ do
-                    withCurrentDirectory sandbox $ do
-                        let src = "testdir"
-                        let dst = "testcopy"
-                        createDirectoryIfMissing src
-                        diagnoseFp src `shouldReturn` IsDirectory
-                        diagnoseFp dst `shouldReturn` Nonexistent
-                    -- Under test
-                        copy src dst
-                        diagnoseFp src `shouldReturn` IsDirectory
-                        diagnoseFp dst `shouldReturn` IsDirectory
-                        dsrc <- diagnose src
-                        ddst <- diagnose dst
+                    withCurrentDir sandbox $ do
+                        let src = sandbox </> $(mkRelDir "testdir")
+                        let src' = AbsP $ sandbox </> $(mkRelFile "testdir")
+                        let dst = sandbox </> $(mkRelDir "testcopy")
+                        let dst' = AbsP $ sandbox </> $(mkRelFile "testcopy")
+                        ensureDir src
+                        diagnoseFp src' `shouldReturn` IsDirectory
+                        diagnoseFp dst' `shouldReturn` Nonexistent
+                        -- Under test
+                        copy src' dst'
+                        diagnoseFp src' `shouldReturn` IsDirectory
+                        diagnoseFp dst' `shouldReturn` IsDirectory
+                        dsrc <- diagnose src'
+                        ddst <- diagnose dst'
                         diagnosedHashDigest ddst `shouldBe`
                             diagnosedHashDigest dsrc
-                        removeDirectoryRecursive src
-                        removeDirectoryRecursive dst
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
+                        removeDirRecur src
+                        removeDirRecur dst
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
             describe "link" $ do
                 it "successfully links this file" $ do
-                    withCurrentDirectory sandbox $ do
-                        let src = "testfile"
-                        let dst = "testlink"
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
+                    withCurrentDir sandbox $ do
+                        let src = sandbox </> $(mkRelFile "testfile")
+                        let src' = AbsP src
+                        let dst = sandbox </> $(mkRelFile "testlink")
+                        let dst' = AbsP dst
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
                         writeFile src "This is a test."
-                        diagnoseFp src `shouldReturn` IsFile
-                        diagnoseFp dst `shouldReturn` Nonexistent
-                    -- Under test
-                        link src dst
-                        diagnoseFp src `shouldReturn` IsFile
-                        diagnoseFp dst `shouldReturn` IsLinkTo src
+                        diagnoseFp src' `shouldReturn` IsFile
+                        diagnoseFp dst' `shouldReturn` Nonexistent
+                        -- Under test
+                        link src' dst'
+                        diagnoseFp src' `shouldReturn` IsFile
+                        diagnoseFp dst' `shouldReturn` IsLinkTo src'
                         removeFile src
-                        removeLink dst
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
+                        removeLink $ toFilePath dst
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
                 it "successfully links this directory" $ do
-                    withCurrentDirectory sandbox $ do
-                        let src = "testdir"
-                        let dst = "testlink"
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
-                        createDirectoryIfMissing src
-                        diagnoseFp src `shouldReturn` IsDirectory
-                        diagnoseFp dst `shouldReturn` Nonexistent
-                    -- Under test
-                        link src dst
-                        diagnoseFp src `shouldReturn` IsDirectory
-                        diagnoseFp dst `shouldReturn` IsLinkTo src
-                        removeDirectoryRecursive src
-                        removeLink dst
-                        diagnoseFp src `shouldReturn` Nonexistent
-                        diagnoseFp dst `shouldReturn` Nonexistent
-
-completionSpec :: Spec
-completionSpec = do
-    describe "complete" $
-        -- Necessary because not all utilities can handle paths with '~' in them.
-     do
-        it
-            "replaces the home directory as specified for simple home directories and simple paths" $ do
-            forAll arbitrary $ \env ->
-                forAll generateWord $ \home ->
-                    forAll generateWord $ \fp ->
-                        complete home env ("~" </> fp) `shouldBe`
-                        Right (home </> fp)
-    describe "parseId" $ do
-        it "Works for these cases" $ do
-            parseId "" `shouldBe` []
-            parseId "file" `shouldBe` [Plain "file"]
-            parseId "something$(with)variable" `shouldBe`
-                [Plain "something", Var "with", Plain "variable"]
-            parseId "$(one)$(two)$(three)" `shouldBe`
-                [Var "one", Var "two", Var "three"]
-    describe "replaceId" $ do
-        it "leaves plain ID's unchanged in any environment" $ do
-            forAll arbitrary $ \env ->
-                forAll arbitrary $ \s ->
-                    replaceId env (Plain s) `shouldBe` Right s
-        it "returns Left if a variable is not in the environment" $ do
-            forAll arbitrary $ \var ->
-                forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env ->
-                    replaceId env (Var var) `shouldSatisfy` isLeft
-        it "replaces a variable if it's in the environment" $ do
-            forAll arbitrary $ \var ->
-                forAll arbitrary $ \val ->
-                    forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env1 ->
-                        forAll (arbitrary `suchThat` (isNothing . lookup var)) $ \env2 ->
-                            replaceId (env1 ++ [(var, val)] ++ env2) (Var var) `shouldBe`
-                            Right val
+                    withCurrentDir sandbox $ do
+                        let src = sandbox </> $(mkRelDir "testdir")
+                        let src' = AbsP $ sandbox </> $(mkRelFile "testdir")
+                        let dst = sandbox </> $(mkRelFile "testlink")
+                        let dst' = AbsP dst
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
+                        ensureDir src
+                        diagnoseFp src' `shouldReturn` IsDirectory
+                        diagnoseFp dst' `shouldReturn` Nonexistent
+                        -- Under test
+                        link src' dst'
+                        diagnoseFp src' `shouldReturn` IsDirectory
+                        diagnoseFp dst' `shouldReturn` IsLinkTo src'
+                        removeDirRecur src
+                        removeLink $ toFilePath dst
+                        diagnoseFp src' `shouldReturn` Nonexistent
+                        diagnoseFp dst' `shouldReturn` Nonexistent
