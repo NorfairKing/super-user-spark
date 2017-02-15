@@ -4,12 +4,9 @@ module SuperUserSpark.Deployer.Types where
 
 import Import
 
-import System.FilePath.Posix (takeExtension)
-
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.CoreTypes
-import SuperUserSpark.Language.Types
 
 data DeployAssignment = DeployAssignment
     { deployCardReference :: BakeCardReference

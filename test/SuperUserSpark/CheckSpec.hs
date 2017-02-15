@@ -6,7 +6,6 @@ module SuperUserSpark.CheckSpec where
 import TestImport
 
 import Control.Monad (forM_)
-import qualified Data.ByteString as SB
 import Data.Hashable
 import System.Posix.Files
 
@@ -19,7 +18,7 @@ import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.OptParse.Gen ()
-import SuperUserSpark.Parser.Gen
+import SuperUserSpark.Parser.Gen ()
 import SuperUserSpark.Utils
 import TestUtils
 

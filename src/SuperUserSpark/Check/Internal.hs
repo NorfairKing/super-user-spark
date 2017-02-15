@@ -1,15 +1,11 @@
 module SuperUserSpark.Check.Internal where
 
-import Import hiding ((</>))
+import Import
 
 import qualified Data.ByteString as SB
-import qualified Data.ByteString.Char8 as SBC
-import qualified Data.ByteString.Lazy as LB
 import Data.Hashable
 import Data.Maybe (catMaybes)
-import System.Directory (getDirectoryContents)
 import System.Exit (ExitCode(..))
-import System.FilePath ((</>))
 import System.Posix.Files
        (fileExist, getSymbolicLinkStatus, isBlockDevice,
         isCharacterDevice, isDirectory, isNamedPipe, isRegularFile,
@@ -188,21 +184,20 @@ diagnoseDeployment (BakedDeployment bds kind) = do
     ddirs <- diagnoseDirs bds
     return $ Diagnosed ddirs kind
 
-diagnoseDirs
-    :: DeploymentDirections AbsP
-    -> IO (DeploymentDirections DiagnosedFp)
+diagnoseDirs :: DeploymentDirections AbsP
+             -> IO (DeploymentDirections DiagnosedFp)
 diagnoseDirs (Directions srcs dst) =
     Directions <$> mapM diagnose srcs <*> diagnose dst
 
 diagnose :: AbsP -> IO DiagnosedFp
 diagnose fp = do
     d <- diagnoseFp fp
-    hash <- hashFilePath fp
-    return $ D fp d hash
+    hash_ <- hashFilePath fp
+    return $ D fp d hash_
 
 diagnoseFp :: AbsP -> IO Diagnostics
-diagnoseFp ap = do
-    let fp = toPath ap
+diagnoseFp absp = do
+    let fp = toPath absp
     e <- fileExist fp
     if e
         then do
@@ -254,9 +249,9 @@ hashFile fp = (HashDigest . hash) <$> SB.readFile (toPath fp)
 hashDirectory :: AbsP -> IO HashDigest
 hashDirectory fp = do
     tdir <- parseAbsDir (toPath fp)
-    walkDirAccum Nothing writer tdir
+    walkDirAccum Nothing writer_ tdir
   where
-    writer _ subdirs files = do
+    writer_ _ _ files = do
         hashes <- mapM (hashFile . AbsP) files
         pure $ HashDigest $ hash hashes
 

@@ -20,9 +20,7 @@ import Import hiding ((</>))
 import Control.Exception (try)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
-import qualified Data.ByteString.Lazy.Char8 as BS
-import Data.List (find, stripPrefix)
-import System.FilePath (takeDirectory, (</>))
+import Data.List (find)
 
 import SuperUserSpark.Compiler.Internal
 import SuperUserSpark.Compiler.Types

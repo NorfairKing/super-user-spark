@@ -10,11 +10,8 @@ import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler
-import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
-import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Utils
 

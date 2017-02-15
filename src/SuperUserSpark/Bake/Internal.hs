@@ -5,7 +5,6 @@ module SuperUserSpark.Bake.Internal where
 import Import
 
 import Control.Exception (try)
-import System.Environment (getEnvironment)
 import System.FilePath (isAbsolute)
 
 import SuperUserSpark.Bake.Types
@@ -48,7 +47,7 @@ bakeFilePath fp = do
                         Left err ->
                             throwError $
                             BakeError $ show (err :: PathParseException)
-                        Right ap -> pure $ AbsP ap
+                        Right absp -> pure $ AbsP absp
 
 type Environment = [(String, String)]
 

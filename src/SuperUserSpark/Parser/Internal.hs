@@ -5,7 +5,6 @@ import Import
 import Data.List (isSuffixOf)
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
-import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Language.Types
 import Text.Parsec
 import Text.Parsec.String

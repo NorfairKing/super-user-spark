@@ -2,18 +2,13 @@ module SuperUserSpark.Deployer.Internal where
 
 import Import hiding ((</>))
 
-import Data.List (isPrefixOf)
 import Data.Text (pack)
 import Shelly (cp_r, fromText, shelly)
-import System.Directory (getHomeDirectory)
-import System.Environment (getEnvironment)
-import System.FilePath (normalise, (</>))
 import System.FilePath.Posix (dropFileName)
 import System.Posix.Files (createSymbolicLink, removeLink)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Utils

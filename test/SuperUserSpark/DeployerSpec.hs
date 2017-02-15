@@ -3,14 +3,8 @@
 
 module SuperUserSpark.DeployerSpec where
 
-import qualified Prelude as P (writeFile)
 import TestImport
 
-import Data.Either (isLeft)
-import Data.Maybe (isNothing)
-
-import System.Directory
-       hiding (createDirectoryIfMissing, removeFile)
 import System.Posix.Files
 
 import SuperUserSpark.Bake.Types
@@ -21,8 +15,7 @@ import SuperUserSpark.Deployer.Gen ()
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.OptParse.Gen ()
-import SuperUserSpark.Parser.Gen
-import SuperUserSpark.Utils
+import SuperUserSpark.Parser.Gen ()
 
 spec :: Spec
 spec = do

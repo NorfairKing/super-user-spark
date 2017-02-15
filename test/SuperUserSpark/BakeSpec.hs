@@ -2,29 +2,20 @@
 
 module SuperUserSpark.BakeSpec where
 
-import qualified Prelude as P (writeFile)
 import TestImport hiding ((</>), removeFile, writeFile)
 
 import Data.Either (isLeft)
 import Data.Maybe (isNothing)
 
-import System.Directory hiding (createDirectoryIfMissing)
 import System.FilePath.Posix ((</>))
-import System.Posix.Files
 
 import SuperUserSpark.Bake
 import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
-import SuperUserSpark.Check.Internal
-import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Deployer
-import SuperUserSpark.Deployer.Internal
-import SuperUserSpark.Deployer.Types
 import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen
-import SuperUserSpark.Utils
 
 spec :: Spec
 spec = do
@@ -59,25 +50,25 @@ bakeSpec =
         describe "bakeFilePath" $ do
             it "works for these unit test cases without variables" $ do
                 let b root fp s = do
-                        ap <- AbsP <$> parseAbsFile s
+                        absp <- AbsP <$> parseAbsFile s
                         rp <- parseAbsDir root
                         runReaderT
                             (runExceptT (bakeFilePath fp))
                             defaultBakeSettings {bakeRoot = rp} `shouldReturn`
-                            Right ap
+                            Right absp
                 b "/home/user/hello" "a/b/c" "/home/user/hello/a/b/c"
                 b "/home/user/hello" "/home/user/.files/c" "/home/user/.files/c"
             it "works for a simple home-only variable situation" $ do
                 forAll genValid $ \root -> do
                     let b home fp s = do
-                            ap <- AbsP <$> parseAbsFile s
+                            absp <- AbsP <$> parseAbsFile s
                             runReaderT
                                 (runExceptT (bakeFilePath fp))
                                 defaultBakeSettings
                                 { bakeRoot = root
                                 , bakeEnvironment = [("HOME", home)]
                                 } `shouldReturn`
-                                Right ap
+                                Right absp
                     b "/home/user" "~/a/b/c" "/home/user/a/b/c"
                     b "/home" "~/c" "/home/c"
         describe "defaultBakeSettings" $

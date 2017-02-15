@@ -8,11 +8,9 @@ module SuperUserSpark.Bake.Types where
 import Import
 
 import Data.Aeson
-import System.FilePath (takeExtension)
 
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.CoreTypes
-import SuperUserSpark.Language.Types
 
 data BakeAssignment = BakeAssignment
     { bakeCardReference :: BakeCardReference

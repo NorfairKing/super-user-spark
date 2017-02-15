@@ -8,7 +8,6 @@ import Import
 import Data.Aeson
        (FromJSON(..), ToJSON(..), object, (.:), (.=), withObject)
 
-import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 import SuperUserSpark.Parser.Types

@@ -6,11 +6,9 @@ module SuperUserSpark.Check.Types where
 import Import
 
 import Data.Hashable
-import System.FilePath hiding (isValid)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.CoreTypes
-import SuperUserSpark.Language.Types
 import SuperUserSpark.Compiler.Types
 
 data CheckAssignment = CheckAssignment
