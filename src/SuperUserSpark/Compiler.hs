@@ -12,7 +12,7 @@
     As such, raw deployments still contain references to variables such as:
     - Environment variables
     - The home directory: @~@
- -}
+-}
 module SuperUserSpark.Compiler where
 
 import Import hiding ((</>))
