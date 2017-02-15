@@ -24,13 +24,7 @@ instance GenUnchecked BakeError
 
 instance GenValid BakeError
 
-instance GenUnchecked BakedDeployment
-
-instance GenValid BakedDeployment where
-    genValid = BakedDeployment <$> genValid <*> genValid
-
 instance GenUnchecked AbsP
-
 instance GenValid AbsP
 
 instance Arbitrary AbsP where

@@ -16,7 +16,7 @@ bakeDeployments = mapM bakeDeployment
 bakeDeployment :: RawDeployment -> SparkBaker BakedDeployment
 bakeDeployment Deployment {..} = do
     d <- bakeDirections deploymentDirections
-    pure $ BakedDeployment {bakedDirections = d, bakedKind = deploymentKind}
+    pure $ Deployment {deploymentDirections = d, deploymentKind = deploymentKind}
 
 bakeDirections :: DeploymentDirections FilePath
                -> SparkBaker (DeploymentDirections AbsP)

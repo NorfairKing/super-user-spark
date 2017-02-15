@@ -180,7 +180,7 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
             _ -> Impossible "should not occur"
 
 diagnoseDeployment :: BakedDeployment -> IO DiagnosedDeployment
-diagnoseDeployment (BakedDeployment bds kind) = do
+diagnoseDeployment (Deployment bds kind) = do
     ddirs <- diagnoseDirs bds
     return $ Diagnosed ddirs kind
 
@@ -275,7 +275,7 @@ formatDeploymentCheck (d, ImpossibleDeployment ds) =
     Just $
     concat
         [ "IMPOSSIBLE: "
-        , toPath $ directionDestination $ bakedDirections d
+        , toPath $ directionDestination $ deploymentDirections d
         , " cannot be deployed:\n"
         , unlines ds
         , "\n"
@@ -284,7 +284,7 @@ formatDeploymentCheck (d, (DirtySituation str is c)) =
     Just $
     concat
         [ "DIRTY: "
-        , toPath $ directionDestination $ bakedDirections d
+        , toPath $ directionDestination $ deploymentDirections d
         , "\n"
         , str
         , "planned: "

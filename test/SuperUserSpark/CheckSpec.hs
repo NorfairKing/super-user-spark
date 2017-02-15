@@ -83,9 +83,7 @@ diagnoseSpec = do
                                 forAll arbitrary $ \kind -> do
                                     (Diagnosed (Directions dsrcs ddst) dkind) <-
                                         diagnoseDeployment $
-                                        BakedDeployment
-                                            (Directions srcs dst)
-                                            kind
+                                        Deployment (Directions srcs dst) kind
                                     map diagnosedFilePath dsrcs `shouldBe` srcs
                                     diagnosedFilePath ddst `shouldBe` dst
                                     dkind `shouldBe` kind

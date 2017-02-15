@@ -10,7 +10,6 @@ import Import
 import Data.Aeson
 
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.CoreTypes
 
 data BakeAssignment = BakeAssignment
     { bakeCardReference :: BakeCardReference
@@ -51,21 +50,7 @@ data BakeError
 
 instance Validity BakeError
 
-data BakedDeployment = BakedDeployment
-    { bakedDirections :: DeploymentDirections AbsP
-    , bakedKind :: DeploymentKind
-    } deriving (Show, Eq, Generic)
-
-instance Validity BakedDeployment
-
-instance ToJSON BakedDeployment where
-    toJSON BakedDeployment {..} =
-        object ["directions" .= bakedDirections, "deployment kind" .= bakedKind]
-
-instance FromJSON BakedDeployment where
-    parseJSON =
-        withObject "Baked Deployment" $ \o ->
-            BakedDeployment <$> o .: "directions" <*> o .: "deployment kind"
+type BakedDeployment = Deployment AbsP
 
 -- | An absolute path.
 --
