@@ -27,3 +27,4 @@ import Data.GenValidity.Path as X ()
 import Data.Validity as X ()
 import Data.Validity.Path as X ()
 import Test.Validity as X
+import Test.Validity.Aeson as X

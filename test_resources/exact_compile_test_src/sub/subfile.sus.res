@@ -1,9 +1,11 @@
 [
     {
-        "destination": "thing.txt",
-        "sources": [
-            "thing.txt"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "thing.txt",
+            "sources": [
+                "thing.txt"
+            ]
+        }
     }
 ]

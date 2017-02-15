@@ -35,7 +35,7 @@ runInternalCompiler
     :: [Declaration]
     -> CompilerState
     -> CompileSettings
-    -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
+    -> Either CompileError (CompilerState, ([RawDeployment], [CardReference]))
 runInternalCompiler ds s c =
     runPureCompiler c $ runWriterT $ execStateT (compileDecs ds) s
 
@@ -43,7 +43,7 @@ compileSingleDec
     :: Declaration
     -> CompilerState
     -> CompileSettings
-    -> Either CompileError (CompilerState, ([Deployment], [CardReference]))
+    -> Either CompileError (CompilerState, ([RawDeployment], [CardReference]))
 compileSingleDec d = runInternalCompiler [d]
 
 compilationShouldSucceed :: [Declaration]
@@ -65,7 +65,7 @@ singleShouldFail c s d = compilationShouldFail [d] s c
 shouldCompileTo :: CompileSettings
                 -> CompilerState
                 -> [Declaration]
-                -> [Deployment]
+                -> [RawDeployment]
                 -> IO ()
 shouldCompileTo c s ds eds = do
     compilationShouldSucceed ds s c
@@ -76,7 +76,7 @@ shouldCompileTo c s ds eds = do
 singleShouldCompileTo :: CompileSettings
                       -> CompilerState
                       -> Declaration
-                      -> Deployment
+                      -> RawDeployment
                       -> IO ()
 singleShouldCompileTo c s d eds = shouldCompileTo c s [d] [eds]
 

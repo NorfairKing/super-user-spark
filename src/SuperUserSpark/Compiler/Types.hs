@@ -6,20 +6,33 @@ module SuperUserSpark.Compiler.Types where
 import Import
 
 import Data.Aeson
-       (FromJSON(..), ToJSON(..), Value(..), object, (.:), (.=))
+       (FromJSON(..), ToJSON(..), object, (.:), (.=), withObject)
 
-import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Language.Types
 import SuperUserSpark.Parser.Types
 import SuperUserSpark.PreCompiler.Types
 
 data CompileAssignment = CompileAssignment
-    { compileCardReference :: CardFileReference
+    { compileCardReference :: StrongCardFileReference
     , compileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity CompileAssignment
+
+data StrongCardFileReference =
+    StrongCardFileReference (Path Abs File)
+                            (Maybe CardNameReference)
+    deriving (Show, Eq, Generic)
+
+instance Validity StrongCardFileReference
+
+data StrongCardReference
+    = StrongCardFile StrongCardFileReference
+    | StrongCardName CardNameReference
+    deriving (Show, Eq, Generic)
+
+instance Validity StrongCardReference
 
 data CompileSettings = CompileSettings
     { compileOutput :: Maybe (Path Abs File)
@@ -37,37 +50,54 @@ defaultCompileSettings =
     , compileKindOverride = Nothing
     }
 
-data Deployment = Put
-    { deploymentSources :: [FilePath]
-    , deploymentDestination :: FilePath
+type RawDeployment = Deployment FilePath
+
+data Deployment a = Deployment
+    { deploymentDirections :: DeploymentDirections a
     , deploymentKind :: DeploymentKind
-    } deriving (Eq, Generic)
+    } deriving (Show, Eq, Generic)
 
-instance Validity Deployment
+instance Validity a =>
+         Validity (Deployment a)
 
-instance Show Deployment where
-    show dep = unwords $ srcs ++ [k, dst]
-      where
-        srcs = map quote $ deploymentSources dep
-        k =
-            case deploymentKind dep of
-                LinkDeployment -> linkKindSymbol
-                CopyDeployment -> copyKindSymbol
-        dst = quote $ deploymentDestination dep
-        quote = (\s -> "\"" ++ s ++ "\"")
+instance FromJSON a =>
+         FromJSON (Deployment a) where
+    parseJSON =
+        withObject "Deployment" $ \o ->
+            Deployment <$> o .: "directions" <*> o .: "deployment kind"
 
-instance FromJSON Deployment where
-    parseJSON (Object o) =
-        Put <$> o .: "sources" <*> o .: "destination" <*> o .: "deployment kind"
-    parseJSON _ = mzero
-
-instance ToJSON Deployment where
+instance ToJSON a =>
+         ToJSON (Deployment a) where
     toJSON depl =
         object
-            [ "sources" .= deploymentSources depl
-            , "destination" .= deploymentDestination depl
+            [ "directions" .= deploymentDirections depl
             , "deployment kind" .= deploymentKind depl
             ]
+
+instance Functor Deployment where
+    fmap f (Deployment dis dk) = Deployment (fmap f dis) dk
+
+data DeploymentDirections a = Directions
+    { directionSources :: [a]
+    , directionDestination :: a
+    } deriving (Show, Eq, Generic)
+
+instance Validity a =>
+         Validity (DeploymentDirections a)
+
+instance ToJSON a =>
+         ToJSON (DeploymentDirections a) where
+    toJSON (Directions srcs dst) =
+        object ["sources" .= srcs, "destination" .= dst]
+
+instance FromJSON a =>
+         FromJSON (DeploymentDirections a) where
+    parseJSON =
+        withObject "Deployment Directions" $ \o ->
+            Directions <$> o .: "sources" <*> o .: "destination"
+
+instance Functor DeploymentDirections where
+    fmap f (Directions srcs dst) = Directions (map f srcs) (f dst)
 
 type CompilerPrefix = [PrefixPart]
 
@@ -90,7 +120,7 @@ type ImpureCompiler = ExceptT CompileError (ReaderT CompileSettings IO)
 
 type PureCompiler = ExceptT CompileError (ReaderT CompileSettings Identity)
 
-type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
+type InternalCompiler = StateT CompilerState (WriterT ([RawDeployment], [CardReference]) PureCompiler)
 
 data CompileError
     = CompileParseError ParseError

@@ -38,7 +38,7 @@ instance Validity Declaration
 
 -- * Card references
 -- | Reference a card by name (inside a file)
-data CardNameReference =
+newtype CardNameReference =
     CardNameReference CardName
     deriving (Show, Eq, Generic)
 

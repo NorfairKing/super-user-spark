@@ -5,7 +5,6 @@ import Import
 import Data.List (isSuffixOf)
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
-import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Language.Types
 import Text.Parsec
 import Text.Parsec.String
@@ -78,12 +77,6 @@ sparkOff =
 
 compilerCardReference :: Parser CardFileReference
 compilerCardReference = unprefixedCardFileReference
-
-deployerCardReference :: Parser DeployerCardReference
-deployerCardReference = goComp <|> goUncomp
-  where
-    goComp = compiledCardReference >>= return . DeployerCardCompiled
-    goUncomp = unprefixedCardFileReference >>= return . DeployerCardUncompiled
 
 compiledCardReference :: Parser FilePath
 compiledCardReference = do

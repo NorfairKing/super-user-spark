@@ -8,7 +8,7 @@ import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Compiler.Utils
 import SuperUserSpark.Language.Types
 
-compileUnit :: Card -> PureCompiler ([Deployment], [CardReference])
+compileUnit :: Card -> PureCompiler ([RawDeployment], [CardReference])
 compileUnit card =
     execWriterT $ evalStateT (compileDecs [cardContent card]) initialState
 
@@ -26,9 +26,12 @@ compileDec (Deploy src dst kind) = do
                 Just k -> k
     outof <- gets stateOutof_prefix
     into <- gets stateInto
-    let alternates = resolvePrefix $ outof ++ [sources src]
-    let destination = into </> dst
-    addDeployment $ Put alternates destination resultKind
+    let directions =
+            Directions
+            { directionSources = resolvePrefix $ outof ++ [sources src]
+            , directionDestination = into </> dst
+            }
+    addDeployment $ Deployment directions resultKind
 compileDec (SparkOff cr) = addCardRef cr
 compileDec (IntoDir dir) = do
     ip <- gets stateInto

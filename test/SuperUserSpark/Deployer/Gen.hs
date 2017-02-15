@@ -9,7 +9,8 @@ import SuperUserSpark.Check.Gen ()
 
 instance GenUnchecked DeployAssignment
 
-instance GenValid DeployAssignment
+instance GenValid DeployAssignment where
+    genValid = DeployAssignment <$> genValid <*> genValid
 
 instance Arbitrary DeployAssignment where
     arbitrary = genValid
@@ -19,13 +20,6 @@ instance GenUnchecked DeploySettings
 instance GenValid DeploySettings
 
 instance Arbitrary DeploySettings where
-    arbitrary = genValid
-
-instance GenUnchecked DeployerCardReference
-
-instance GenValid DeployerCardReference
-
-instance Arbitrary DeployerCardReference where
     arbitrary = genValid
 
 instance GenUnchecked DeployError
@@ -40,11 +34,4 @@ instance GenUnchecked PreDeployment
 instance GenValid PreDeployment
 
 instance Arbitrary PreDeployment where
-    arbitrary = genValid
-
-instance GenUnchecked ID
-
-instance GenValid ID
-
-instance Arbitrary ID where
     arbitrary = genValid

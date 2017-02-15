@@ -1,30 +1,28 @@
 module SuperUserSpark.Check.Internal where
 
-import Import hiding ((</>))
+import Import
 
 import qualified Data.ByteString as SB
-import qualified Data.ByteString.Char8 as SBC
-import qualified Data.ByteString.Lazy as LB
-import qualified Data.Digest.Pure.MD5 as H (md5)
+import Data.Hashable
 import Data.Maybe (catMaybes)
-import SuperUserSpark.Check.Types
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Constants
-import SuperUserSpark.CoreTypes
-import System.Directory (getDirectoryContents)
 import System.Exit (ExitCode(..))
-import System.FilePath ((</>))
 import System.Posix.Files
        (fileExist, getSymbolicLinkStatus, isBlockDevice,
         isCharacterDevice, isDirectory, isNamedPipe, isRegularFile,
         isSocket, isSymbolicLink, readSymbolicLink)
 import System.Process (readProcess, system)
 
+import SuperUserSpark.Bake.Types
+import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Constants
+import SuperUserSpark.CoreTypes
+
 checkDeployment :: DiagnosedDeployment -> DeploymentCheckResult
-checkDeployment (Diagnosed [] (D dst _ _) _) =
+checkDeployment (Deployment (Directions [] (D dst _ _)) _) =
     ImpossibleDeployment
-        [unwords ["No source for deployment with destination", dst]]
-checkDeployment (Diagnosed srcs dst kind) =
+        [unwords ["No source for deployment with destination", toPath dst]]
+checkDeployment (Deployment (Directions srcs dst) kind) =
     bestResult $ map (\src -> checkSingle src dst kind) srcs
 
 bestResult :: [CheckResult] -> DeploymentCheckResult
@@ -67,9 +65,9 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
         (IsFile, IsFile, LinkDeployment) ->
             e
                 [ "Both the source:"
-                , src
+                , toPath src
                 , "and the destination:"
-                , dst
+                , toPath dst
                 , "are files for a link deployment."
                 ]
         (IsFile, IsFile, CopyDeployment) ->
@@ -77,17 +75,17 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 then AlreadyDone
                 else e
                          [ "Both the source:"
-                         , src
+                         , toPath src
                          , "and the destination:"
-                         , dst
+                         , toPath dst
                          , "are files for a copy deployment, but they are not equal."
                          ]
         (IsFile, IsDirectory, _) ->
             e
                 [ "The source: "
-                , src
+                , toPath src
                 , "is a file but the destination:"
-                , dst
+                , toPath dst
                 , "is a directory."
                 ]
         (IsFile, IsLinkTo l, LinkDeployment) ->
@@ -95,27 +93,27 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 then AlreadyDone
                 else e
                          [ "The source:"
-                         , src
+                         , toPath src
                          , "is a file and the destination:"
-                         , dst
+                         , toPath dst
                          , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
-                         , l ++ "."
+                         , toPath l ++ "."
                          ]
         (IsFile, IsLinkTo _, CopyDeployment) ->
             e
                 [ "The source:"
-                , src
+                , toPath src
                 , "is a file and the destination:"
-                , dst
+                , toPath dst
                 , "is a link for a copy deployment."
                 ]
         (IsDirectory, Nonexistent, _) -> ready
         (IsDirectory, IsFile, _) ->
             e
                 [ "The source:"
-                , src
+                , toPath src
                 , "is a directory and the destination:"
-                , dst
+                , toPath dst
                 , "is a file."
                 ]
         (IsDirectory, IsDirectory, CopyDeployment) ->
@@ -123,17 +121,17 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 then AlreadyDone
                 else e
                          [ "The source:"
-                         , src
+                         , toPath src
                          , "and destination:"
-                         , dst
+                         , toPath dst
                          , "are directories for a copy deployment, but they are not equal."
                          ]
         (IsDirectory, IsDirectory, LinkDeployment) ->
             e
                 [ "The source:"
-                , src
+                , toPath src
                 , "and the destination:"
-                , dst
+                , toPath dst
                 , "are directories for a link deployment."
                 ]
         (IsDirectory, IsLinkTo l, LinkDeployment) ->
@@ -141,58 +139,65 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                 then AlreadyDone
                 else e
                          [ "The source:"
-                         , src
+                         , toPath src
                          , "is a directory and the destination:"
-                         , dst
+                         , toPath dst
                          , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
-                         , l ++ "."
+                         , toPath l ++ "."
                          ]
         (IsDirectory, IsLinkTo _, CopyDeployment) ->
             e
                 [ "The source:"
-                , src
+                , toPath src
                 , "is a directory and the destination:"
-                , dst
+                , toPath dst
                 , "is a link for a copy deployment."
                 ]
-        (Nonexistent, _, _) -> i ["The source:", src, "does not exist."]
-        (IsLinkTo _, _, _) -> i ["The source:", src, "is a link."]
+        (Nonexistent, _, _) -> i ["The source:", toPath src, "does not exist."]
+        (IsLinkTo _, _, _) -> i ["The source:", toPath src, "is a link."]
         (IsWeird, IsWeird, _) ->
             i
                 [ "Both the source:"
-                , src
+                , toPath src
                 , "and the destination:"
-                , dst
+                , toPath dst
                 , "are weird."
                 ]
-        (IsWeird, _, _) -> i ["The source:", src, "is weird."]
-        (_, IsWeird, _) -> i ["The destination:", dst, "is weird."]
+        (IsWeird, _, _) -> i ["The source:", toPath src, "is weird."]
+        (_, IsWeird, _) -> i ["The destination:", toPath dst, "is weird."]
   where
     ins = Instruction src dst kind
     ready = Ready ins
     i = Impossible . unlines
-    e s = Dirty (unlines s) ins cins
-    cins =
+    e s =
         case dstd of
-            IsFile -> CleanFile dst
-            IsLinkTo _ -> CleanLink dst
-            IsDirectory -> CleanDirectory dst
-            _ -> error "should not occur"
+            IsFile -> Dirty (unlines s) ins $ CleanFile $ unAbsP dst
+            IsLinkTo _ -> Dirty (unlines s) ins $ CleanLink $ unAbsP dst
+            IsDirectory ->
+                case parseAbsDir $ toPath dst of
+                    Left err -> Impossible $ show err -- Should not happen, but just in case.
+                    Right dir -> Dirty (unlines s) ins $ CleanDirectory dir
+            _ -> Impossible "should not occur"
 
-diagnoseDeployment :: Deployment -> IO DiagnosedDeployment
-diagnoseDeployment (Put srcs dst kind) = do
-    dsrcs <- mapM diagnose srcs
-    ddst <- diagnose dst
-    return $ Diagnosed dsrcs ddst kind
+diagnoseDeployment :: BakedDeployment -> IO DiagnosedDeployment
+diagnoseDeployment (Deployment bds kind) = do
+    ddirs <- diagnoseDirs bds
+    return $ Deployment ddirs kind
 
-diagnose :: FilePath -> IO DiagnosedFp
+diagnoseDirs :: DeploymentDirections AbsP
+             -> IO (DeploymentDirections DiagnosedFp)
+diagnoseDirs (Directions srcs dst) =
+    Directions <$> mapM diagnose srcs <*> diagnose dst
+
+diagnose :: AbsP -> IO DiagnosedFp
 diagnose fp = do
     d <- diagnoseFp fp
-    hash <- hashFilePath fp
-    return $ D fp d hash
+    hash_ <- hashFilePath fp
+    return $ D fp d hash_
 
-diagnoseFp :: FilePath -> IO Diagnostics
-diagnoseFp fp = do
+diagnoseFp :: AbsP -> IO Diagnostics
+diagnoseFp absp = do
+    let fp = toPath absp
     e <- fileExist fp
     if e
         then do
@@ -204,7 +209,9 @@ diagnoseFp fp = do
                     if isSymbolicLink s
                         then do
                             point <- readSymbolicLink fp
-                            return $ IsLinkTo point
+                            -- TODO check what happens with relative links.
+                            apoint <- AbsP <$> parseAbsFile point
+                            return $ IsLinkTo apoint
                         else if isDirectory s
                                  then return IsDirectory
                                  else if isRegularFile s
@@ -220,37 +227,35 @@ diagnoseFp fp = do
                 -- Need to do a manual call because readSymbolicLink fails for nonexistent destinations
                  -> do
                     point <- readProcess "readlink" [fp] ""
-                    return $ IsLinkTo $ init point -- remove newline
+                    -- TODO check what happens with relative links.
+                    apoint <- AbsP <$> parseAbsFile (init point) -- remove newline
+                    return $ IsLinkTo apoint
                 ExitFailure _ -> return Nonexistent
 
-md5 :: SB.ByteString -> HashDigest
-md5 bs = H.md5 $ LB.fromStrict bs
-
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
-hashFilePath :: FilePath -> IO HashDigest
+hashFilePath :: AbsP -> IO HashDigest
 hashFilePath fp = do
     d <- diagnoseFp fp
     case d of
         IsFile -> hashFile fp
         IsDirectory -> hashDirectory fp
-        IsLinkTo _ -> return $ md5 SB.empty
-        IsWeird -> return $ md5 SB.empty
-        Nonexistent -> return $ md5 SB.empty
+        IsLinkTo _ -> return $ HashDigest $ hash ()
+        IsWeird -> return $ HashDigest $ hash ()
+        Nonexistent -> return $ HashDigest $ hash ()
 
-hashFile :: FilePath -> IO HashDigest
-hashFile fp = md5 <$> SB.readFile fp
+hashFile :: AbsP -> IO HashDigest
+hashFile fp = (HashDigest . hash) <$> SB.readFile (toPath fp)
 
-hashDirectory :: FilePath -> IO HashDigest
+hashDirectory :: AbsP -> IO HashDigest
 hashDirectory fp = do
-    rawContents <- getDirectoryContents fp
-    let contents =
-            map (fp </>) . filter (\f -> not $ f == "." || f == "..") $
-            rawContents
-    hashes <- mapM hashFilePath contents
-    let hashbs = map (SBC.pack . show) hashes
-    return $ md5 $ SB.concat hashbs
+    tdir <- parseAbsDir (toPath fp)
+    walkDirAccum Nothing writer_ tdir
+  where
+    writer_ _ _ files = do
+        hashes <- mapM (hashFile . AbsP) files
+        pure $ HashDigest $ hash hashes
 
-formatDeploymentChecks :: [(Deployment, DeploymentCheckResult)] -> String
+formatDeploymentChecks :: [(BakedDeployment, DeploymentCheckResult)] -> String
 formatDeploymentChecks dss =
     if null output
         then "Deployment is done already."
@@ -261,31 +266,44 @@ formatDeploymentChecks dss =
   where
     output = catMaybes $ map formatDeploymentCheck dss
 
-formatDeploymentCheck :: (Deployment, DeploymentCheckResult) -> Maybe String
+formatDeploymentCheck :: (BakedDeployment, DeploymentCheckResult)
+                      -> Maybe String
 formatDeploymentCheck (_, (ReadyToDeploy is)) =
     Just $ "READY: " ++ formatInstruction is
 formatDeploymentCheck (_, DeploymentDone) = Nothing
 formatDeploymentCheck (d, ImpossibleDeployment ds) =
     Just $
-    "IMPOSSIBLE: " ++
-    deploymentDestination d ++ " cannot be deployed:\n" ++ unlines ds ++ "\n"
+    concat
+        [ "IMPOSSIBLE: "
+        , toPath $ directionDestination $ deploymentDirections d
+        , " cannot be deployed:\n"
+        , unlines ds
+        , "\n"
+        ]
 formatDeploymentCheck (d, (DirtySituation str is c)) =
     Just $
-    "DIRTY: " ++
-    deploymentDestination d ++
-    "\n" ++
-    str ++
-    "planned: " ++
-    formatInstruction is ++
-    "\n" ++ "cleanup needed:\n" ++ formatCleanupInstruction c ++ "\n"
+    concat
+        [ "DIRTY: "
+        , toPath $ directionDestination $ deploymentDirections d
+        , "\n"
+        , str
+        , "planned: "
+        , formatInstruction is
+        , "\n"
+        , "cleanup needed:\n"
+        , formatCleanupInstruction c
+        , "\n"
+        ]
 
 formatInstruction :: Instruction -> String
-formatInstruction (Instruction src dst k) = unwords $ [src, kindSymbol k, dst]
+formatInstruction (Instruction src dst k) =
+    unwords $ [toPath src, kindSymbol k, toPath dst]
   where
     kindSymbol LinkDeployment = linkKindSymbol
     kindSymbol CopyDeployment = copyKindSymbol
 
 formatCleanupInstruction :: CleanupInstruction -> String
-formatCleanupInstruction (CleanFile fp) = "remove file " ++ fp
-formatCleanupInstruction (CleanDirectory dir) = "remove directory " ++ dir
-formatCleanupInstruction (CleanLink link) = "remove link " ++ link
+formatCleanupInstruction (CleanFile fp) = "remove file " ++ toFilePath fp
+formatCleanupInstruction (CleanDirectory dir) =
+    "remove directory " ++ toFilePath dir
+formatCleanupInstruction (CleanLink link) = "remove link " ++ toFilePath link

@@ -15,6 +15,13 @@ instance GenValid CompileAssignment
 instance Arbitrary CompileAssignment where
     arbitrary = genValid
 
+instance GenUnchecked StrongCardFileReference
+
+instance GenValid StrongCardFileReference
+
+instance Arbitrary StrongCardFileReference where
+    arbitrary = genValid
+
 instance GenUnchecked CompileSettings
 
 instance GenValid CompileSettings
@@ -22,13 +29,20 @@ instance GenValid CompileSettings
 instance Arbitrary CompileSettings where
     arbitrary = genValid
 
-instance GenUnchecked Deployment where
-    genUnchecked = Put <$> genUnchecked <*> genUnchecked <*> genUnchecked
+instance GenUnchecked a =>
+         GenUnchecked (Deployment a) where
+    genUnchecked = Deployment <$> genUnchecked <*> genUnchecked
 
-instance GenValid Deployment
+instance GenValid a =>
+         GenValid (Deployment a) where
+    genValid = Deployment <$> genValid <*> genValid
 
-instance Arbitrary Deployment where
-    arbitrary = genValid
+instance GenUnchecked a =>
+         GenUnchecked (DeploymentDirections a)
+
+instance GenValid a =>
+         GenValid (DeploymentDirections a) where
+    genValid = Directions <$> genValid <*> genValid
 
 instance GenUnchecked PrefixPart
 

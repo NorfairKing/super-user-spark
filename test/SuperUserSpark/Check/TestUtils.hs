@@ -2,6 +2,7 @@ module SuperUserSpark.Check.TestUtils where
 
 import TestImport
 
+import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Check.Gen ()
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
@@ -69,5 +70,5 @@ shouldBeImpossible :: DiagnosedFp
 shouldBeImpossible src dst kind =
     checkSingle src dst kind `shouldSatisfy` isImpossible
 
-arbitraryWith :: Diagnostics -> Gen DiagnosedFp
-arbitraryWith d = D <$> arbitrary <*> pure d <*> arbitrary
+validWith :: Diagnostics -> Gen DiagnosedFp
+validWith d = D <$> genValid <*> pure d <*> genValid
