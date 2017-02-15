@@ -18,7 +18,8 @@ instance GenValid BakeCardReference
 
 instance GenUnchecked BakeSettings
 
-instance GenValid BakeSettings
+instance GenValid BakeSettings where
+    genValid = BakeSettings <$> genValid <*> genValid <*> genValid
 
 instance GenUnchecked BakeError
 

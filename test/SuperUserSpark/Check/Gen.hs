@@ -22,7 +22,8 @@ instance Arbitrary CheckAssignment where
 
 instance GenUnchecked CheckSettings
 
-instance GenValid CheckSettings
+instance GenValid CheckSettings where
+    genValid = CheckSettings <$> genValid
 
 instance Arbitrary CheckSettings where
     arbitrary = genValid
@@ -64,7 +65,8 @@ instance Arbitrary CheckResult where
 
 instance GenUnchecked Instruction
 
-instance GenValid Instruction
+instance GenValid Instruction where
+    genValid = Instruction <$> genValid <*> genValid <*> genValid
 
 instance Arbitrary Instruction where
     arbitrary = genValid

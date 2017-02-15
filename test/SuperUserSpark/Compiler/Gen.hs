@@ -24,7 +24,8 @@ instance Arbitrary StrongCardFileReference where
 
 instance GenUnchecked CompileSettings
 
-instance GenValid CompileSettings
+instance GenValid CompileSettings where
+    genValid = CompileSettings <$> genValid <*> genValid <*> genValid
 
 instance Arbitrary CompileSettings where
     arbitrary = genValid
