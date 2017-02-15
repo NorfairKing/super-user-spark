@@ -206,9 +206,11 @@ instanceSpec =
         eqSpec @(Deployment FilePath)
         genValidSpec @(Deployment FilePath)
         jsonSpecOnValid @(Deployment FilePath)
+        functorSpec @Deployment
         eqSpec @(DeploymentDirections FilePath)
         genValidSpec @(DeploymentDirections FilePath)
         jsonSpecOnValid @(DeploymentDirections FilePath)
+        functorSpec @DeploymentDirections
         eqSpec @PrefixPart
         genValidSpec @PrefixPart
         eqSpec @CompilerState

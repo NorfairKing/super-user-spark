@@ -74,6 +74,9 @@ instance ToJSON a =>
             , "deployment kind" .= deploymentKind depl
             ]
 
+instance Functor Deployment where
+    fmap f (Deployment dis dk) = Deployment (fmap f dis) dk
+
 data DeploymentDirections a = Directions
     { directionSources :: [a]
     , directionDestination :: a
@@ -92,6 +95,9 @@ instance FromJSON a =>
     parseJSON =
         withObject "Deployment Directions" $ \o ->
             Directions <$> o .: "sources" <*> o .: "destination"
+
+instance Functor DeploymentDirections where
+    fmap f (Directions srcs dst) = Directions (map f srcs) (f dst)
 
 type CompilerPrefix = [PrefixPart]
 
