@@ -76,14 +76,6 @@ instance GenValid CleanupInstruction
 instance Arbitrary CleanupInstruction where
     arbitrary = genValid
 
-instance GenUnchecked DiagnosedDeployment
-
-instance GenValid DiagnosedDeployment where
-    genValid = Diagnosed <$> genValid <*> genValid
-
-instance Arbitrary DiagnosedDeployment where
-    arbitrary = genValid
-
 instance GenUnchecked Diagnostics
 
 instance GenValid Diagnostics

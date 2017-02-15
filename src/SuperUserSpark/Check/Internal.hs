@@ -19,10 +19,10 @@ import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 
 checkDeployment :: DiagnosedDeployment -> DeploymentCheckResult
-checkDeployment (Diagnosed (Directions [] (D dst _ _)) _) =
+checkDeployment (Deployment (Directions [] (D dst _ _)) _) =
     ImpossibleDeployment
         [unwords ["No source for deployment with destination", toPath dst]]
-checkDeployment (Diagnosed (Directions srcs dst) kind) =
+checkDeployment (Deployment (Directions srcs dst) kind) =
     bestResult $ map (\src -> checkSingle src dst kind) srcs
 
 bestResult :: [CheckResult] -> DeploymentCheckResult
@@ -182,7 +182,7 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
 diagnoseDeployment :: BakedDeployment -> IO DiagnosedDeployment
 diagnoseDeployment (Deployment bds kind) = do
     ddirs <- diagnoseDirs bds
-    return $ Diagnosed ddirs kind
+    return $ Deployment ddirs kind
 
 diagnoseDirs :: DeploymentDirections AbsP
              -> IO (DeploymentDirections DiagnosedFp)

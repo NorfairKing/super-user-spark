@@ -81,7 +81,7 @@ diagnoseSpec = do
                         forAll genValid $ \srcs -> do
                             forAll genValid $ \dst -> do
                                 forAll arbitrary $ \kind -> do
-                                    (Diagnosed (Directions dsrcs ddst) dkind) <-
+                                    (Deployment (Directions dsrcs ddst) dkind) <-
                                         diagnoseDeployment $
                                         Deployment (Directions srcs dst) kind
                                     map diagnosedFilePath dsrcs `shouldBe` srcs
@@ -152,16 +152,16 @@ checkDeploymentSpec = do
         it "says 'impossible' for deployments with an empty list of sources" $ do
             forAll genUnchecked $ \dst ->
                 forAll genUnchecked $ \kind ->
-                    shouldBeImpossible' $ Diagnosed (Directions [] dst) kind
+                    shouldBeImpossible' $ Deployment (Directions [] dst) kind
         it "says 'impossible' for deployments where all singles are impossible" $ do
             forAll
-                (arbitrary `suchThat`
-                 (\(Diagnosed (Directions srcs dst) kind) ->
+                (genValid `suchThat`
+                 (\(Deployment (Directions srcs dst) kind) ->
                       all (\src -> isImpossible $ checkSingle src dst kind) srcs)) $ \dd ->
                 shouldBeImpossible' dd
         it
             "gives the same result as bestResult (just with a better error for empty lists)" $ do
-            property $ \dd@(Diagnosed (Directions srcs dst) kind) ->
+            forAll genValid $ \dd@(Deployment (Directions srcs dst) kind) ->
                 case ( bestResult (map (\src -> checkSingle src dst kind) srcs)
                      , checkDeployment dd) of
                     (ImpossibleDeployment r1, ImpossibleDeployment r2) ->

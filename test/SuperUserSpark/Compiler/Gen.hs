@@ -34,7 +34,8 @@ instance GenUnchecked a =>
     genUnchecked = Deployment <$> genUnchecked <*> genUnchecked
 
 instance GenValid a =>
-         GenValid (Deployment a)
+         GenValid (Deployment a) where
+    genValid = Deployment <$> genValid <*> genValid
 
 instance GenUnchecked a =>
          GenUnchecked (DeploymentDirections a)

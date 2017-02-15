@@ -64,9 +64,7 @@ data DiagnosedFp = D
     , diagnosedHashDigest :: HashDigest
     } deriving (Show, Eq, Generic)
 
-instance Validity DiagnosedFp where
-    isValid D {..} =
-        and [isValid diagnosedFilePath, isValid diagnosedDiagnostics]
+instance Validity DiagnosedFp
 
 data Instruction =
     Instruction AbsP
@@ -106,9 +104,4 @@ data CheckResult
 
 instance Validity CheckResult
 
-data DiagnosedDeployment = Diagnosed
-    { diagnosedDirections :: DeploymentDirections DiagnosedFp
-    , diagnosedKind :: DeploymentKind
-    } deriving (Show, Eq, Generic)
-
-instance Validity DiagnosedDeployment
+type DiagnosedDeployment = Deployment DiagnosedFp
