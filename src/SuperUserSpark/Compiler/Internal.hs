@@ -26,9 +26,12 @@ compileDec (Deploy src dst kind) = do
                 Just k -> k
     outof <- gets stateOutof_prefix
     into <- gets stateInto
-    let alternates = resolvePrefix $ outof ++ [sources src]
-    let destination = into </> dst
-    addDeployment $ Put alternates destination resultKind
+    let directions =
+            Directions
+            { directionSources = resolvePrefix $ outof ++ [sources src]
+            , directionDestination = into </> dst
+            }
+    addDeployment $ Put directions resultKind
 compileDec (SparkOff cr) = addCardRef cr
 compileDec (IntoDir dir) = do
     ip <- gets stateInto

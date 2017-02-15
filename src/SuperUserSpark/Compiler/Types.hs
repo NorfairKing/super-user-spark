@@ -28,7 +28,9 @@ data StrongCardFileReference =
 
 instance Validity StrongCardFileReference
 
-data StrongCardReference = StrongCardFile StrongCardFileReference | StrongCardName CardNameReference
+data StrongCardReference
+    = StrongCardFile StrongCardFileReference
+    | StrongCardName CardNameReference
     deriving (Show, Eq, Generic)
 
 instance Validity StrongCardReference
@@ -50,36 +52,37 @@ defaultCompileSettings =
     }
 
 data Deployment = Put
-    { deploymentSources :: [FilePath]
-    , deploymentDestination :: FilePath
+    { deploymentDirections :: DeploymentDirections FilePath
     , deploymentKind :: DeploymentKind
-    } deriving (Eq, Generic)
+    } deriving (Show, Eq, Generic)
 
 instance Validity Deployment
 
-instance Show Deployment where
-    show dep = unwords $ srcs ++ [k, dst]
-      where
-        srcs = map quote $ deploymentSources dep
-        k =
-            case deploymentKind dep of
-                LinkDeployment -> linkKindSymbol
-                CopyDeployment -> copyKindSymbol
-        dst = quote $ deploymentDestination dep
-        quote = (\s -> "\"" ++ s ++ "\"")
-
 instance FromJSON Deployment where
     parseJSON (Object o) =
-        Put <$> o .: "sources" <*> o .: "destination" <*> o .: "deployment kind"
+        Put <$> o .: "directions" <*> o .: "deployment kind"
     parseJSON _ = mzero
 
 instance ToJSON Deployment where
     toJSON depl =
         object
-            [ "sources" .= deploymentSources depl
-            , "destination" .= deploymentDestination depl
+            [ "directions" .= deploymentDirections depl
             , "deployment kind" .= deploymentKind depl
             ]
+
+data DeploymentDirections a = Directions
+    { directionSources :: [a]
+    , directionDestination :: a
+    } deriving (Show, Eq, Generic)
+
+instance Validity a =>
+         Validity (DeploymentDirections a)
+
+instance ToJSON a =>
+         ToJSON (DeploymentDirections a)
+
+instance FromJSON a =>
+         FromJSON (DeploymentDirections a)
 
 type CompilerPrefix = [PrefixPart]
 

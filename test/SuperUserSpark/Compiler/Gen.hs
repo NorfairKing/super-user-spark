@@ -30,12 +30,20 @@ instance Arbitrary CompileSettings where
     arbitrary = genValid
 
 instance GenUnchecked Deployment where
-    genUnchecked = Put <$> genUnchecked <*> genUnchecked <*> genUnchecked
+    genUnchecked = Put <$> genUnchecked <*> genUnchecked
 
 instance GenValid Deployment
 
 instance Arbitrary Deployment where
     arbitrary = genValid
+
+instance GenUnchecked a =>
+         GenUnchecked (DeploymentDirections a)
+
+instance GenValid a =>
+         GenValid (DeploymentDirections a) where
+    genValid = Directions <$> genValid <*> genValid
+
 
 instance GenUnchecked PrefixPart
 

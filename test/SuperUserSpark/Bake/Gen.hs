@@ -36,13 +36,6 @@ instance GenValid AbsP
 instance Arbitrary AbsP where
     arbitrary = genValid
 
-instance GenUnchecked a =>
-         GenUnchecked (DeploymentDirections a)
-
-instance GenValid a =>
-         GenValid (DeploymentDirections a) where
-    genValid = Directions <$> genValid <*> genValid
-
 instance GenUnchecked ID
 
 instance GenValid ID

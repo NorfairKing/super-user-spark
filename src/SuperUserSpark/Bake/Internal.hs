@@ -16,13 +16,12 @@ bakeDeployments = mapM bakeDeployment
 
 bakeDeployment :: Deployment -> SparkBaker BakedDeployment
 bakeDeployment Put {..} = do
-    d <- bakeDirections deploymentSources deploymentDestination
+    d <- bakeDirections deploymentDirections
     pure $ BakedDeployment {bakedDirections = d, bakedKind = deploymentKind}
 
-bakeDirections :: [FilePath]
-               -> FilePath
+bakeDirections :: DeploymentDirections FilePath
                -> SparkBaker (DeploymentDirections AbsP)
-bakeDirections srcs dst =
+bakeDirections (Directions srcs dst) =
     Directions <$> mapM bakeFilePath srcs <*> bakeFilePath dst
 
 -- | Bake asingle 'FilePath'

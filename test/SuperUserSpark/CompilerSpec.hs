@@ -205,6 +205,9 @@ instanceSpec =
         genValidSpec @CompileSettings
         eqSpec @Deployment
         genValidSpec @Deployment
+        eqSpec @(DeploymentDirections FilePath)
+        genValidSpec @(DeploymentDirections FilePath)
+        jsonSpecOnValid @(DeploymentDirections FilePath)
         eqSpec @PrefixPart
         genValidSpec @PrefixPart
         eqSpec @CompilerState
@@ -234,12 +237,12 @@ singleCompileDecSpec =
                     forAll easyFilePath $ \to ->
                         sc
                             (Deploy from to Nothing)
-                            (Put [from] to LinkDeployment)
+                            (Put (Directions [from] to) LinkDeployment)
             it "handles filepaths with a leading dot correctly" $ do pending
             it
                 "figures out the correct paths in these cases with default config and initial state" $ do
                 let d = (Deploy "from" "to" $ Just LinkDeployment)
-                sc d (Put ["from"] "to" LinkDeployment)
+                sc d (Put (Directions ["from"] "to") LinkDeployment)
             it "uses the alternates correctly" $ do pending
             it "uses the into's correctly" $ do pending
             it "uses the outof's correctly" $ do pending
@@ -323,15 +326,18 @@ hopTests = do
             r <-
                 runDefaultImpureCompiler $
                 compileJob $ StrongCardFileReference hop3 Nothing
-            r `shouldBe` Right [Put ["z/delta"] "d/three" LinkDeployment]
+            r `shouldBe`
+                Right [Put (Directions ["z/delta"] "d/three") LinkDeployment]
         it "compiles hop2 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
                 compileJob $ StrongCardFileReference hop2 Nothing
             r `shouldBe`
                 Right
-                    [ Put ["y/gamma"] "c/two" LinkDeployment
-                    , Put ["hop3dir/z/delta"] "d/three" LinkDeployment
+                    [ Put (Directions ["y/gamma"] "c/two") LinkDeployment
+                    , Put
+                          (Directions ["hop3dir/z/delta"] "d/three")
+                          LinkDeployment
                     ]
         it "compiles hop1 correctly" $ do
             r <-
@@ -339,9 +345,13 @@ hopTests = do
                 compileJob $ StrongCardFileReference hop1 Nothing
             r `shouldBe`
                 Right
-                    [ Put ["x/beta"] "b/one" LinkDeployment
-                    , Put ["hop2dir/y/gamma"] "c/two" LinkDeployment
-                    , Put ["hop2dir/hop3dir/z/delta"] "d/three" LinkDeployment
+                    [ Put (Directions ["x/beta"] "b/one") LinkDeployment
+                    , Put
+                          (Directions ["hop2dir/y/gamma"] "c/two")
+                          LinkDeployment
+                    , Put
+                          (Directions ["hop2dir/hop3dir/z/delta"] "d/three")
+                          LinkDeployment
                     ]
         it "compiles root correctly" $ do
             r <-
@@ -349,12 +359,15 @@ hopTests = do
                 compileJob $ StrongCardFileReference root Nothing
             r `shouldBe`
                 Right
-                    [ Put ["u/alpha"] "a/zero" LinkDeployment
-                    , Put ["hop1dir/x/beta"] "b/one" LinkDeployment
-                    , Put ["hop1dir/hop2dir/y/gamma"] "c/two" LinkDeployment
+                    [ Put (Directions ["u/alpha"] "a/zero") LinkDeployment
+                    , Put (Directions ["hop1dir/x/beta"] "b/one") LinkDeployment
                     , Put
-                          ["hop1dir/hop2dir/hop3dir/z/delta"]
-                          "d/three"
+                          (Directions ["hop1dir/hop2dir/y/gamma"] "c/two")
+                          LinkDeployment
+                    , Put
+                          (Directions
+                               ["hop1dir/hop2dir/hop3dir/z/delta"]
+                               "d/three")
                           LinkDeployment
                     ]
 

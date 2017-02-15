@@ -21,6 +21,7 @@ import SuperUserSpark.Check.Types
 import SuperUserSpark.Deployer
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
+import SuperUserSpark.Compiler.Types
 import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen
 import SuperUserSpark.Utils

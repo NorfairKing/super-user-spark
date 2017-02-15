@@ -82,20 +82,6 @@ instance FromJSON AbsP where
 toPath :: AbsP -> FilePath
 toPath = toFilePath . unAbsP
 
-data DeploymentDirections a = Directions
-    { directionSources :: [a]
-    , directionDestination :: a
-    } deriving (Show, Eq, Generic)
-
-instance Validity a =>
-         Validity (DeploymentDirections a)
-
-instance ToJSON a =>
-         ToJSON (DeploymentDirections a)
-
-instance FromJSON a =>
-         FromJSON (DeploymentDirections a)
-
 data ID
     = Plain String
     | Var String
