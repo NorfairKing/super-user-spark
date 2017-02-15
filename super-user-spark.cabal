@@ -127,7 +127,6 @@ test-suite spark-tests
       , optparse-applicative  
       , parsec                
       , process               
-      , pureMD5               
       , shelly                
       , text                  
       , transformers          

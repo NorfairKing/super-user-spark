@@ -4,9 +4,6 @@ module SuperUserSpark.Check.Gen where
 
 import TestImport
 
-import qualified Data.ByteString.Lazy as LB
-import Data.Digest.Pure.MD5
-
 import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Gen ()
@@ -106,9 +103,3 @@ instance GenValid DeploymentCheckResult
 
 instance Arbitrary DeploymentCheckResult where
     arbitrary = genValid
-
-instance GenUnchecked MD5Digest where
-    genUnchecked = md5 . LB.pack <$> arbitrary
-
-instance Arbitrary MD5Digest where
-    arbitrary = genUnchecked
