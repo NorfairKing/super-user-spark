@@ -29,13 +29,12 @@ instance GenValid CompileSettings
 instance Arbitrary CompileSettings where
     arbitrary = genValid
 
-instance GenUnchecked Deployment where
-    genUnchecked = Put <$> genUnchecked <*> genUnchecked
+instance GenUnchecked a =>
+         GenUnchecked (Deployment a) where
+    genUnchecked = Deployment <$> genUnchecked <*> genUnchecked
 
-instance GenValid Deployment
-
-instance Arbitrary Deployment where
-    arbitrary = genValid
+instance GenValid a =>
+         GenValid (Deployment a)
 
 instance GenUnchecked a =>
          GenUnchecked (DeploymentDirections a)
@@ -43,7 +42,6 @@ instance GenUnchecked a =>
 instance GenValid a =>
          GenValid (DeploymentDirections a) where
     genValid = Directions <$> genValid <*> genValid
-
 
 instance GenUnchecked PrefixPart
 

@@ -10,11 +10,11 @@ import System.FilePath (isAbsolute)
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
 
-bakeDeployments :: [Deployment] -> SparkBaker [BakedDeployment]
+bakeDeployments :: [RawDeployment] -> SparkBaker [BakedDeployment]
 bakeDeployments = mapM bakeDeployment
 
-bakeDeployment :: Deployment -> SparkBaker BakedDeployment
-bakeDeployment Put {..} = do
+bakeDeployment :: RawDeployment -> SparkBaker BakedDeployment
+bakeDeployment Deployment {..} = do
     d <- bakeDirections deploymentDirections
     pure $ BakedDeployment {bakedDirections = d, bakedKind = deploymentKind}
 

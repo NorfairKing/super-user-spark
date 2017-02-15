@@ -122,7 +122,7 @@ injectBase Nothing c = c
 injectBase (Just base) (Card name s) =
     Card name $ Block [OutofDir $ toFilePath base, s]
 
-compileJob :: StrongCardFileReference -> ImpureCompiler [Deployment]
+compileJob :: StrongCardFileReference -> ImpureCompiler [RawDeployment]
 compileJob cr@(StrongCardFileReference root _) =
     compileJobWithRoot root Nothing cr
 
@@ -130,7 +130,7 @@ compileJobWithRoot
     :: Path Abs File
     -> Maybe (Path Rel Dir)
     -> StrongCardFileReference
-    -> ImpureCompiler [Deployment]
+    -> ImpureCompiler [RawDeployment]
 compileJobWithRoot root base cfr@(StrongCardFileReference fp _) = do
     sf <- compilerParse fp
     unit <- throwEither $ decideCardToCompile cfr $ sparkFileCards sf
@@ -181,7 +181,7 @@ embedPureCompiler = withExceptT id . mapExceptT (mapReaderT idToIO)
     idToIO :: Identity a -> IO a
     idToIO = return . runIdentity
 
-outputCompiled :: [Deployment] -> ImpureCompiler ()
+outputCompiled :: [RawDeployment] -> ImpureCompiler ()
 outputCompiled deps = do
     out <- asks compileOutput
     liftIO $ do
@@ -190,7 +190,7 @@ outputCompiled deps = do
             Nothing -> putStrLn bs
             Just fp -> writeFile fp bs
 
-inputCompiled :: Path Abs File -> ImpureCompiler [Deployment]
+inputCompiled :: Path Abs File -> ImpureCompiler [RawDeployment]
 inputCompiled fp = do
     bs <- readFile fp
     case eitherDecode bs of

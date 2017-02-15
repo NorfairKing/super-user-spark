@@ -89,7 +89,7 @@ bakeByCardRef bakeCardReference = do
     bdeps <- bakeDeployments deps
     putStrLn $ JSON.encodePretty bdeps
 
-compileBakeCardRef :: BakeCardReference -> SparkBaker [Deployment]
+compileBakeCardRef :: BakeCardReference -> SparkBaker [RawDeployment]
 compileBakeCardRef (BakeCardCompiled fp) = bakerCompile $ inputCompiled fp
 compileBakeCardRef (BakeCardUncompiled bcf) = bakerCompile $ compileJob bcf
 

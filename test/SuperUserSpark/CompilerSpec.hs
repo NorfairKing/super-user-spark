@@ -203,8 +203,9 @@ instanceSpec =
         genValidSpec @CompileAssignment
         eqSpec @CompileSettings
         genValidSpec @CompileSettings
-        eqSpec @Deployment
-        genValidSpec @Deployment
+        eqSpec @(Deployment FilePath)
+        genValidSpec @(Deployment FilePath)
+        jsonSpecOnValid @(Deployment FilePath)
         eqSpec @(DeploymentDirections FilePath)
         genValidSpec @(DeploymentDirections FilePath)
         jsonSpecOnValid @(DeploymentDirections FilePath)
@@ -237,12 +238,12 @@ singleCompileDecSpec =
                     forAll easyFilePath $ \to ->
                         sc
                             (Deploy from to Nothing)
-                            (Put (Directions [from] to) LinkDeployment)
+                            (Deployment (Directions [from] to) LinkDeployment)
             it "handles filepaths with a leading dot correctly" $ do pending
             it
                 "figures out the correct paths in these cases with default config and initial state" $ do
                 let d = (Deploy "from" "to" $ Just LinkDeployment)
-                sc d (Put (Directions ["from"] "to") LinkDeployment)
+                sc d (Deployment (Directions ["from"] "to") LinkDeployment)
             it "uses the alternates correctly" $ do pending
             it "uses the into's correctly" $ do pending
             it "uses the outof's correctly" $ do pending
@@ -327,15 +328,19 @@ hopTests = do
                 runDefaultImpureCompiler $
                 compileJob $ StrongCardFileReference hop3 Nothing
             r `shouldBe`
-                Right [Put (Directions ["z/delta"] "d/three") LinkDeployment]
+                Right
+                    [ Deployment
+                          (Directions ["z/delta"] "d/three")
+                          LinkDeployment
+                    ]
         it "compiles hop2 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
                 compileJob $ StrongCardFileReference hop2 Nothing
             r `shouldBe`
                 Right
-                    [ Put (Directions ["y/gamma"] "c/two") LinkDeployment
-                    , Put
+                    [ Deployment (Directions ["y/gamma"] "c/two") LinkDeployment
+                    , Deployment
                           (Directions ["hop3dir/z/delta"] "d/three")
                           LinkDeployment
                     ]
@@ -345,11 +350,11 @@ hopTests = do
                 compileJob $ StrongCardFileReference hop1 Nothing
             r `shouldBe`
                 Right
-                    [ Put (Directions ["x/beta"] "b/one") LinkDeployment
-                    , Put
+                    [ Deployment (Directions ["x/beta"] "b/one") LinkDeployment
+                    , Deployment
                           (Directions ["hop2dir/y/gamma"] "c/two")
                           LinkDeployment
-                    , Put
+                    , Deployment
                           (Directions ["hop2dir/hop3dir/z/delta"] "d/three")
                           LinkDeployment
                     ]
@@ -359,12 +364,16 @@ hopTests = do
                 compileJob $ StrongCardFileReference root Nothing
             r `shouldBe`
                 Right
-                    [ Put (Directions ["u/alpha"] "a/zero") LinkDeployment
-                    , Put (Directions ["hop1dir/x/beta"] "b/one") LinkDeployment
-                    , Put
+                    [ Deployment
+                          (Directions ["u/alpha"] "a/zero")
+                          LinkDeployment
+                    , Deployment
+                          (Directions ["hop1dir/x/beta"] "b/one")
+                          LinkDeployment
+                    , Deployment
                           (Directions ["hop1dir/hop2dir/y/gamma"] "c/two")
                           LinkDeployment
-                    , Put
+                    , Deployment
                           (Directions
                                ["hop1dir/hop2dir/hop3dir/z/delta"]
                                "d/three")

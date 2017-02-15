@@ -14,7 +14,7 @@ initialState =
     , stateOutof_prefix = []
     }
 
-addDeployment :: Deployment -> InternalCompiler ()
+addDeployment :: RawDeployment -> InternalCompiler ()
 addDeployment d = tell ([d], [])
 
 addCardRef :: CardReference -> InternalCompiler ()

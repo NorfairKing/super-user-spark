@@ -50,19 +50,24 @@ defaultCompileSettings =
     , compileKindOverride = Nothing
     }
 
-data Deployment = Put
-    { deploymentDirections :: DeploymentDirections FilePath
+type RawDeployment = Deployment FilePath
+
+data Deployment a = Deployment
+    { deploymentDirections :: DeploymentDirections a
     , deploymentKind :: DeploymentKind
     } deriving (Show, Eq, Generic)
 
-instance Validity Deployment
+instance Validity a =>
+         Validity (Deployment a)
 
-instance FromJSON Deployment where
+instance FromJSON a =>
+         FromJSON (Deployment a) where
     parseJSON =
         withObject "Deployment" $ \o ->
-            Put <$> o .: "directions" <*> o .: "deployment kind"
+            Deployment <$> o .: "directions" <*> o .: "deployment kind"
 
-instance ToJSON Deployment where
+instance ToJSON a =>
+         ToJSON (Deployment a) where
     toJSON depl =
         object
             [ "directions" .= deploymentDirections depl
@@ -109,7 +114,7 @@ type ImpureCompiler = ExceptT CompileError (ReaderT CompileSettings IO)
 
 type PureCompiler = ExceptT CompileError (ReaderT CompileSettings Identity)
 
-type InternalCompiler = StateT CompilerState (WriterT ([Deployment], [CardReference]) PureCompiler)
+type InternalCompiler = StateT CompilerState (WriterT ([RawDeployment], [CardReference]) PureCompiler)
 
 data CompileError
     = CompileParseError ParseError
