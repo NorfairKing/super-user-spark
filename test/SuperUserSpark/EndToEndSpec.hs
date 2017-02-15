@@ -65,7 +65,7 @@ regularWorkflowSpec = do
                                 ()
                             actual <- P.readFile outfile
                             expected <- P.readFile bashrscres
-                            actual `shouldBe` expected
+                            unless (actual == expected) $ expectationFailure $ unlines ["Expected and actual differ:", expected, actual]
                         it "checks without exceptions" $ do
                             withCurrentDirectory sandbox $
                                 withArgs ["check", cardfile] spark `shouldReturn`
