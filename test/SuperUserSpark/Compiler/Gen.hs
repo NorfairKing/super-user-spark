@@ -10,7 +10,8 @@ import SuperUserSpark.PreCompiler.Gen ()
 
 instance GenUnchecked CompileAssignment
 
-instance GenValid CompileAssignment
+instance GenValid CompileAssignment where
+    genValid = CompileAssignment <$> genValid <*> genValid
 
 instance Arbitrary CompileAssignment where
     arbitrary = genValid

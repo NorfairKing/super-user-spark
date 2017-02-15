@@ -4,8 +4,8 @@ module SuperUserSpark.Deployer.Gen where
 
 import TestImport
 
-import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Check.Gen ()
+import SuperUserSpark.Deployer.Types
 
 instance GenUnchecked DeployAssignment
 
@@ -17,7 +17,9 @@ instance Arbitrary DeployAssignment where
 
 instance GenUnchecked DeploySettings
 
-instance GenValid DeploySettings
+instance GenValid DeploySettings where
+    genValid =
+        DeploySettings <$> genValid <*> genValid <*> genValid <*> genValid
 
 instance Arbitrary DeploySettings where
     arbitrary = genValid
