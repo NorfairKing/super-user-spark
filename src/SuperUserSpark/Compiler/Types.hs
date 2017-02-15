@@ -15,11 +15,23 @@ import SuperUserSpark.Parser.Types
 import SuperUserSpark.PreCompiler.Types
 
 data CompileAssignment = CompileAssignment
-    { compileCardReference :: CardFileReference
+    { compileCardReference :: StrongCardFileReference
     , compileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity CompileAssignment
+
+data StrongCardFileReference =
+    StrongCardFileReference (Path Abs File)
+                            (Maybe CardNameReference)
+    deriving (Show, Eq, Generic)
+
+instance Validity StrongCardFileReference
+
+data StrongCardReference = StrongCardFile StrongCardFileReference | StrongCardName CardNameReference
+    deriving (Show, Eq, Generic)
+
+instance Validity StrongCardReference
 
 data CompileSettings = CompileSettings
     { compileOutput :: Maybe (Path Abs File)

@@ -15,6 +15,13 @@ instance GenValid CompileAssignment
 instance Arbitrary CompileAssignment where
     arbitrary = genValid
 
+instance GenUnchecked StrongCardFileReference
+
+instance GenValid StrongCardFileReference
+
+instance Arbitrary StrongCardFileReference where
+    arbitrary = genValid
+
 instance GenUnchecked CompileSettings
 
 instance GenValid CompileSettings

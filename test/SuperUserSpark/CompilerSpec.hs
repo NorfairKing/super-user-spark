@@ -216,9 +216,6 @@ compileSpec :: Spec
 compileSpec = do
     describe "formatCompileError" $
         it "only produces valid strings" $ producesValid formatCompileError
-    describe "resolveCardReferenceRelativeTo" $
-        it "only produces valid card references" $
-        producesValid2 resolveCardReferenceRelativeTo
 
 singleCompileDecSpec :: Spec
 singleCompileDecSpec =
@@ -325,12 +322,12 @@ hopTests = do
         it "compiles hop3 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference (toFilePath hop3) Nothing
+                compileJob $ StrongCardFileReference hop3 Nothing
             r `shouldBe` Right [Put ["z/delta"] "d/three" LinkDeployment]
         it "compiles hop2 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference (toFilePath hop2) Nothing
+                compileJob $ StrongCardFileReference hop2 Nothing
             r `shouldBe`
                 Right
                     [ Put ["y/gamma"] "c/two" LinkDeployment
@@ -339,7 +336,7 @@ hopTests = do
         it "compiles hop1 correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference (toFilePath hop1) Nothing
+                compileJob $ StrongCardFileReference hop1 Nothing
             r `shouldBe`
                 Right
                     [ Put ["x/beta"] "b/one" LinkDeployment
@@ -349,7 +346,7 @@ hopTests = do
         it "compiles root correctly" $ do
             r <-
                 runDefaultImpureCompiler $
-                compileJob $ CardFileReference (toFilePath root) Nothing
+                compileJob $ StrongCardFileReference root Nothing
             r `shouldBe`
                 Right
                     [ Put ["u/alpha"] "a/zero" LinkDeployment
@@ -374,11 +371,8 @@ exactTests = do
                         result <- parseAbsFile $ toFilePath fp <.> "res"
                         ads <-
                             runDefaultImpureCompiler $
-                            compileJob $
-                            CardFileReference (toFilePath orig) Nothing
-                        eds <-
-                            runDefaultImpureCompiler $
-                            inputCompiled (toFilePath result)
+                            compileJob $ StrongCardFileReference orig Nothing
+                        eds <- runDefaultImpureCompiler $ inputCompiled result
                         ads `shouldBe` eds
 
 hopTestDir :: Path Rel Dir
@@ -393,7 +387,7 @@ compilerBlackBoxTests = do
             it (toFilePath f) $ do
                 r <-
                     runDefaultImpureCompiler $
-                    compileJob $ CardFileReference (toFilePath f) Nothing
+                    compileJob $ StrongCardFileReference f Nothing
                 r `shouldSatisfy` isRight
     describe "Unsuccesfull compile examples" $ do
         let dirs = map (tr </>) [shouldNotParseDir, shouldNotCompileDir]
@@ -401,5 +395,5 @@ compilerBlackBoxTests = do
             it (toFilePath f) $ do
                 r <-
                     runDefaultImpureCompiler $
-                    compileJob $ CardFileReference (toFilePath f) Nothing
+                    compileJob $ StrongCardFileReference f Nothing
                 r `shouldSatisfy` isLeft

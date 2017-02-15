@@ -27,7 +27,7 @@ deployFromArgs das = do
 
 deployAssignment :: DeployArgs -> IO (Either String DeployAssignment)
 deployAssignment DeployArgs {..} =
-    DeployAssignment <$$> pure (readEither deployArgCardRef) <**>
+    DeployAssignment <$$> parseBakeCardReference deployArgCardRef <**>
     deriveDeploySettings deployFlags
 
 deriveDeploySettings :: DeployFlags -> IO (Either String DeploySettings)

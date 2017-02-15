@@ -18,11 +18,13 @@ import Import
 
 import qualified Data.Aeson.Encode.Pretty as JSON
 import System.Environment (getEnvironment)
+import System.FilePath (takeExtension)
 
 import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler
 import SuperUserSpark.Compiler.Types
+import SuperUserSpark.Language.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Utils
 
@@ -35,8 +37,22 @@ bakeFromArgs ba = do
 
 bakeAssignment :: BakeArgs -> IO (Either String BakeAssignment)
 bakeAssignment BakeArgs {..} =
-    BakeAssignment <$$> pure (readEither bakeCardRef) <**>
+    BakeAssignment <$$> parseBakeCardReference bakeCardRef <**>
     deriveBakeSettings bakeFlags
+
+parseBakeCardReference :: String -> IO (Either String BakeCardReference)
+parseBakeCardReference s =
+    case words s of
+        [fp] ->
+            if takeExtension fp == ".sus"
+                then BakeCardUncompiled <$$> parseStrongCardFileReference fp
+                else BakeCardCompiled <$$> resolveFile'Either fp
+        [f, c] ->
+            BakeCardUncompiled <$$>
+            ((\(StrongCardFileReference p _) ->
+                  StrongCardFileReference p (Just $ CardNameReference c)) <$$>
+             parseStrongCardFileReference f)
+        _ -> pure $ Left $ unwords ["Could not parse card reference from:", s]
 
 deriveBakeSettings :: BakeFlags -> IO (Either String BakeSettings)
 deriveBakeSettings BakeFlags {..} =

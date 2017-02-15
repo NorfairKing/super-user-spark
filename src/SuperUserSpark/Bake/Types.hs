@@ -20,29 +20,11 @@ data BakeAssignment = BakeAssignment
 instance Validity BakeAssignment
 
 data BakeCardReference
-    = BakeCardCompiled FilePath -- TODO make absolute when we do something better than 'Read'.
-    | BakeCardUncompiled CardFileReference
+    = BakeCardCompiled (Path Abs File)
+    | BakeCardUncompiled StrongCardFileReference
     deriving (Show, Eq, Generic)
 
 instance Validity BakeCardReference
-
-instance Read BakeCardReference where
-    readsPrec _ fp =
-        case length (words fp) of
-            0 -> []
-            1 ->
-                if takeExtension fp == ".sus"
-                    then [ ( BakeCardUncompiled (CardFileReference fp Nothing)
-                           , "")
-                         ]
-                    else [(BakeCardCompiled fp, "")]
-            2 ->
-                let [f, c] = words fp
-                in [ ( BakeCardUncompiled
-                           (CardFileReference f (Just $ CardNameReference c))
-                     , "")
-                   ]
-            _ -> []
 
 data BakeSettings = BakeSettings
     { bakeEnvironment :: [(String, String)]
@@ -83,7 +65,6 @@ instance FromJSON BakedDeployment
 newtype AbsP = AbsP
     { unAbsP :: Path Abs File
     } deriving (Show, Eq, Generic)
-
 
 instance Validity AbsP
 

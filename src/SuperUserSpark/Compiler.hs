@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 {-
     The Compiler is responsible for transforming an AST into a list of
@@ -41,8 +42,18 @@ compileFromArgs ca = do
 
 compileAssignment :: CompileArgs -> IO (Either String CompileAssignment)
 compileAssignment CompileArgs {..} =
-    CompileAssignment <$$> pure (readEither compileCardRef) <**>
+    CompileAssignment <$$> (parseStrongCardFileReference compileCardRef) <**>
     deriveCompileSettings compileFlags
+
+resolveFile'Either :: FilePath -> IO (Either String (Path Abs File))
+resolveFile'Either fp = do
+    errOrSp <- try $ resolveFile' fp
+    pure $ left (show :: PathParseException -> String) $ errOrSp
+
+parseStrongCardFileReference :: FilePath
+                             -> IO (Either String StrongCardFileReference)
+parseStrongCardFileReference fp =
+    (\sfp -> StrongCardFileReference sfp Nothing) <$$> resolveFile'Either fp
 
 deriveCompileSettings :: CompileFlags -> IO (Either String CompileSettings)
 deriveCompileSettings CompileFlags {..} =
@@ -80,15 +91,20 @@ formatCompileError (PreCompileErrors ss) =
 formatCompileError (DuringCompilationError s) =
     unlines ["Compilation failed:", s]
 
-decideCardToCompile :: CardFileReference -> [Card] -> Either CompileError Card
-decideCardToCompile (CardFileReference fp mcn) scope =
+decideCardToCompile :: StrongCardFileReference
+                    -> [Card]
+                    -> Either CompileError Card
+decideCardToCompile (StrongCardFileReference fp mcn) scope =
     case mcn of
         Nothing ->
             case scope of
                 [] ->
                     Left $
                     DuringCompilationError $
-                    "No cards found for compilation in file:" ++ fp
+                    unwords
+                        [ "No cards found for compilation in file:"
+                        , toFilePath fp
+                        ]
                             -- TODO more detailed error here
                 (fst_:_) -> pure fst_
         Just (CardNameReference name) -> do
@@ -103,30 +119,21 @@ throwEither :: Either CompileError a -> ImpureCompiler a
 throwEither (Left e) = throwError e
 throwEither (Right a) = pure a
 
-injectBase :: FilePath -> Card -> Card
-injectBase base c@(Card name s)
-    | null base = c
-    | otherwise = Card name $ Block [OutofDir base, s]
+injectBase :: Maybe (Path Rel Dir) -> Card -> Card
+injectBase Nothing c = c
+injectBase (Just base) (Card name s) =
+    Card name $ Block [OutofDir $ toFilePath base, s]
 
-composeBases :: FilePath -> FilePath -> FilePath -> FilePath
-composeBases _ base_ [] = base_
-composeBases root _ base2 = takeDirectory (stripRoot root base2)
+compileJob :: StrongCardFileReference -> ImpureCompiler [Deployment]
+compileJob cr@(StrongCardFileReference root _) =
+    compileJobWithRoot root Nothing cr
 
-stripRoot :: FilePath -> FilePath -> FilePath
-stripRoot root orig =
-    case stripPrefix (takeDirectory root) orig of
-        Nothing -> orig
-        Just ('/':new) -> new
-        Just new -> new
-
-compileJob :: CardFileReference -> ImpureCompiler [Deployment]
-compileJob cr@(CardFileReference root _) = compileJobWithRoot root "" cr
-
-compileJobWithRoot :: FilePath
-                   -> FilePath
-                   -> CardFileReference
-                   -> ImpureCompiler [Deployment]
-compileJobWithRoot root base cfr@(CardFileReference fp _) = do
+compileJobWithRoot
+    :: Path Abs File
+    -> Maybe (Path Rel Dir)
+    -> StrongCardFileReference
+    -> ImpureCompiler [Deployment]
+compileJobWithRoot root base cfr@(StrongCardFileReference fp _) = do
     sf <- compilerParse fp
     unit <- throwEither $ decideCardToCompile cfr $ sparkFileCards sf
     -- Inject base outofDir
@@ -137,28 +144,35 @@ compileJobWithRoot root base cfr@(CardFileReference fp _) = do
     -- Compile this unit
     (deps, crfs) <- embedPureCompiler $ compileUnit injected
     -- Compile the rest of the units
-    let rcrfs = map (resolveCardReferenceRelativeTo fp) crfs
+    rcrfs <- mapM (resolveCardReferenceRelativeTo fp) crfs
     restDeps <-
         fmap concat $
         forM rcrfs $ \rcrf ->
             case rcrf of
-                (CardFile cfr_@(CardFileReference base2 _)) ->
-                    compileJobWithRoot root (composeBases root base base2) cfr_
-                (CardName cnr) ->
+                (StrongCardFile cfr_@(StrongCardFileReference base2 _)) -> do
+                    let (newRoot, newBase) =
+                            case stripDir (parent root) (parent base2) of
+                                Nothing -> (base2, Nothing)
+                                Just d -> (root, Just d)
+                    compileJobWithRoot newRoot newBase cfr_
+                (StrongCardName cnr) ->
                     compileJobWithRoot
                         root
                         base
-                        (CardFileReference fp $ Just cnr)
+                        (StrongCardFileReference fp $ Just cnr)
     return $ deps ++ restDeps
 
-resolveCardReferenceRelativeTo :: FilePath -> CardReference -> CardReference
-resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) =
-    CardFile $ CardFileReference (takeDirectory fp </> cfp) mcn
-resolveCardReferenceRelativeTo _ cn = cn
+resolveCardReferenceRelativeTo :: Path Abs File
+                               -> CardReference
+                               -> ImpureCompiler StrongCardReference
+resolveCardReferenceRelativeTo fp (CardFile (CardFileReference cfp mcn)) = do
+    nfp <- liftIO $ resolveFile (parent fp) cfp
+    pure $ StrongCardFile $ StrongCardFileReference nfp mcn
+resolveCardReferenceRelativeTo _ (CardName cnr) = pure $ StrongCardName cnr
 
-compilerParse :: FilePath -> ImpureCompiler SparkFile
+compilerParse :: Path Abs File -> ImpureCompiler SparkFile
 compilerParse fp = do
-    esf <- liftIO $ parseAbsFile fp >>= parseFile
+    esf <- liftIO $ parseFile fp
     case esf of
         Left pe -> throwError $ CompileParseError pe
         Right sf_ -> pure sf_
@@ -178,9 +192,9 @@ outputCompiled deps = do
             Nothing -> putStrLn bs
             Just fp -> writeFile fp bs
 
-inputCompiled :: FilePath -> ImpureCompiler [Deployment]
+inputCompiled :: Path Abs File -> ImpureCompiler [Deployment]
 inputCompiled fp = do
-    bs <- liftIO $ BS.readFile fp
+    bs <- readFile fp
     case eitherDecode bs of
         Left err ->
             throwError $

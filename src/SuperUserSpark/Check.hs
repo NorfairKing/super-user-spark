@@ -33,7 +33,7 @@ checkFromArgs cas = do
 
 checkAssignment :: CheckArgs -> IO (Either String CheckAssignment)
 checkAssignment CheckArgs {..} =
-    CheckAssignment <$$> pure (readEither checkArgCardRef) <**>
+    CheckAssignment <$$> parseBakeCardReference checkArgCardRef <**>
     deriveCheckSettings checkFlags
 
 deriveCheckSettings :: CheckFlags -> IO (Either String CheckSettings)
