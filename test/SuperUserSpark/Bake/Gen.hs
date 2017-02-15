@@ -26,10 +26,8 @@ instance GenUnchecked BakeError
 instance GenValid BakeError
 
 instance GenUnchecked AbsP
-instance GenValid AbsP
 
-instance Arbitrary AbsP where
-    arbitrary = genValid
+instance GenValid AbsP
 
 instance GenUnchecked ID
 

@@ -14,16 +14,10 @@ instance GenUnchecked CheckAssignment
 instance GenValid CheckAssignment where
     genValid = CheckAssignment <$> genValid <*> genValid
 
-instance Arbitrary CheckAssignment where
-    arbitrary = genValid
-
 instance GenUnchecked CheckSettings
 
 instance GenValid CheckSettings where
     genValid = CheckSettings <$> genValid
-
-instance Arbitrary CheckSettings where
-    arbitrary = genValid
 
 instance GenUnchecked CheckError
 
@@ -32,12 +26,6 @@ instance GenValid CheckError
 instance GenUnchecked HashDigest
 
 instance GenValid HashDigest
-
-instance Arbitrary HashDigest where
-    arbitrary = genValid
-
-instance Arbitrary CheckError where
-    arbitrary = genValid
 
 instance GenUnchecked CheckResult where
     genUnchecked =
@@ -57,38 +45,23 @@ instance GenValid CheckResult where
             , Impossible <$> genValid
             ]
 
-instance Arbitrary CheckResult where
-    arbitrary = genValid
-
 instance GenUnchecked Instruction
 
 instance GenValid Instruction where
     genValid = Instruction <$> genValid <*> genValid <*> genValid
 
-instance Arbitrary Instruction where
-    arbitrary = genValid
-
 instance GenUnchecked CleanupInstruction
 
 instance GenValid CleanupInstruction
-
-instance Arbitrary CleanupInstruction where
-    arbitrary = genValid
 
 instance GenUnchecked Diagnostics
 
 instance GenValid Diagnostics
 
-instance Arbitrary Diagnostics where
-    arbitrary = genValid
-
 instance GenUnchecked DiagnosedFp
 
 instance GenValid DiagnosedFp where
     genValid = D <$> genValid <*> genValid <*> genValid
-
-instance Arbitrary DiagnosedFp where
-    arbitrary = genValid
 
 instance GenUnchecked DeploymentCheckResult where
     genUnchecked =
@@ -100,6 +73,3 @@ instance GenUnchecked DeploymentCheckResult where
             ]
 
 instance GenValid DeploymentCheckResult
-
-instance Arbitrary DeploymentCheckResult where
-    arbitrary = genValid

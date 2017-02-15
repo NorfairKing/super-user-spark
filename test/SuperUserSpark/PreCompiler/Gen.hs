@@ -10,6 +10,3 @@ import SuperUserSpark.PreCompiler.Types
 instance GenUnchecked PreCompileError
 
 instance GenValid PreCompileError
-
-instance Arbitrary PreCompileError where
-    arbitrary = genValid

@@ -80,7 +80,7 @@ diagnoseSpec = do
                     once $
                         forAll genValid $ \srcs -> do
                             forAll genValid $ \dst -> do
-                                forAll arbitrary $ \kind -> do
+                                forAll genValid $ \kind -> do
                                     (Deployment (Directions dsrcs ddst) dkind) <-
                                         diagnoseDeployment $
                                         Deployment (Directions srcs dst) kind
@@ -172,23 +172,23 @@ checkDeploymentSpec = do
             producesValidsOnValids bestResult
         it "says 'impossible' if all checkresults are impossible" $ do
             forAll
-                (arbitrary `suchThat` all isImpossible)
+                (genValid `suchThat` all isImpossible)
                 shouldBeImpossibleDeployment
         it "says 'done' if the first non-impossible in 'done'" $ do
             forAll
-                (arbitrary `suchThat`
+                (genValid `suchThat`
                  (any (not . isImpossible) &&&
                   (isDone . head . dropWhile isImpossible))) $ \dd ->
                 bestResult dd `shouldSatisfy` deploymentIsDone
         it "says 'dirty' if the first non-impossible in 'dirty'" $ do
             forAll
-                (arbitrary `suchThat`
+                (genValid `suchThat`
                  (any (not . isImpossible) &&&
                   (isDirty . head . dropWhile isImpossible))) $ \dd ->
                 bestResult dd `shouldSatisfy` dirtyDeployment
         it "says 'ready' if the first non-impossible in 'ready'" $ do
             forAll
-                (arbitrary `suchThat`
+                (genValid `suchThat`
                  (any (not . isImpossible) &&&
                   (isReady . head . dropWhile isImpossible))) $ \dd ->
                 bestResult dd `shouldSatisfy` deploymentReadyToDeploy
@@ -200,13 +200,13 @@ checkSingleSpec =
             producesValidsOnValids3 checkSingle
         it "says 'impossible' if the source does not exist" $ do
             forAll (validWith Nonexistent) $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \kind -> shouldBeImpossible src dst kind
+                forAll genValid $ \dst ->
+                    forAll genValid $ \kind -> shouldBeImpossible src dst kind
         it
             "says 'ready' if the source is a file and the destination does not exist" $ do
             forAll (validWith IsFile) $ \src ->
                 forAll (validWith Nonexistent) $ \dst ->
-                    forAll arbitrary $ \kind -> shouldBeReady src dst kind
+                    forAll genValid $ \kind -> shouldBeReady src dst kind
         it
             "says 'dirty' if both the source and destination are files and it's a link deployment" $ do
             forAll (validWith IsFile) $ \src ->
@@ -215,19 +215,19 @@ checkSingleSpec =
                     CleanFile $ unAbsP $ diagnosedFilePath dst
         it
             "says 'done' if both the source and destination are files and it's a copy deployment and the files are equal" $ do
-            forAll arbitrary $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \h1 ->
+            forAll genValid $ \src ->
+                forAll genValid $ \dst ->
+                    forAll genValid $ \h1 ->
                         shouldBeDone
                             (D src IsFile h1)
                             (D dst IsFile h1)
                             CopyDeployment
         it
             "says 'dirty' if both the source and destination are files and it's a copy deployment but the files are unequal" $ do
-            forAll arbitrary $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \h1 ->
-                        forAll (arbitrary `suchThat` (/= h1)) $ \h2 ->
+            forAll genValid $ \src ->
+                forAll genValid $ \dst ->
+                    forAll genValid $ \h1 ->
+                        forAll (genValid `suchThat` (/= h1)) $ \h2 ->
                             shouldBeDirty
                                 (D src IsFile h1)
                                 (D dst IsFile h2)
@@ -237,13 +237,13 @@ checkSingleSpec =
             "says 'dirty' if the source is a file and the destination is a directory" $ do
             forAll (validWith IsFile) $ \src ->
                 forAll (validWith IsDirectory) $ \dst ->
-                    forAll arbitrary $ \kind -> do
+                    forAll genValid $ \kind -> do
                         d <- parseAbsDir (toPath $ diagnosedFilePath dst)
                         shouldBeDirty src dst kind $ CleanDirectory d
         it
             "says 'dirty' if the source is a file and the destination is a link for a link deployment but the destination doesn't point to the source" $ do
             forAll (validWith IsFile) $ \src@(D srcp _ _) ->
-                forAll (arbitrary `suchThat` (/= srcp)) $ \l ->
+                forAll (genValid `suchThat` (/= srcp)) $ \l ->
                     forAll (validWith $ IsLinkTo l) $ \dst ->
                         shouldBeDirty src dst LinkDeployment $
                         CleanLink $ unAbsP $ diagnosedFilePath dst
@@ -255,7 +255,7 @@ checkSingleSpec =
         it
             "says 'dirty' if the source is a file and the destination is a link for a copy deployment" $ do
             forAll (validWith IsFile) $ \src ->
-                forAll arbitrary $ \l ->
+                forAll genValid $ \l ->
                     forAll (validWith $ IsLinkTo l) $ \dst ->
                         shouldBeDirty src dst CopyDeployment $
                         CleanLink $ unAbsP $ diagnosedFilePath dst
@@ -263,12 +263,12 @@ checkSingleSpec =
             "says 'ready' if the source is a directory and the destination does not exist" $ do
             forAll (validWith IsDirectory) $ \src ->
                 forAll (validWith Nonexistent) $ \dst ->
-                    forAll arbitrary $ \kind -> shouldBeReady src dst kind
+                    forAll genValid $ \kind -> shouldBeReady src dst kind
         it
             "says 'dirty' if the source is a directory and the destination is a file" $ do
             forAll (validWith IsDirectory) $ \src ->
                 forAll (validWith IsFile) $ \dst ->
-                    forAll arbitrary $ \kind ->
+                    forAll genValid $ \kind ->
                         shouldBeDirty src dst kind $
                         CleanFile $ unAbsP $ diagnosedFilePath dst
         it
@@ -279,19 +279,19 @@ checkSingleSpec =
                     shouldBeDirty src dst LinkDeployment $ CleanDirectory d
         it
             "says 'done' if both the source and destination are directories and it's a copy deployment and the directories are equal" $ do
-            forAll arbitrary $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \h1 ->
+            forAll genValid $ \src ->
+                forAll genValid $ \dst ->
+                    forAll genValid $ \h1 ->
                         shouldBeDone
                             (D src IsDirectory h1)
                             (D dst IsDirectory h1)
                             CopyDeployment
         it
             "says 'dirty' if both the source and destination are directories and it's a copy deployment but the directories are unequal" $ do
-            forAll arbitrary $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \h1 ->
-                        forAll (arbitrary `suchThat` (/= h1)) $ \h2 -> do
+            forAll genValid $ \src ->
+                forAll genValid $ \dst ->
+                    forAll genValid $ \h1 ->
+                        forAll (genValid `suchThat` (/= h1)) $ \h2 -> do
                             d <- parseAbsDir $ toPath dst
                             shouldBeDirty
                                 (D src IsDirectory h1)
@@ -301,7 +301,7 @@ checkSingleSpec =
         it
             "says 'dirty' if the source is a directory and the destination is a link for a link deployment but the destination doesn't point to the source" $ do
             forAll (validWith IsDirectory) $ \src@(D srcp _ _) ->
-                forAll (arbitrary `suchThat` (/= srcp)) $ \l ->
+                forAll (genValid `suchThat` (/= srcp)) $ \l ->
                     forAll (validWith $ IsLinkTo l) $ \dst ->
                         shouldBeDirty src dst LinkDeployment $
                         CleanLink $ unAbsP $ diagnosedFilePath dst
@@ -313,24 +313,24 @@ checkSingleSpec =
         it
             "says 'dirty' if the source is a directory and the destination is a link for a copy deployment" $ do
             forAll (validWith IsDirectory) $ \src ->
-                forAll arbitrary $ \l ->
+                forAll genValid $ \l ->
                     forAll (validWith $ IsLinkTo l) $ \dst ->
                         shouldBeDirty src dst CopyDeployment $
                         CleanLink $ unAbsP $ diagnosedFilePath dst
         it "says 'dirty' if the source is a link" $ do
-            forAll arbitrary $ \l ->
+            forAll genValid $ \l ->
                 forAll (validWith $ IsLinkTo l) $ \src ->
-                    forAll arbitrary $ \dst ->
-                        forAll arbitrary $ \kind ->
+                    forAll genValid $ \dst ->
+                        forAll genValid $ \kind ->
                             shouldBeImpossible src dst kind
         it "says 'dirty' for a weird source" $ do
             forAll (validWith IsWeird) $ \src ->
-                forAll arbitrary $ \dst ->
-                    forAll arbitrary $ \kind -> shouldBeImpossible src dst kind
+                forAll genValid $ \dst ->
+                    forAll genValid $ \kind -> shouldBeImpossible src dst kind
         it "says 'dirty' for a weird destination" $ do
-            forAll arbitrary $ \src ->
+            forAll genValid $ \src ->
                 forAll (validWith IsWeird) $ \dst ->
-                    forAll arbitrary $ \kind -> shouldBeImpossible src dst kind
+                    forAll genValid $ \kind -> shouldBeImpossible src dst kind
         it "works for these unit tests" $ do pending
 
 hashSpec :: Spec
