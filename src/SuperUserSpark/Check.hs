@@ -32,13 +32,18 @@ checkFromArgs cas = do
         Right ass -> check ass
 
 checkAssignment :: CheckArgs -> IO (Either String CheckAssignment)
-checkAssignment CheckArgs {..} =
-    CheckAssignment <$$> parseBakeCardReference checkArgCardRef <**>
-    deriveCheckSettings checkFlags
+checkAssignment CheckArgs {..} = do
+    errOrCardRef <- parseBakeCardReference checkArgCardRef
+    case errOrCardRef of
+        Left err -> pure $ Left err
+        Right cardRef ->
+            CheckAssignment cardRef <$$> deriveCheckSettings cardRef checkFlags
 
-deriveCheckSettings :: CheckFlags -> IO (Either String CheckSettings)
-deriveCheckSettings CheckFlags {..} =
-    CheckSettings <$$> deriveBakeSettings checkBakeFlags
+deriveCheckSettings :: BakeCardReference
+                    -> CheckFlags
+                    -> IO (Either String CheckSettings)
+deriveCheckSettings bcr CheckFlags {..} =
+    CheckSettings <$$> deriveBakeSettings bcr checkBakeFlags
 
 check :: CheckAssignment -> IO ()
 check CheckAssignment {..} = do

@@ -14,7 +14,8 @@ import SuperUserSpark.Language.Gen ()
 
 instance GenUnchecked CheckAssignment
 
-instance GenValid CheckAssignment
+instance GenValid CheckAssignment where
+    genValid = CheckAssignment <$> genValid <*> genValid
 
 instance Arbitrary CheckAssignment where
     arbitrary = genValid

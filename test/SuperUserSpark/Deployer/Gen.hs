@@ -9,7 +9,8 @@ import SuperUserSpark.Check.Gen ()
 
 instance GenUnchecked DeployAssignment
 
-instance GenValid DeployAssignment
+instance GenValid DeployAssignment where
+    genValid = DeployAssignment <$> genValid <*> genValid
 
 instance Arbitrary DeployAssignment where
     arbitrary = genValid

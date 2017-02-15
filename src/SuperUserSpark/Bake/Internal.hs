@@ -6,6 +6,7 @@ import Import
 
 import Control.Exception (try)
 import System.Environment (getEnvironment)
+import System.FilePath (isAbsolute)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
@@ -34,12 +35,20 @@ bakeDirections srcs dst =
 bakeFilePath :: FilePath -> SparkBaker AbsP
 bakeFilePath fp = do
     env <- asks bakeEnvironment
+    root <- asks bakeRoot
     case complete env fp of
         Left err -> throwError $ BakeError $ err
         Right cp -> do
-                    errOrAp <- liftIO $ try $ resolveFile' cp -- FIXME resolve from the right file.
+            if isAbsolute cp
+                then case parseAbsFile cp of
+                         Left err -> throwError $ BakeError $ show err
+                         Right af -> pure $ AbsP af
+                else do
+                    errOrAp <- liftIO $ try $ resolveFile root cp
                     case errOrAp of
-                        Left err -> throwError $ BakeError $ show (err :: PathParseException)
+                        Left err ->
+                            throwError $
+                            BakeError $ show (err :: PathParseException)
                         Right ap -> pure $ AbsP ap
 
 type Environment = [(String, String)]

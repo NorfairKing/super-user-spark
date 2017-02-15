@@ -36,9 +36,12 @@ bakeFromArgs ba = do
         Right ass -> bake ass
 
 bakeAssignment :: BakeArgs -> IO (Either String BakeAssignment)
-bakeAssignment BakeArgs {..} =
-    BakeAssignment <$$> parseBakeCardReference bakeCardRef <**>
-    deriveBakeSettings bakeFlags
+bakeAssignment BakeArgs {..} = do
+    errOrCardRef <- parseBakeCardReference bakeCardRef
+    case errOrCardRef of
+        Left err -> pure $ Left err
+        Right cardRef ->
+            BakeAssignment cardRef <$$> deriveBakeSettings cardRef bakeFlags
 
 parseBakeCardReference :: String -> IO (Either String BakeCardReference)
 parseBakeCardReference s =
@@ -54,10 +57,19 @@ parseBakeCardReference s =
              parseStrongCardFileReference f)
         _ -> pure $ Left $ unwords ["Could not parse card reference from:", s]
 
-deriveBakeSettings :: BakeFlags -> IO (Either String BakeSettings)
-deriveBakeSettings BakeFlags {..} =
-    BakeSettings <$$> (Right <$> getEnvironment) <**>
+deriveBakeSettings :: BakeCardReference
+                   -> BakeFlags
+                   -> IO (Either String BakeSettings)
+deriveBakeSettings bcr BakeFlags {..} =
+    BakeSettings (rootOf bcr) <$$> (Right <$> getEnvironment) <**>
     deriveCompileSettings bakeCompileFlags
+
+rootOf :: BakeCardReference -> Path Abs Dir
+rootOf bcr =
+    parent $
+    case bcr of
+        (BakeCardCompiled fp) -> fp
+        (BakeCardUncompiled (StrongCardFileReference fp _)) -> fp
 
 bake :: BakeAssignment -> IO ()
 bake BakeAssignment {..} = do

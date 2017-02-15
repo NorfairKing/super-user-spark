@@ -9,7 +9,8 @@ import SuperUserSpark.Compiler.Gen ()
 
 instance GenUnchecked BakeAssignment
 
-instance GenValid BakeAssignment
+instance GenValid BakeAssignment where
+    genValid = BakeAssignment <$> genValid <*> genValid
 
 instance GenUnchecked BakeCardReference
 

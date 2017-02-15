@@ -26,13 +26,16 @@ deployFromArgs das = do
         Right ass -> deploy ass
 
 deployAssignment :: DeployArgs -> IO (Either String DeployAssignment)
-deployAssignment DeployArgs {..} =
-    DeployAssignment <$$> parseBakeCardReference deployArgCardRef <**>
-    deriveDeploySettings deployFlags
+deployAssignment DeployArgs {..} = do
+    errOrCardRef <- parseBakeCardReference deployArgCardRef
+    case errOrCardRef of
+        Left err -> pure $ Left err
+        Right cardRef ->
+            DeployAssignment cardRef <$$> deriveDeploySettings cardRef deployFlags
 
-deriveDeploySettings :: DeployFlags -> IO (Either String DeploySettings)
-deriveDeploySettings DeployFlags {..} = do
-    ecs <- deriveCheckSettings deployCheckFlags
+deriveDeploySettings :: BakeCardReference -> DeployFlags -> IO (Either String DeploySettings)
+deriveDeploySettings bcr DeployFlags {..} = do
+    ecs <- deriveCheckSettings bcr deployCheckFlags
     pure $ do
         cs <- ecs
         pure

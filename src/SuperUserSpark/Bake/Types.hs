@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module SuperUserSpark.Bake.Types where
@@ -27,7 +28,8 @@ data BakeCardReference
 instance Validity BakeCardReference
 
 data BakeSettings = BakeSettings
-    { bakeEnvironment :: [(String, String)]
+    { bakeRoot :: Path Abs Dir
+    , bakeEnvironment :: [(String, String)]
     , bakeCompileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
@@ -36,7 +38,10 @@ instance Validity BakeSettings
 defaultBakeSettings :: BakeSettings
 defaultBakeSettings =
     BakeSettings
-    {bakeEnvironment = [], bakeCompileSettings = defaultCompileSettings}
+    { bakeRoot = $(mkAbsDir "/")
+    , bakeEnvironment = []
+    , bakeCompileSettings = defaultCompileSettings
+    }
 
 type SparkBaker = ExceptT BakeError (ReaderT BakeSettings IO)
 

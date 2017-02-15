@@ -53,6 +53,30 @@ instanceSpec =
 bakeSpec :: Spec
 bakeSpec =
     parallel $ do
+        describe "bakeFilePath" $ do
+            it "works for these unit test cases without variables" $ do
+                let b root fp s = do
+                        ap <- AbsP <$> parseAbsFile s
+                        rp <- parseAbsDir root
+                        runReaderT
+                            (runExceptT (bakeFilePath fp))
+                            defaultBakeSettings {bakeRoot = rp} `shouldReturn`
+                            Right ap
+                b "/home/user/hello" "a/b/c" "/home/user/hello/a/b/c"
+                b "/home/user/hello" "/home/user/.files/c" "/home/user/.files/c"
+            it "works for a simple home-only variable situation" $ do
+                forAll genValid $ \root -> do
+                    let b home fp s = do
+                            ap <- AbsP <$> parseAbsFile s
+                            runReaderT
+                                (runExceptT (bakeFilePath fp))
+                                defaultBakeSettings
+                                { bakeRoot = root
+                                , bakeEnvironment = [("HOME", home)]
+                                } `shouldReturn`
+                                Right ap
+                    b "/home/user" "~/a/b/c" "/home/user/a/b/c"
+                    b "/home" "~/c" "/home/c"
         describe "defaultBakeSettings" $
             it "is valid" $ isValid defaultBakeSettings
         describe "formatBakeError" $ do
