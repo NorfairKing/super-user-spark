@@ -7,4 +7,6 @@ extra-deps:
 - optparse-applicative-0.13.1.0
 - process-1.5.0.0
 - validity-0.3.2.0
+- iostring-0.0.0.0
+- validity-path-0.1.0.0
 resolver: lts-7.19
