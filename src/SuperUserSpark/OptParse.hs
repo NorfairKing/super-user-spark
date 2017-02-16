@@ -69,11 +69,6 @@ parseCompileArgs :: Parser CompileArgs
 parseCompileArgs =
     CompileArgs <$>
     strArgument (metavar "CARDREF" <> help "the card file to compile") <*>
-    parseCompileFlags
-
-parseCompileFlags :: Parser CompileFlags
-parseCompileFlags =
-    CompileFlags <$>
     option
         (Just <$> str)
         (mconcat
@@ -83,6 +78,11 @@ parseCompileFlags =
              , metavar "FILE"
              , help "The output file for compilation"
              ]) <*>
+    parseCompileFlags
+
+parseCompileFlags :: Parser CompileFlags
+parseCompileFlags =
+    CompileFlags <$>
     option
         (Just <$> str)
         (mconcat

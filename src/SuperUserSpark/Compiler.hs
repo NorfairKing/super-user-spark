@@ -40,7 +40,14 @@ compileFromArgs ca = do
 
 compileAssignment :: CompileArgs -> IO (Either String CompileAssignment)
 compileAssignment CompileArgs {..} =
-    CompileAssignment <$$> (parseStrongCardFileReference compileCardRef) <**>
+    CompileAssignment <$$> (parseStrongCardFileReference compileArgCardRef) <**>
+    (case compileArgOutput of
+         Nothing -> pure $ pure Nothing
+         Just f -> do
+             af <-
+                 left (show :: PathParseException -> String) <$>
+                 try (resolveFile' f)
+             pure $ Just <$> af) <**>
     deriveCompileSettings compileFlags
 
 resolveFile'Either :: FilePath -> IO (Either String (Path Abs File))
@@ -56,13 +63,6 @@ parseStrongCardFileReference fp =
 deriveCompileSettings :: CompileFlags -> IO (Either String CompileSettings)
 deriveCompileSettings CompileFlags {..} =
     CompileSettings <$$>
-    (case compileFlagOutput of
-         Nothing -> pure $ pure Nothing
-         Just f -> do
-             af <-
-                 left (show :: PathParseException -> String) <$>
-                 try (resolveFile' f)
-             pure $ Just <$> af) <**>
     (pure $
      case compileDefaultKind of
          Nothing -> Right LinkDeployment
@@ -76,7 +76,8 @@ compile :: CompileAssignment -> IO ()
 compile CompileAssignment {..} = do
     errOrDone <-
         runReaderT
-            (runExceptT $ compileJob compileCardReference >>= outputCompiled)
+            (runExceptT $
+             compileJob compileCardReference >>= outputCompiled compileOutput)
             compileSettings
     case errOrDone of
         Left ce -> die $ formatCompileError ce
@@ -181,9 +182,8 @@ embedPureCompiler = withExceptT id . mapExceptT (mapReaderT idToIO)
     idToIO :: Identity a -> IO a
     idToIO = return . runIdentity
 
-outputCompiled :: [RawDeployment] -> ImpureCompiler ()
-outputCompiled deps = do
-    out <- asks compileOutput
+outputCompiled :: Maybe (Path Abs File) -> [RawDeployment] -> ImpureCompiler ()
+outputCompiled out deps =
     liftIO $ do
         let bs = encodePretty deps
         case out of

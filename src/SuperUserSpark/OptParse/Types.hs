@@ -21,15 +21,15 @@ data ParseArgs = ParseArgs
 instance Validity ParseArgs
 
 data CompileArgs = CompileArgs
-    { compileCardRef :: String
+    { compileArgCardRef :: String
+    , compileArgOutput :: Maybe FilePath
     , compileFlags :: CompileFlags
     } deriving (Show, Eq, Generic)
 
 instance Validity CompileArgs
 
 data CompileFlags = CompileFlags
-    { compileFlagOutput :: Maybe FilePath
-    , compileDefaultKind :: Maybe String
+    { compileDefaultKind :: Maybe String
     , compileKindOverride :: Maybe String
     } deriving (Show, Eq, Generic)
 

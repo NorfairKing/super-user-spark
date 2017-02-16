@@ -15,6 +15,7 @@ import SuperUserSpark.PreCompiler.Types
 
 data CompileAssignment = CompileAssignment
     { compileCardReference :: StrongCardFileReference
+    , compileOutput :: Maybe (Path Abs File)
     , compileSettings :: CompileSettings
     } deriving (Show, Eq, Generic)
 
@@ -35,8 +36,7 @@ data StrongCardReference
 instance Validity StrongCardReference
 
 data CompileSettings = CompileSettings
-    { compileOutput :: Maybe (Path Abs File)
-    , compileDefaultKind :: DeploymentKind
+    { compileDefaultKind :: DeploymentKind
     , compileKindOverride :: Maybe DeploymentKind
     } deriving (Show, Eq, Generic)
 
@@ -45,10 +45,7 @@ instance Validity CompileSettings
 defaultCompileSettings :: CompileSettings
 defaultCompileSettings =
     CompileSettings
-    { compileOutput = Nothing
-    , compileDefaultKind = LinkDeployment
-    , compileKindOverride = Nothing
-    }
+    {compileDefaultKind = LinkDeployment, compileKindOverride = Nothing}
 
 type RawDeployment = Deployment FilePath
 

@@ -11,7 +11,7 @@ import SuperUserSpark.PreCompiler.Gen ()
 instance GenUnchecked CompileAssignment
 
 instance GenValid CompileAssignment where
-    genValid = CompileAssignment <$> genValid <*> genValid
+    genValid = CompileAssignment <$> genValid <*> genValid <*> genValid
 
 
 instance GenUnchecked StrongCardFileReference
@@ -22,7 +22,7 @@ instance GenValid StrongCardFileReference
 instance GenUnchecked CompileSettings
 
 instance GenValid CompileSettings where
-    genValid = CompileSettings <$> genValid <*> genValid <*> genValid
+    genValid = CompileSettings <$> genValid <*> genValid
 
 
 instance GenUnchecked a =>
