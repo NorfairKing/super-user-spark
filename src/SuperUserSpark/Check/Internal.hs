@@ -198,10 +198,10 @@ diagnose fp = do
 diagnoseFp :: AbsP -> IO Diagnostics
 diagnoseFp absp = do
     let fp = toPath absp
-    e <- fileExist fp
-    if e
-        then do
-            s <- getSymbolicLinkStatus fp
+    ms <- forgivingAbsence $ getSymbolicLinkStatus fp
+    case ms of
+        Nothing -> pure Nonexistent
+        Just s ->
             if isBlockDevice s ||
                isCharacterDevice s || isSocket s || isNamedPipe s
                 then return IsWeird
@@ -220,17 +220,6 @@ diagnoseFp absp = do
                                                "File " ++
                                                fp ++
                                                " was neither a block device, a character device, a socket, a named pipe, a symbolic link, a directory or a regular file"
-        else do
-            es <- system $ unwords ["test", "-L", fp]
-            case es of
-                ExitSuccess
-                -- Need to do a manual call because readSymbolicLink fails for nonexistent destinations
-                 -> do
-                    point <- readProcess "readlink" [fp] ""
-                    -- TODO check what happens with relative links.
-                    apoint <- AbsP <$> parseAbsFile (init point) -- remove newline
-                    return $ IsLinkTo apoint
-                ExitFailure _ -> return Nonexistent
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: AbsP -> IO HashDigest

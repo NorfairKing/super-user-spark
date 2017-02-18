@@ -7,6 +7,7 @@ import TestImport
 
 import Control.Monad (forM_)
 import Data.Hashable
+import System.FilePath (dropTrailingPathSeparator)
 import System.Posix.Files
 
 import SuperUserSpark.Bake.Types
@@ -77,66 +78,61 @@ diagnoseSpec = do
             describe "diagnoseDeployment" $ do
                 it
                     "retains the filepaths and deploymentkind that it diagnoses for valid filepaths" $ do
-                    once $
-                        forAll genValid $ \srcs -> do
-                            forAll genValid $ \dst -> do
-                                forAll genValid $ \kind -> do
-                                    (Deployment (Directions dsrcs ddst) dkind) <-
-                                        diagnoseDeployment $
-                                        Deployment (Directions srcs dst) kind
-                                    map diagnosedFilePath dsrcs `shouldBe` srcs
-                                    diagnosedFilePath ddst `shouldBe` dst
-                                    dkind `shouldBe` kind
+                    forAll genValid $ \d@(Deployment (Directions srcs dst) kind) -> do
+                        (Deployment (Directions dsrcs ddst) dkind) <-
+                            diagnoseDeployment d
+                        map diagnosedFilePath dsrcs `shouldBe` srcs
+                        diagnosedFilePath ddst `shouldBe` dst
+                        dkind `shouldBe` kind
                 pend
             describe "diagnose" $ do
                 it "retains the filepath that it diagnoses for valid AbsPath's" $ do
-                    once $
-                        forAll genValid $ \fp -> do
-                            (D dfp _ _) <- diagnose fp
-                            dfp `shouldBe` fp
+                    forAll genValid $ \fp -> do
+                        (D dfp _ _) <- diagnose fp
+                        dfp `shouldBe` fp
                 pend
             describe "diagnoseFp" $ do
-                it "figures out this test file" $ do
-                    withCurrentDir sandbox $ do
-                        let file = sandbox </> $(mkRelFile "test.txt")
-                        let file' = AbsP file
+                it
+                    "figures out that a thing in a nonexistent dir is nonexistent" $ do
+                    let file = sandbox </> $(mkRelFile "nonexistent/and/file")
+                    let file' = AbsP file
+                    diagnoseFp file' `shouldReturn` Nonexistent
+                it "figures out a file" $ do
+                    forAll (absFileIn sandbox) $ \(file, file') -> do
+                        ensureDir $ parent file
                         writeFile file "This is a test"
                         diagnoseFp file' `shouldReturn` IsFile
                         removeFile file
                         diagnoseFp file' `shouldReturn` Nonexistent
-                it "figures out this test directory" $ do
-                    withCurrentDir sandbox $ do
-                        let dir = sandbox </> $(mkRelDir "testdir")
-                        let dir' = AbsP $ sandbox </> $(mkRelFile "testdir")
+                it "figures out a directory" $ do
+                    forAll (absDirIn sandbox) $ \(dir, dir') -> do
                         ensureDir dir
                         diagnoseFp dir' `shouldReturn` IsDirectory
                         removeDirRecur dir
                         diagnoseFp dir' `shouldReturn` Nonexistent
-                it "figures out this test symbolic link with a destination" $ do
-                    withCurrentDir sandbox $ do
-                        let link = sandbox </> $(mkRelFile "link.txt")
-                        let link' = AbsP link
-                        let file = sandbox </> $(mkRelFile "test.txt")
-                        let file' = AbsP file
-                        writeFile file "This is a test"
-                        createSymbolicLink (toFilePath file) (toFilePath link)
-                        diagnoseFp file' `shouldReturn` IsFile
-                        diagnoseFp link' `shouldReturn` IsLinkTo file'
-                        removeLink $ toFilePath link
-                        removeFile file
-                        diagnoseFp link' `shouldReturn` Nonexistent
-                it "figures out this test symbolic link without a destination" $ do
-                    withCurrentDir sandbox $ do
-                        let link = sandbox </> $(mkRelFile "link.txt")
-                        let link' = AbsP link
-                        let file = sandbox </> $(mkRelFile "test.txt")
-                        let file' = AbsP file
-                        createSymbolicLink (toFilePath file) (toFilePath link)
-                        diagnoseFp file' `shouldReturn` Nonexistent
-                        diagnoseFp link' `shouldReturn` IsLinkTo file'
-                        removeLink $ toFilePath link
-                        diagnoseFp file' `shouldReturn` Nonexistent
-                        diagnoseFp link' `shouldReturn` Nonexistent
+                it "figures out a symbolic link with an existent destination" $ do
+                    forAll (absFileIn sandbox) $ \(file, file') ->
+                        forAll (absFileIn sandbox) $ \(link, link') -> do
+                            writeFile file "This is a test"
+                            createSymbolicLink
+                                (toFilePath file)
+                                (toFilePath link)
+                            diagnoseFp file' `shouldReturn` IsFile
+                            diagnoseFp link' `shouldReturn` IsLinkTo file'
+                            removeLink $ toFilePath link
+                            removeFile file
+                            diagnoseFp link' `shouldReturn` Nonexistent
+                it "figures out a symbolic link with a nonexistent destination" $ do
+                    forAll (absFileIn sandbox) $ \(file, file') ->
+                        forAll (absFileIn sandbox) $ \(link, link') -> do
+                            createSymbolicLink
+                                (toFilePath file)
+                                (toFilePath link)
+                            diagnoseFp file' `shouldReturn` Nonexistent
+                            diagnoseFp link' `shouldReturn` IsLinkTo file'
+                            removeLink $ toFilePath link
+                            diagnoseFp file' `shouldReturn` Nonexistent
+                            diagnoseFp link' `shouldReturn` Nonexistent
                 it "figures out that /dev/null is weird" $ do
                     diagnoseFp (AbsP $(mkAbsFile "/dev/null")) `shouldReturn`
                         IsWeird
