@@ -92,6 +92,63 @@ diagnoseSpec = do
                         dfp `shouldBe` fp
                 pend
             describe "diagnoseFp" $ do
+                let expect s ls = do
+                        rs <-
+                            forM ls $ \(a, b) -> do
+                                r <- diagnoseFp a
+                                pure (a, r, b)
+                        unless (all (\(a, r, b) -> r == b) rs) $
+                            let nice (a, r, b) =
+                                    unlines
+                                        [ unwords
+                                              [ "Unexpected results at stage"
+                                              , show s
+                                              ]
+                                        , unwords ["path:", show $ toPath a]
+                                        , unwords
+                                              [ "stripped:"
+                                              , show $
+                                                (stripDir sandbox $ unAbsP a :: Maybe (Path Rel File))
+                                              ]
+                                        , unwords ["expected:", show b]
+                                        , unwords ["real:", show r]
+                                        ]
+                            in expectationFailure $ unlines $ map nice rs
+                it "figures out this link that points to something that exists" $ do
+                    let file = sandbox </> $(mkRelFile "file")
+                    let file' = AbsP file
+                    let link = sandbox </> $(mkRelFile "link")
+                    let link' = AbsP link
+                    expect "before" [(file', Nonexistent), (link', Nonexistent)]
+                    writeFile file "This is a test"
+                    expect
+                        "after file creation"
+                        [(file', IsFile), (link', Nonexistent)]
+                    createSymbolicLink (toFilePath file) (toFilePath link)
+                    expect
+                        "after link creation"
+                        [(file', IsFile), (link', IsLinkTo file')]
+                    removeLink $ toFilePath link
+                    expect
+                        "after link removal"
+                        [(file', IsFile), (link', Nonexistent)]
+                    removeFile file
+                    expect
+                        "after file removal"
+                        [(file', Nonexistent), (link', Nonexistent)]
+                it
+                    "figures out this link that points to something that does not exist" $ do
+                    let file = sandbox </> $(mkRelFile "file")
+                    let file' = AbsP file
+                    let link = sandbox </> $(mkRelFile "link")
+                    let link' = AbsP link
+                    expect "before" [(file', Nonexistent), (link', Nonexistent)]
+                    createSymbolicLink (toFilePath file) (toFilePath link)
+                    expect
+                        "after link creation"
+                        [(file', Nonexistent), (link', IsLinkTo file')]
+                    removeLink $ toFilePath link
+                    expect "after" [(file', Nonexistent), (link', Nonexistent)]
                 it
                     "figures out that a thing in a nonexistent dir is nonexistent" $ do
                     let file = sandbox </> $(mkRelFile "nonexistent/and/file")
@@ -99,6 +156,7 @@ diagnoseSpec = do
                     diagnoseFp file' `shouldReturn` Nonexistent
                 it "figures out a file" $ do
                     forAll (absFileIn sandbox) $ \(file, file') -> do
+                        diagnoseFp file' `shouldReturn` Nonexistent
                         ensureDir $ parent file
                         writeFile file "This is a test"
                         diagnoseFp file' `shouldReturn` IsFile
@@ -106,33 +164,51 @@ diagnoseSpec = do
                         diagnoseFp file' `shouldReturn` Nonexistent
                 it "figures out a directory" $ do
                     forAll (absDirIn sandbox) $ \(dir, dir') -> do
+                        diagnoseFp dir' `shouldReturn` Nonexistent
                         ensureDir dir
                         diagnoseFp dir' `shouldReturn` IsDirectory
                         removeDirRecur dir
                         diagnoseFp dir' `shouldReturn` Nonexistent
                 it "figures out a symbolic link with an existent destination" $ do
-                    forAll (absFileIn sandbox) $ \(file, file') ->
-                        forAll (absFileIn sandbox) $ \(link, link') -> do
+                    forAll (absFileIn sandbox) $ \f@(file, file') ->
+                        forAll (absFileIn sandbox `suchThat` (/= f)) $ \(link, link') -> do
+                            expect
+                                "before"
+                                [(file', Nonexistent), (link', Nonexistent)]
                             writeFile file "This is a test"
+                            expect
+                                "after file creation"
+                                [(file', IsFile), (link', Nonexistent)]
                             createSymbolicLink
                                 (toFilePath file)
                                 (toFilePath link)
-                            diagnoseFp file' `shouldReturn` IsFile
-                            diagnoseFp link' `shouldReturn` IsLinkTo file'
+                            expect
+                                "after link creation"
+                                [(file', IsFile), (link', IsLinkTo file')]
                             removeLink $ toFilePath link
+                            expect
+                                "after link removal"
+                                [(file', IsFile), (link', Nonexistent)]
                             removeFile file
-                            diagnoseFp link' `shouldReturn` Nonexistent
+                            expect
+                                "after"
+                                [(file', Nonexistent), (link', Nonexistent)]
                 it "figures out a symbolic link with a nonexistent destination" $ do
-                    forAll (absFileIn sandbox) $ \(file, file') ->
-                        forAll (absFileIn sandbox) $ \(link, link') -> do
+                    forAll (absFileIn sandbox) $ \f@(file, file') ->
+                        forAll (absFileIn sandbox `suchThat` (/= f)) $ \(link, link') -> do
+                            expect
+                                "before"
+                                [(file', Nonexistent), (link', Nonexistent)]
                             createSymbolicLink
                                 (toFilePath file)
                                 (toFilePath link)
-                            diagnoseFp file' `shouldReturn` Nonexistent
-                            diagnoseFp link' `shouldReturn` IsLinkTo file'
+                            expect
+                                "after link creation"
+                                [(file', Nonexistent), (link', IsLinkTo file')]
                             removeLink $ toFilePath link
-                            diagnoseFp file' `shouldReturn` Nonexistent
-                            diagnoseFp link' `shouldReturn` Nonexistent
+                            expect
+                                "after"
+                                [(file', Nonexistent), (link', Nonexistent)]
                 it "figures out that /dev/null is weird" $ do
                     diagnoseFp (AbsP $(mkAbsFile "/dev/null")) `shouldReturn`
                         IsWeird
