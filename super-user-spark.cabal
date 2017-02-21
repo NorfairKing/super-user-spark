@@ -30,6 +30,9 @@ library
       , SuperUserSpark.Deployer
       , SuperUserSpark.Deployer.Internal
       , SuperUserSpark.Deployer.Types
+      , SuperUserSpark.Diagnose
+      , SuperUserSpark.Diagnose.Internal
+      , SuperUserSpark.Diagnose.Types
       , SuperUserSpark.Language.Types
       , SuperUserSpark.OptParse
       , SuperUserSpark.OptParse.Types

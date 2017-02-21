@@ -42,6 +42,7 @@ parseDispatch =
         [ command "parse" parseParse
         , command "compile" parseCompile
         , command "bake" parseBake
+        , command "diagnose" parseDiagnose
         , command "check" parseCheck
         , command "deploy" parseDeploy
         ]
@@ -116,6 +117,22 @@ parseBakeArgs =
 
 parseBakeFlags :: Parser BakeFlags
 parseBakeFlags = BakeFlags <$> parseCompileFlags
+
+parseDiagnose :: ParserInfo Dispatch
+parseDiagnose = info parser modifier
+  where
+    parser = DispatchDiagnose <$> parseDiagnoseArgs
+    modifier =
+        fullDesc <> progDesc "Diagnose the baked deployment of a spark card."
+
+parseDiagnoseArgs :: Parser DiagnoseArgs
+parseDiagnoseArgs =
+    DiagnoseArgs <$>
+    strArgument (metavar "CARDREF" <> help "the card to diagnose") <*>
+    parseDiagnoseFlags
+
+parseDiagnoseFlags :: Parser DiagnoseFlags
+parseDiagnoseFlags = DiagnoseFlags <$> parseBakeFlags
 
 parseCheck :: ParserInfo Dispatch
 parseCheck = info parser modifier
