@@ -45,6 +45,7 @@ linkThenCopySpec = do
                             cf
                             "card link { kind link; into to; outof from; file }"
                         runSpark ["parse", toFilePath cf]
+                        runSpark ["compile", toFilePath cf]
                         runSpark ["bake", toFilePath cf]
                         runSpark ["check", toFilePath cf]
                         runSpark ["deploy", toFilePath cf]
@@ -53,6 +54,7 @@ linkThenCopySpec = do
                             cf
                             "card link { kind copy; into to; outof from; file }"
                         runSpark ["parse", toFilePath cf]
+                        runSpark ["compile", toFilePath cf]
                         runSpark ["bake", toFilePath cf]
                         runSpark ["check", toFilePath cf]
                         runSpark ["deploy", toFilePath cf] `shouldThrow`
