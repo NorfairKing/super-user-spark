@@ -30,7 +30,7 @@ defaultDiagnoseSettings :: DiagnoseSettings
 defaultDiagnoseSettings =
     DiagnoseSettings {diagnoseBakeSettings = defaultBakeSettings}
 
-type SparkDiagnoseer = ExceptT DiagnoseError (ReaderT DiagnoseSettings IO)
+type SparkDiagnoser = ExceptT DiagnoseError (ReaderT DiagnoseSettings IO)
 
 data DiagnoseError
     = DiagnoseBakeError BakeError

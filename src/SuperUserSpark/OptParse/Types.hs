@@ -70,7 +70,7 @@ data CheckArgs = CheckArgs
 instance Validity CheckArgs
 
 data CheckFlags = CheckFlags
-    { checkBakeFlags :: BakeFlags
+    { checkDiagnoseFlags ::DiagnoseFlags
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckFlags

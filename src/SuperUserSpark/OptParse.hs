@@ -146,7 +146,7 @@ parseCheckArgs =
     parseCheckFlags
 
 parseCheckFlags :: Parser CheckFlags
-parseCheckFlags = CheckFlags <$> parseBakeFlags
+parseCheckFlags = CheckFlags <$> parseDiagnoseFlags
 
 parseDeploy :: ParserInfo Dispatch
 parseDeploy = info parser modifier

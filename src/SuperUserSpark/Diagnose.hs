@@ -11,6 +11,7 @@ module SuperUserSpark.Diagnose
     , deriveDiagnoseSettings
     , diagnose
     , formatDiagnoseError
+    , diagnoserBake
     , diagnoseDeployments
     ) where
 
@@ -62,16 +63,16 @@ formatDiagnoseError :: DiagnoseError -> String
 formatDiagnoseError (DiagnoseBakeError ce) = formatBakeError ce
 formatDiagnoseError (DiagnoseError s) = unwords ["Diagnose failed:", s]
 
-diagnoseByCardRef :: BakeCardReference -> SparkDiagnoseer ()
+diagnoseByCardRef :: BakeCardReference -> SparkDiagnoser ()
 diagnoseByCardRef checkCardReference = do
     deps <-
-        diagnoseerBake $
+        diagnoserBake $
         compileBakeCardRef checkCardReference >>= bakeDeployments
     ddeps <- liftIO $ diagnoseDeployments deps
     putStrLn $ JSON.encodePretty ddeps
 
-diagnoseerBake :: SparkBaker a -> SparkDiagnoseer a
-diagnoseerBake =
+diagnoserBake :: SparkBaker a -> SparkDiagnoser a
+diagnoserBake =
     withExceptT DiagnoseBakeError .
     mapExceptT (withReaderT diagnoseBakeSettings)
 
