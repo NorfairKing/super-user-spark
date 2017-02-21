@@ -103,6 +103,7 @@ test-suite spark-tests
       , SuperUserSpark.Deployer.Gen
       , SuperUserSpark.DeployerSpec
       , SuperUserSpark.EndToEndSpec
+      , SuperUserSpark.EndToEnd.RegressionSpec
       , SuperUserSpark.Language.Gen
       , SuperUserSpark.OptParse.Gen
       , SuperUserSpark.Parser.Gen
