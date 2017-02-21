@@ -171,7 +171,7 @@ deploymentSpec = do
     let teardown = removeDirRecur sandbox
     beforeAll_ setup $
         afterAll_ teardown $ do
-            describe "copy" $ do
+            describe "performCopyFile" $ do
                 it "succcesfully copies this file" $ do
                     withCurrentDir sandbox $ do
                         let src = sandbox </> $(mkRelFile "testfile")
@@ -182,7 +182,7 @@ deploymentSpec = do
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test
-                        copy src' dst'
+                        performCopyFile src dst
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` IsFile
                         dsrc <- diagnoseAbsP src'
@@ -193,6 +193,7 @@ deploymentSpec = do
                         removeFile dst
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent
+            describe "performCopyDir" $ do
                 it "succcesfully copies this directory" $ do
                     withCurrentDir sandbox $ do
                         let src = sandbox </> $(mkRelDir "testdir")
@@ -203,7 +204,7 @@ deploymentSpec = do
                         diagnoseFp src' `shouldReturn` IsDirectory
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test
-                        copy src' dst'
+                        performCopyDir src dst
                         diagnoseFp src' `shouldReturn` IsDirectory
                         diagnoseFp dst' `shouldReturn` IsDirectory
                         dsrc <- diagnoseAbsP src'
@@ -214,7 +215,7 @@ deploymentSpec = do
                         removeDirRecur dst
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent
-            describe "link" $ do
+            describe "performLinkFile" $ do
                 it "successfully links this file" $ do
                     withCurrentDir sandbox $ do
                         let src = sandbox </> $(mkRelFile "testfile")
@@ -227,29 +228,30 @@ deploymentSpec = do
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test
-                        link src' dst'
+                        performLinkFile src dst
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` IsLinkTo src'
                         removeFile src
                         removeLink $ toFilePath dst
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent
+            describe "performLinkDir" $ do
                 it "successfully links this directory" $ do
                     withCurrentDir sandbox $ do
                         let src = sandbox </> $(mkRelDir "testdir")
                         let src' = AbsP $ sandbox </> $(mkRelFile "testdir")
-                        let dst = sandbox </> $(mkRelFile "testlink")
-                        let dst' = AbsP dst
+                        let dst = sandbox </> $(mkRelDir "testlink")
+                        let dst' = AbsP $ sandbox </> $(mkRelFile "testlink")
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         ensureDir src
                         diagnoseFp src' `shouldReturn` IsDirectory
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test
-                        link src' dst'
+                        performLinkDir src dst
                         diagnoseFp src' `shouldReturn` IsDirectory
                         diagnoseFp dst' `shouldReturn` IsLinkTo src'
                         removeDirRecur src
-                        removeLink $ toFilePath dst
+                        removeLink $ dropTrailingPathSeparator $ toFilePath dst
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent

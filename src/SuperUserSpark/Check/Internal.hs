@@ -53,124 +53,169 @@ deploymentIsDone _ = False
 -- | Check a single (@source@, @destination@, @kind@) triple.
 checkSingle :: DiagnosedFp -> DiagnosedFp -> DeploymentKind -> CheckResult
 checkSingle (D src srcd srch) (D dst dstd dsth) kind =
-    case (srcd, dstd, kind) of
-        (IsFile, Nonexistent, _) -> ready
-        (IsFile, IsFile, LinkDeployment) ->
-            e
-                [ "Both the source:"
-                , toPath src
-                , "and the destination:"
-                , toPath dst
-                , "are files for a link deployment."
-                ]
-        (IsFile, IsFile, CopyDeployment) ->
-            if srch == dsth
-                then AlreadyDone
-                else e
-                         [ "Both the source:"
-                         , toPath src
-                         , "and the destination:"
-                         , toPath dst
-                         , "are files for a copy deployment, but they are not equal."
-                         ]
-        (IsFile, IsDirectory, _) ->
-            e
-                [ "The source: "
-                , toPath src
-                , "is a file but the destination:"
-                , toPath dst
-                , "is a directory."
-                ]
-        (IsFile, IsLinkTo l, LinkDeployment) ->
-            if l == src
-                then AlreadyDone
-                else e
-                         [ "The source:"
-                         , toPath src
-                         , "is a file and the destination:"
-                         , toPath dst
-                         , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
-                         , toPath l ++ "."
-                         ]
-        (IsFile, IsLinkTo _, CopyDeployment) ->
-            e
-                [ "The source:"
-                , toPath src
-                , "is a file and the destination:"
-                , toPath dst
-                , "is a link for a copy deployment."
-                ]
-        (IsDirectory, Nonexistent, _) -> ready
-        (IsDirectory, IsFile, _) ->
-            e
-                [ "The source:"
-                , toPath src
-                , "is a directory and the destination:"
-                , toPath dst
-                , "is a file."
-                ]
-        (IsDirectory, IsDirectory, CopyDeployment) ->
-            if srch == dsth
-                then AlreadyDone
-                else e
-                         [ "The source:"
-                         , toPath src
-                         , "and destination:"
-                         , toPath dst
-                         , "are directories for a copy deployment, but they are not equal."
-                         ]
-        (IsDirectory, IsDirectory, LinkDeployment) ->
-            e
-                [ "The source:"
-                , toPath src
-                , "and the destination:"
-                , toPath dst
-                , "are directories for a link deployment."
-                ]
-        (IsDirectory, IsLinkTo l, LinkDeployment) ->
-            if l == src
-                then AlreadyDone
-                else e
-                         [ "The source:"
-                         , toPath src
-                         , "is a directory and the destination:"
-                         , toPath dst
-                         , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
-                         , toPath l ++ "."
-                         ]
-        (IsDirectory, IsLinkTo _, CopyDeployment) ->
-            e
-                [ "The source:"
-                , toPath src
-                , "is a directory and the destination:"
-                , toPath dst
-                , "is a link for a copy deployment."
-                ]
-        (Nonexistent, _, _) -> i ["The source:", toPath src, "does not exist."]
-        (IsLinkTo _, _, _) -> i ["The source:", toPath src, "is a link."]
-        (IsWeird, IsWeird, _) ->
-            i
-                [ "Both the source:"
-                , toPath src
-                , "and the destination:"
-                , toPath dst
-                , "are weird."
-                ]
-        (IsWeird, _, _) -> i ["The source:", toPath src, "is weird."]
-        (_, IsWeird, _) -> i ["The destination:", toPath dst, "is weird."]
+    let parseBoth cons p =
+            case (p $ toPath src, p $ toPath dst) of
+                (Left err1, Left err2) ->
+                    Impossible $ unwords [show err1, show err2]
+                (Left err, _) -> Impossible $ show err
+                (_, Left err) -> Impossible $ show err
+                (Right s, Right d) -> Ready $ cons s d
+        readyCopyFile = parseBoth CopyFile parseAbsFile
+        readyCopyDir = parseBoth CopyDir parseAbsDir
+        readyLinkFile = parseBoth LinkFile parseAbsFile
+        readyLinkDir = parseBoth LinkDir parseAbsDir
+    in case (srcd, dstd, kind) of
+           (IsFile, Nonexistent, CopyDeployment) -> readyCopyFile
+           (IsFile, Nonexistent, LinkDeployment) -> readyLinkFile
+           (IsFile, IsFile, LinkDeployment) ->
+               e
+                   readyLinkFile
+                   [ "Both the source:"
+                   , toPath src
+                   , "and the destination:"
+                   , toPath dst
+                   , "are files for a link deployment."
+                   ]
+           (IsFile, IsFile, CopyDeployment) ->
+               if srch == dsth
+                   then AlreadyDone
+                   else e
+                            readyCopyFile
+                            [ "Both the source:"
+                            , toPath src
+                            , "and the destination:"
+                            , toPath dst
+                            , "are files for a copy deployment, but they are not equal."
+                            ]
+           (IsFile, IsDirectory, LinkDeployment) ->
+               e
+                   readyLinkFile
+                   [ "The source: "
+                   , toPath src
+                   , "is a file but the destination:"
+                   , toPath dst
+                   , "is a directory for a link deployment."
+                   ]
+           (IsFile, IsDirectory, CopyDeployment) ->
+               e
+                   readyCopyFile
+                   [ "The source: "
+                   , toPath src
+                   , "is a file but the destination:"
+                   , toPath dst
+                   , "is a directory for a copy deployment."
+                   ]
+           (IsFile, IsLinkTo l, LinkDeployment) ->
+               if l == src
+                   then AlreadyDone
+                   else e
+                            readyLinkFile
+                            [ "The source:"
+                            , toPath src
+                            , "is a file and the destination:"
+                            , toPath dst
+                            , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
+                            , toPath l ++ "."
+                            ]
+           (IsFile, IsLinkTo _, CopyDeployment) ->
+               e
+                   readyCopyFile
+                   [ "The source:"
+                   , toPath src
+                   , "is a file and the destination:"
+                   , toPath dst
+                   , "is a link for a copy deployment."
+                   ]
+           (IsDirectory, Nonexistent, LinkDeployment) -> readyLinkDir
+           (IsDirectory, Nonexistent, CopyDeployment) -> readyCopyDir
+           (IsDirectory, IsFile, LinkDeployment) ->
+               e
+                   readyLinkDir
+                   [ "The source:"
+                   , toPath src
+                   , "is a directory and the destination:"
+                   , toPath dst
+                   , "is a file for a link deployment"
+                   ]
+           (IsDirectory, IsFile, CopyDeployment) ->
+               e
+                   readyCopyDir
+                   [ "The source:"
+                   , toPath src
+                   , "is a directory and the destination:"
+                   , toPath dst
+                   , "is a file for a copy deployment"
+                   ]
+           (IsDirectory, IsDirectory, LinkDeployment) ->
+               e
+                   readyLinkDir
+                   [ "The source:"
+                   , toPath src
+                   , "and the destination:"
+                   , toPath dst
+                   , "are directories for a link deployment."
+                   ]
+           (IsDirectory, IsDirectory, CopyDeployment) ->
+               if srch == dsth
+                   then AlreadyDone
+                   else e
+                            readyCopyDir
+                            [ "The source:"
+                            , toPath src
+                            , "and destination:"
+                            , toPath dst
+                            , "are directories for a copy deployment, but they are not equal."
+                            ]
+           (IsDirectory, IsLinkTo l, LinkDeployment) ->
+               if l == src
+                   then AlreadyDone
+                   else e
+                            readyLinkDir
+                            [ "The source:"
+                            , toPath src
+                            , "is a directory and the destination:"
+                            , toPath dst
+                            , "is a link for a link deployment but the destination does not point to the source. Instead it points to:"
+                            , toPath l ++ "."
+                            ]
+           (IsDirectory, IsLinkTo _, CopyDeployment) ->
+               e
+                   readyCopyDir
+                   [ "The source:"
+                   , toPath src
+                   , "is a directory and the destination:"
+                   , toPath dst
+                   , "is a link for a copy deployment."
+                   ]
+           (Nonexistent, _, _) ->
+               i ["The source:", toPath src, "does not exist."]
+           (IsLinkTo _, _, _) -> i ["The source:", toPath src, "is a link."]
+           (IsWeird, IsWeird, _) ->
+               i
+                   [ "Both the source:"
+                   , toPath src
+                   , "and the destination:"
+                   , toPath dst
+                   , "are weird."
+                   ]
+           (IsWeird, _, _) -> i ["The source:", toPath src, "is weird."]
+           (_, IsWeird, _) -> i ["The destination:", toPath dst, "is weird."]
   where
-    ins = Instruction src dst kind
-    ready = Ready ins
     i = Impossible . unlines
-    e s =
-        case dstd of
-            IsFile -> Dirty (unlines s) ins $ CleanFile $ unAbsP dst
-            IsLinkTo _ -> Dirty (unlines s) ins $ CleanLink $ unAbsP dst
-            IsDirectory ->
-                case parseAbsDir $ toPath dst of
-                    Left err -> Impossible $ show err -- Should not happen, but just in case.
-                    Right dir -> Dirty (unlines s) ins $ CleanDirectory dir
-            _ -> Impossible "should not occur"
+    e mins s =
+        case mins of
+            (Impossible _) -> mins
+            (Ready ins) ->
+                case dstd of
+                    IsFile -> Dirty (unlines s) ins $ CleanFile $ unAbsP dst
+                    IsLinkTo _ -> Dirty (unlines s) ins $ CleanLink $ unAbsP dst
+                    IsDirectory ->
+                        case parseAbsDir $ toPath dst of
+                            Left err -> Impossible $ show err -- Should not happen, but just in case.
+                            Right dir ->
+                                Dirty (unlines s) ins $ CleanDirectory dir
+                    _ -> Impossible "should not occur"
+            _ -> Impossible "should not occur."
 
 formatDeploymentChecks :: [(DiagnosedDeployment, DeploymentCheckResult)]
                        -> String
@@ -216,11 +261,14 @@ formatDeploymentCheck (d, (DirtySituation str is c)) =
         ]
 
 formatInstruction :: Instruction -> String
-formatInstruction (Instruction src dst k) =
-    unwords $ [toPath src, kindSymbol k, toPath dst]
-  where
-    kindSymbol LinkDeployment = linkKindSymbol
-    kindSymbol CopyDeployment = copyKindSymbol
+formatInstruction (CopyFile from to) =
+    unwords $ [toFilePath from, "c->", toFilePath to]
+formatInstruction (CopyDir from to) =
+    unwords $ [toFilePath from, "c->", toFilePath to]
+formatInstruction (LinkFile from to) =
+    unwords $ [toFilePath from, "l->", toFilePath to]
+formatInstruction (LinkDir from to) =
+    unwords $ [toFilePath from, "l->", toFilePath to]
 
 formatCleanupInstruction :: CleanupInstruction -> String
 formatCleanupInstruction (CleanFile fp) = "remove file " ++ toFilePath fp

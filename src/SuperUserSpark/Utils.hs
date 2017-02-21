@@ -33,9 +33,6 @@ containsMultipleConsequtiveSlashes = isInfixOf "//"
 (&&&) :: (a -> Bool) -> (a -> Bool) -> a -> Bool
 (&&&) f g = \a -> f a && g a
 
-createDirectoryIfMissing :: FilePath -> IO ()
-createDirectoryIfMissing = D.createDirectoryIfMissing True
-
 (<$$>) :: (a -> b) -> IO (Either e a) -> IO (Either e b)
 (<$$>) f fa = do
     a <- fa

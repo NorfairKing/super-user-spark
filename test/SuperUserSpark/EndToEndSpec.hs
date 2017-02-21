@@ -8,7 +8,7 @@ import qualified Prelude as P (writeFile, readFile)
 
 import SuperUserSpark
 import SuperUserSpark.Utils
-import System.Directory hiding (createDirectoryIfMissing)
+import System.Directory
 import System.Environment (withArgs)
 import System.Exit (ExitCode(ExitSuccess))
 import System.FilePath.Posix ((</>))
@@ -29,7 +29,7 @@ regularWorkflowSpec :: Spec
 regularWorkflowSpec = do
     here <- runIO getCurrentDirectory
     let sandbox = here </> "test_sandbox"
-    let setup = createDirectoryIfMissing sandbox
+    let setup = createDirectoryIfMissing True sandbox
     let teardown = removeDirectoryRecursive sandbox
     let rsc = here </> "test_resources" </> "end-to-end"
     beforeAll_ setup $
@@ -41,7 +41,7 @@ regularWorkflowSpec = do
                 let up = do
                         copyFile bashrsc cardfile
                         withCurrentDirectory sandbox $ do
-                            createDirectoryIfMissing "bash"
+                            createDirectoryIfMissing True "bash"
                             withCurrentDirectory "bash" $ do
                                 P.writeFile "bash_aliases" "bash_aliases"
                                 P.writeFile "bashrc" "bashrc"

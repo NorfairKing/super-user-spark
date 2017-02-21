@@ -9,8 +9,8 @@ import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Gen ()
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
-import SuperUserSpark.Diagnose.Types
 import SuperUserSpark.CoreTypes
+import SuperUserSpark.Diagnose.Types
 
 -- * Test utils for checkDeployment
 shouldBeImpossible' :: DiagnosedDeployment -> Expectation
@@ -45,11 +45,26 @@ shouldBeDirty
     -> Expectation
 shouldBeDirty src dst kind eci =
     case checkSingle src dst kind of
-        Dirty _ (Instruction isrc idst ikind) ci -> do
-            isrc `shouldBe` diagnosedFilePath src
-            idst `shouldBe` diagnosedFilePath dst
-            ikind `shouldBe` kind
+        Dirty _ ins ci -> do
             ci `shouldBe` eci
+            let tp = dropTrailingPathSeparator . toFilePath
+            case ins of
+                CopyFile isrc idst -> do
+                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
+                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
+                    CopyDeployment `shouldBe` kind
+                CopyDir isrc idst -> do
+                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
+                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
+                    CopyDeployment `shouldBe` kind
+                LinkFile isrc idst -> do
+                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
+                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
+                    LinkDeployment `shouldBe` kind
+                LinkDir isrc idst -> do
+                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
+                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
+                    LinkDeployment `shouldBe` kind
         t ->
             expectationFailure $
             unlines

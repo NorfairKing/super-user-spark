@@ -45,7 +45,13 @@ instance GenValid CheckResult where
 instance GenUnchecked Instruction
 
 instance GenValid Instruction where
-    genValid = Instruction <$> genValid <*> genValid <*> genValid
+    genValid =
+        oneof
+            [ CopyFile <$> genValid <*> genValid
+            , CopyDir <$> genValid <*> genValid
+            , LinkFile <$> genValid <*> genValid
+            , LinkDir <$> genValid <*> genValid
+            ]
 
 instance GenUnchecked CleanupInstruction
 

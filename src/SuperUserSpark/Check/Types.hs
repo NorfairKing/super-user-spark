@@ -5,11 +5,7 @@ module SuperUserSpark.Check.Types where
 
 import Import
 
-import Data.Hashable
-
 import SuperUserSpark.Bake.Types
-import SuperUserSpark.Compiler.Types
-import SuperUserSpark.CoreTypes
 import SuperUserSpark.Diagnose.Types
 
 data CheckAssignment = CheckAssignment
@@ -38,10 +34,15 @@ data CheckError
 
 instance Validity CheckError
 
-data Instruction =
-    Instruction AbsP
-                AbsP
-                DeploymentKind
+data Instruction
+    = CopyFile (Path Abs File)
+               (Path Abs File)
+    | CopyDir (Path Abs Dir)
+              (Path Abs Dir)
+    | LinkFile (Path Abs File)
+               (Path Abs File)
+    | LinkDir (Path Abs Dir)
+              (Path Abs Dir)
     deriving (Show, Eq, Generic)
 
 instance Validity Instruction

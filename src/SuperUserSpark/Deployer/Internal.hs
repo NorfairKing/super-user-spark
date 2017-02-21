@@ -3,8 +3,8 @@ module SuperUserSpark.Deployer.Internal where
 import Import hiding ((</>))
 
 import Data.Text (pack)
-import Shelly (cp_r, fromText, shelly)
-import System.FilePath.Posix (dropFileName)
+import System.FilePath.Posix
+       (dropFileName, dropTrailingPathSeparator)
 import System.Posix.Files (createSymbolicLink, removeLink)
 
 import SuperUserSpark.Bake.Types
@@ -20,7 +20,7 @@ performClean (CleanDirectory fp) =
 performClean (CleanLink fp) = incase deploySetsReplaceLinks $ unlink fp
 
 unlink :: Path Abs File -> SparkDeployer ()
-unlink = liftIO . removeLink . toFilePath
+unlink = liftIO . removeLink . dropTrailingPathSeparator . toFilePath
 
 rmFile :: Path Abs File -> SparkDeployer ()
 rmFile = liftIO . removeFile
@@ -29,21 +29,33 @@ rmDir :: Path Abs Dir -> SparkDeployer ()
 rmDir = liftIO . removeDirRecur
 
 performDeployment :: Instruction -> IO ()
-performDeployment (Instruction source destination LinkDeployment) =
-    link source destination
-performDeployment (Instruction source destination CopyDeployment) =
-    copy source destination
+performDeployment (CopyFile source destination) =
+    performCopyFile source destination
+performDeployment (CopyDir source destination) =
+    performCopyDir source destination
+performDeployment (LinkFile source destination) =
+    performLinkFile source destination
+performDeployment (LinkDir source destination) =
+    performLinkDir source destination
 
-copy :: AbsP -> AbsP -> IO ()
-copy src dst = do
-    createDirectoryIfMissing upperDir
-    shelly $ cp_r (fromText $ pack $ toPath src) (fromText $ pack $ toPath dst)
-  where
-    upperDir = dropFileName $ toPath dst
+performCopyFile :: Path Abs File -> Path Abs File -> IO ()
+performCopyFile src dst = do
+    ensureDir $ parent dst
+    copyFile src dst
 
-link :: AbsP -> AbsP -> IO ()
-link src dst = do
-    createDirectoryIfMissing upperDir
-    createSymbolicLink (toPath src) (toPath dst)
-  where
-    upperDir = dropFileName (toPath dst)
+performCopyDir :: Path Abs Dir -> Path Abs Dir -> IO ()
+performCopyDir src dst = do
+    ensureDir $ parent dst
+    copyDirRecur src dst
+
+performLinkFile :: Path Abs File -> Path Abs File -> IO ()
+performLinkFile src dst = do
+    ensureDir $ parent dst
+    createSymbolicLink (toFilePath src) (toFilePath dst)
+
+performLinkDir :: Path Abs Dir -> Path Abs Dir -> IO ()
+performLinkDir src dst = do
+    ensureDir $ parent dst
+    createSymbolicLink
+        (dropTrailingPathSeparator $ toFilePath src)
+        (dropTrailingPathSeparator $ toFilePath dst)

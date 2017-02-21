@@ -8,6 +8,7 @@ extra-deps:
 - genvalidity-hspec-0.3.1.0
 - genvalidity-hspec-aeson-0.0.1.0
 - genvalidity-path-0.1.0.0
+- directory-1.3.0.2
 - iostring-0.0.0.0
 - optparse-applicative-0.13.1.0
 - process-1.5.0.0
