@@ -2,8 +2,16 @@
 title: Installation
 ---
 
-`spark` is on hackage!
+`super-user-spark` is on hackage!
+
+## With Cabal
 
 ```
 $ cabal install super-user-spark
+```
+
+## With Stack
+
+```
+$ stack install super-user-spark
 ```

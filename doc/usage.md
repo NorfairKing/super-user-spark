@@ -40,6 +40,15 @@ This will compile the spark card to a list of deployments.
 - `--override KIND`: Override _all_ deployments to be `KIND` deployments. (Options for `KIND`: `copy`, `link`)
 
 
+### Bake
+Bake a spark card.
+This turns raw compiled deployments into so-called baked deployments.
+
+```
+$ spark bake path/to/card.sus
+$ spark bake "path/to/card.sus card-name"
+```
+
 ### Check
 
 Assess the current state of the system.

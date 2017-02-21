@@ -8,6 +8,12 @@ A card is a unit of control within spark.
 A card has a name and contains a number of statements.
 Cards should be declared inside a file with a `.sus` extension.
 
+```
+card <card-name> {
+  <declarations>
+}
+```
+
 #### References
 A card can be referenced:
 
