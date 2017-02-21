@@ -14,6 +14,8 @@ import SuperUserSpark.Deployer
 import SuperUserSpark.Deployer.Gen ()
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
+import SuperUserSpark.Diagnose.Internal
+import SuperUserSpark.Diagnose.Types
 import SuperUserSpark.OptParse.Gen ()
 import SuperUserSpark.Parser.Gen ()
 
@@ -183,8 +185,8 @@ deploymentSpec = do
                         copy src' dst'
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` IsFile
-                        dsrc <- diagnose src'
-                        ddst <- diagnose dst'
+                        dsrc <- diagnoseAbsP src'
+                        ddst <- diagnoseAbsP dst'
                         diagnosedHashDigest ddst `shouldBe`
                             diagnosedHashDigest dsrc
                         removeFile src
@@ -204,8 +206,8 @@ deploymentSpec = do
                         copy src' dst'
                         diagnoseFp src' `shouldReturn` IsDirectory
                         diagnoseFp dst' `shouldReturn` IsDirectory
-                        dsrc <- diagnose src'
-                        ddst <- diagnose dst'
+                        dsrc <- diagnoseAbsP src'
+                        ddst <- diagnoseAbsP dst'
                         diagnosedHashDigest ddst `shouldBe`
                             diagnosedHashDigest dsrc
                         removeDirRecur src
