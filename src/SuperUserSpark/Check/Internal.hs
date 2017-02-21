@@ -2,21 +2,14 @@ module SuperUserSpark.Check.Internal where
 
 import Import
 
-import qualified Data.ByteString as SB
-import Data.Hashable
 import Data.Maybe (catMaybes)
-import System.Exit (ExitCode(..))
-import System.Posix.Files
-       (fileExist, getSymbolicLinkStatus, isBlockDevice,
-        isCharacterDevice, isDirectory, isNamedPipe, isRegularFile,
-        isSocket, isSymbolicLink, readSymbolicLink)
-import System.Process (readProcess, system)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
 import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
+import SuperUserSpark.Diagnose.Types
 
 checkDeployment :: DiagnosedDeployment -> DeploymentCheckResult
 checkDeployment (Deployment (Directions [] (D dst _ _)) _) =
@@ -179,72 +172,8 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                     Right dir -> Dirty (unlines s) ins $ CleanDirectory dir
             _ -> Impossible "should not occur"
 
-diagnoseDeployment :: BakedDeployment -> IO DiagnosedDeployment
-diagnoseDeployment (Deployment bds kind) = do
-    ddirs <- diagnoseDirs bds
-    return $ Deployment ddirs kind
-
-diagnoseDirs :: DeploymentDirections AbsP
-             -> IO (DeploymentDirections DiagnosedFp)
-diagnoseDirs (Directions srcs dst) =
-    Directions <$> mapM diagnose srcs <*> diagnose dst
-
-diagnose :: AbsP -> IO DiagnosedFp
-diagnose fp = do
-    d <- diagnoseFp fp
-    hash_ <- hashFilePath fp
-    return $ D fp d hash_
-
-diagnoseFp :: AbsP -> IO Diagnostics
-diagnoseFp absp = do
-    let fp = toPath absp
-    ms <- forgivingAbsence $ getSymbolicLinkStatus fp
-    case ms of
-        Nothing -> pure Nonexistent
-        Just s ->
-            if isBlockDevice s ||
-               isCharacterDevice s || isSocket s || isNamedPipe s
-                then return IsWeird
-                else do
-                    if isSymbolicLink s
-                        then do
-                            point <- readSymbolicLink fp
-                            -- TODO check what happens with relative links.
-                            apoint <- AbsP <$> parseAbsFile point
-                            return $ IsLinkTo apoint
-                        else if isDirectory s
-                                 then return IsDirectory
-                                 else if isRegularFile s
-                                          then return IsFile
-                                          else error $
-                                               "File " ++
-                                               fp ++
-                                               " was neither a block device, a character device, a socket, a named pipe, a symbolic link, a directory or a regular file"
-
--- | Hash a filepath so that two filepaths with the same contents have the same hash
-hashFilePath :: AbsP -> IO HashDigest
-hashFilePath fp = do
-    d <- diagnoseFp fp
-    case d of
-        IsFile -> hashFile fp
-        IsDirectory -> hashDirectory fp
-        IsLinkTo _ -> return $ HashDigest $ hash ()
-        IsWeird -> return $ HashDigest $ hash ()
-        Nonexistent -> return $ HashDigest $ hash ()
-
-hashFile :: AbsP -> IO HashDigest
-hashFile fp = (HashDigest . hash) <$> SB.readFile (toPath fp)
-
-hashDirectory :: AbsP -> IO HashDigest
-hashDirectory fp = do
-    tdir <- parseAbsDir (toPath fp)
-    walkDirAccum Nothing writer_ tdir
-  where
-    writer_ _ _ files = do
-        hashes <- mapM (hashFile . AbsP) files
-        pure $ HashDigest $ hash hashes
-
-formatDeploymentChecks :: [(BakedDeployment, DeploymentCheckResult)] -> String
+formatDeploymentChecks :: [(DiagnosedDeployment, DeploymentCheckResult)]
+                       -> String
 formatDeploymentChecks dss =
     if null output
         then "Deployment is done already."
@@ -255,7 +184,7 @@ formatDeploymentChecks dss =
   where
     output = catMaybes $ map formatDeploymentCheck dss
 
-formatDeploymentCheck :: (BakedDeployment, DeploymentCheckResult)
+formatDeploymentCheck :: (DiagnosedDeployment, DeploymentCheckResult)
                       -> Maybe String
 formatDeploymentCheck (_, (ReadyToDeploy is)) =
     Just $ "READY: " ++ formatInstruction is
@@ -264,7 +193,8 @@ formatDeploymentCheck (d, ImpossibleDeployment ds) =
     Just $
     concat
         [ "IMPOSSIBLE: "
-        , toPath $ directionDestination $ deploymentDirections d
+        , toPath $
+          diagnosedFilePath $ directionDestination $ deploymentDirections d
         , " cannot be deployed:\n"
         , unlines ds
         , "\n"
@@ -273,7 +203,8 @@ formatDeploymentCheck (d, (DirtySituation str is c)) =
     Just $
     concat
         [ "DIRTY: "
-        , toPath $ directionDestination $ deploymentDirections d
+        , toPath $
+          diagnosedFilePath $ directionDestination $ deploymentDirections d
         , "\n"
         , str
         , "planned: "

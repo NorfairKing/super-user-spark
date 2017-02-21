@@ -8,6 +8,7 @@ data Dispatch
     = DispatchParse ParseArgs
     | DispatchCompile CompileArgs
     | DispatchBake BakeArgs
+    | DispatchDiagnose DiagnoseArgs
     | DispatchCheck CheckArgs
     | DispatchDeploy DeployArgs
     deriving (Show, Eq, Generic)
@@ -48,6 +49,19 @@ data BakeFlags = BakeFlags
 
 instance Validity BakeFlags
 
+data DiagnoseArgs = DiagnoseArgs
+    { diagnoseArgCardRef :: String
+    , diagnoseFlags :: DiagnoseFlags
+    } deriving (Show, Eq, Generic)
+
+instance Validity DiagnoseArgs
+
+data DiagnoseFlags = DiagnoseFlags
+    { diagnoseBakeFlags :: BakeFlags
+    } deriving (Show, Eq, Generic)
+
+instance Validity DiagnoseFlags
+
 data CheckArgs = CheckArgs
     { checkArgCardRef :: String
     , checkFlags :: CheckFlags
@@ -56,7 +70,7 @@ data CheckArgs = CheckArgs
 instance Validity CheckArgs
 
 data CheckFlags = CheckFlags
-    { checkBakeFlags :: BakeFlags
+    { checkDiagnoseFlags ::DiagnoseFlags
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckFlags

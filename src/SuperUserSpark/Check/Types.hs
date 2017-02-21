@@ -8,8 +8,9 @@ import Import
 import Data.Hashable
 
 import SuperUserSpark.Bake.Types
-import SuperUserSpark.CoreTypes
 import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
+import SuperUserSpark.Diagnose.Types
 
 data CheckAssignment = CheckAssignment
     { checkCardReference :: BakeCardReference
@@ -19,52 +20,23 @@ data CheckAssignment = CheckAssignment
 instance Validity CheckAssignment
 
 data CheckSettings = CheckSettings
-    { checkBakeSettings :: BakeSettings
+    { checkDiagnoseSettings :: DiagnoseSettings
     } deriving (Show, Eq, Generic)
 
 instance Validity CheckSettings
 
 defaultCheckSettings :: CheckSettings
-defaultCheckSettings = CheckSettings {checkBakeSettings = defaultBakeSettings}
+defaultCheckSettings =
+    CheckSettings {checkDiagnoseSettings = defaultDiagnoseSettings}
 
 type SparkChecker = ExceptT CheckError (ReaderT CheckSettings IO)
 
 data CheckError
-    = CheckBakeError BakeError
+    = CheckDiagnoseError DiagnoseError
     | CheckError String
     deriving (Show, Eq, Generic)
 
 instance Validity CheckError
-
-newtype HashDigest =
-    HashDigest Int
-    deriving (Show, Eq, Generic)
-
-instance Validity HashDigest
-
-instance Monoid HashDigest where
-    mempty = HashDigest (hash ())
-    (HashDigest h1) `mappend` (HashDigest h2) = HashDigest $ h1 * 31 + h2
-
-instance Hashable HashDigest
-
-data Diagnostics
-    = Nonexistent
-    | IsFile
-    | IsDirectory
-    | IsLinkTo AbsP -- Could point to directory too.
-    | IsWeird
-    deriving (Show, Eq, Generic)
-
-instance Validity Diagnostics
-
-data DiagnosedFp = D
-    { diagnosedFilePath :: AbsP
-    , diagnosedDiagnostics :: Diagnostics
-    , diagnosedHashDigest :: HashDigest
-    } deriving (Show, Eq, Generic)
-
-instance Validity DiagnosedFp
 
 data Instruction =
     Instruction AbsP
@@ -103,5 +75,3 @@ data CheckResult
     deriving (Show, Eq, Generic)
 
 instance Validity CheckResult
-
-type DiagnosedDeployment = Deployment DiagnosedFp

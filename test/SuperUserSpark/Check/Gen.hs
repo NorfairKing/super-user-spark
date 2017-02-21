@@ -7,6 +7,7 @@ import TestImport
 import SuperUserSpark.Bake.Gen ()
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Gen ()
+import SuperUserSpark.Diagnose.Gen ()
 import SuperUserSpark.Language.Gen ()
 
 instance GenUnchecked CheckAssignment
@@ -22,10 +23,6 @@ instance GenValid CheckSettings where
 instance GenUnchecked CheckError
 
 instance GenValid CheckError
-
-instance GenUnchecked HashDigest
-
-instance GenValid HashDigest
 
 instance GenUnchecked CheckResult where
     genUnchecked =
@@ -53,15 +50,6 @@ instance GenValid Instruction where
 instance GenUnchecked CleanupInstruction
 
 instance GenValid CleanupInstruction
-
-instance GenUnchecked Diagnostics
-
-instance GenValid Diagnostics
-
-instance GenUnchecked DiagnosedFp
-
-instance GenValid DiagnosedFp where
-    genValid = D <$> genValid <*> genValid <*> genValid
 
 instance GenUnchecked DeploymentCheckResult where
     genUnchecked =

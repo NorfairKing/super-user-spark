@@ -17,6 +17,8 @@ import SuperUserSpark.Bake.Internal
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
+import SuperUserSpark.Diagnose
+import SuperUserSpark.Diagnose.Types
 import SuperUserSpark.OptParse.Types
 import SuperUserSpark.Utils
 
@@ -39,7 +41,7 @@ deriveCheckSettings :: BakeCardReference
                     -> CheckFlags
                     -> IO (Either String CheckSettings)
 deriveCheckSettings bcr CheckFlags {..} =
-    CheckSettings <$$> deriveBakeSettings bcr checkBakeFlags
+    CheckSettings <$$> deriveDiagnoseSettings bcr checkDiagnoseFlags
 
 check :: CheckAssignment -> IO ()
 check CheckAssignment {..} = do
@@ -52,21 +54,22 @@ check CheckAssignment {..} = do
         Right () -> pure ()
 
 formatCheckError :: CheckError -> String
-formatCheckError (CheckBakeError ce) = formatBakeError ce
+formatCheckError (CheckDiagnoseError ce) = formatDiagnoseError ce
 formatCheckError (CheckError s) = unwords ["Check failed:", s]
 
 checkByCardRef :: BakeCardReference -> SparkChecker ()
 checkByCardRef checkCardReference = do
-    deps <-
-        checkerBake $ compileBakeCardRef checkCardReference >>= bakeDeployments
-    dcrs <- liftIO $ checkDeployments deps
-    liftIO $ putStrLn $ formatDeploymentChecks $ zip deps dcrs
+    ddeps <-
+        checkerDiagnose $
+        diagnoserBake
+            (compileBakeCardRef checkCardReference >>= bakeDeployments) >>=
+        (liftIO . diagnoseDeployments)
+    liftIO $ putStrLn $ formatDeploymentChecks $ zip ddeps $ checkDeployments ddeps
 
-checkerBake :: SparkBaker a -> SparkChecker a
-checkerBake =
-    withExceptT CheckBakeError . mapExceptT (withReaderT checkBakeSettings)
+checkerDiagnose :: SparkDiagnoser a -> SparkChecker a
+checkerDiagnose =
+    withExceptT CheckDiagnoseError .
+    mapExceptT (withReaderT checkDiagnoseSettings)
 
-checkDeployments :: [BakedDeployment] -> IO [DeploymentCheckResult]
-checkDeployments ds = do
-    diagnosed <- mapM diagnoseDeployment ds
-    return $ map checkDeployment diagnosed
+checkDeployments :: [DiagnosedDeployment] -> [DeploymentCheckResult]
+checkDeployments = map checkDeployment
