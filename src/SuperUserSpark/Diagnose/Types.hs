@@ -8,6 +8,7 @@ import Import
 
 import Data.Aeson
 import Data.Hashable
+import Text.Printf
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
@@ -50,7 +51,8 @@ instance Monoid HashDigest where
 
 instance Hashable HashDigest
 
-instance ToJSON HashDigest
+instance ToJSON HashDigest where
+    toJSON (HashDigest i) = toJSON $ (printf "%016x" i :: String)
 
 data Diagnostics
     = Nonexistent
