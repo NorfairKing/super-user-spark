@@ -5,7 +5,8 @@ module SuperUserSpark.Bake.Internal where
 import Import
 
 import Control.Exception (try)
-import System.FilePath (isAbsolute)
+import System.FilePath
+       (isAbsolute, replaceDirectory, takeDirectory)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
@@ -16,7 +17,8 @@ bakeDeployments = mapM bakeDeployment
 bakeDeployment :: RawDeployment -> SparkBaker BakedDeployment
 bakeDeployment Deployment {..} = do
     d <- bakeDirections deploymentDirections
-    pure $ Deployment {deploymentDirections = d, deploymentKind = deploymentKind}
+    pure $
+        Deployment {deploymentDirections = d, deploymentKind = deploymentKind}
 
 bakeDirections :: DeploymentDirections FilePath
                -> SparkBaker (DeploymentDirections AbsP)
@@ -42,7 +44,12 @@ bakeFilePath fp = do
                          Left err -> throwError $ BakeError $ show err
                          Right af -> pure $ AbsP af
                 else do
-                    errOrAp <- liftIO $ try $ resolveFile root cp
+                    let dir = takeDirectory cp
+                    errOrAp <-
+                        liftIO $
+                        try $ do
+                            d <- resolveFile root dir
+                            parseAbsFile $ replaceDirectory cp $ toFilePath d
                     case errOrAp of
                         Left err ->
                             throwError $

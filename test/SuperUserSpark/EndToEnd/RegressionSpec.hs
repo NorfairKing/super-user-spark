@@ -8,7 +8,7 @@ import TestImport
 
 import System.Directory
 import System.Environment (withArgs)
-import System.Exit (ExitCode(ExitSuccess))
+import System.Exit (ExitCode(ExitFailure))
 import System.Posix.Files
 
 import SuperUserSpark
@@ -60,5 +60,5 @@ linkThenCopySpec = do
                         runSpark ["deploy", toFilePath cf] `shouldThrow`
                             (\e ->
                                  case e of
-                                     ExitSuccess -> True
+                                     ExitFailure _ -> True
                                      _ -> False)
