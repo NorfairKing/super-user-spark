@@ -1,13 +1,15 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module SuperUserSpark.BakeSpec where
 
-import TestImport hiding ((</>), removeFile, writeFile)
+import TestImport
 
 import Data.Either (isLeft)
 import Data.Maybe (isNothing)
 
-import System.FilePath.Posix ((</>))
+import qualified System.FilePath as FP
+import System.Posix.Files (createSymbolicLink)
 
 import SuperUserSpark.Bake
 import SuperUserSpark.Bake.Gen ()
@@ -71,6 +73,32 @@ bakeSpec =
                                 Right absp
                     b "/home/user" "~/a/b/c" "/home/user/a/b/c"
                     b "/home" "~/c" "/home/c"
+            here <- runIO getCurrentDir
+            let sandbox = here </> $(mkRelDir "test_sandbox")
+            before_ (ensureDir sandbox) $
+                after_ (removeDirRecur sandbox) $
+                it
+                    "does not follow toplevel links when the completed paths are relative" $ do
+                    let file = $(mkRelFile "file")
+                    let from = $(mkRelDir "from") </> file
+                    let to = $(mkRelDir "to") </> file
+                    withCurrentDir sandbox $ do
+                        ensureDir $ parent $ sandbox </> from
+                        writeFile (sandbox </> from) "contents"
+                        ensureDir $ parent $ sandbox </> to
+                        createSymbolicLink
+                            (toFilePath $ sandbox </> from)
+                            (toFilePath $ sandbox </> to)
+                    let runBake f =
+                            runReaderT
+                                (runExceptT f)
+                                (defaultBakeSettings
+                                 {bakeRoot = sandbox, bakeEnvironment = []})
+                    runBake (bakeFilePath (toFilePath to)) `shouldReturn`
+                        (Right $ AbsP $ sandbox </> to)
+                    runBake (bakeFilePath (toFilePath from)) `shouldReturn`
+                        (Right $ AbsP $ sandbox </> from)
+            it "follows directory-level links" $ pending
         describe "defaultBakeSettings" $
             it "is valid" $ isValid defaultBakeSettings
         describe "formatBakeError" $ do
@@ -83,8 +111,8 @@ bakeSpec =
                 forAll arbitrary $ \env ->
                     forAll generateWord $ \home ->
                         forAll generateWord $ \fp ->
-                            complete (("HOME", home) : env) ("~" </> fp) `shouldBe`
-                            Right (home </> fp)
+                            complete (("HOME", home) : env) ("~" FP.</> fp) `shouldBe`
+                            Right (home FP.</> fp)
         describe "parseId" $ do
             it "only ever produces valid IDs" $ producesValid parseId
             it "Figures out the home directory in these cases" $ do
