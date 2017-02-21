@@ -76,29 +76,54 @@ bakeSpec =
             here <- runIO getCurrentDir
             let sandbox = here </> $(mkRelDir "test_sandbox")
             before_ (ensureDir sandbox) $
-                after_ (removeDirRecur sandbox) $
-                it
-                    "does not follow toplevel links when the completed paths are relative" $ do
-                    let file = $(mkRelFile "file")
-                    let from = $(mkRelDir "from") </> file
-                    let to = $(mkRelDir "to") </> file
-                    withCurrentDir sandbox $ do
-                        ensureDir $ parent $ sandbox </> from
-                        writeFile (sandbox </> from) "contents"
-                        ensureDir $ parent $ sandbox </> to
-                        createSymbolicLink
-                            (toFilePath $ sandbox </> from)
-                            (toFilePath $ sandbox </> to)
-                    let runBake f =
-                            runReaderT
-                                (runExceptT f)
-                                (defaultBakeSettings
-                                 {bakeRoot = sandbox, bakeEnvironment = []})
-                    runBake (bakeFilePath (toFilePath to)) `shouldReturn`
-                        (Right $ AbsP $ sandbox </> to)
-                    runBake (bakeFilePath (toFilePath from)) `shouldReturn`
-                        (Right $ AbsP $ sandbox </> from)
-            it "follows directory-level links" $ pending
+                after_ (removeDirRecur sandbox) $ do
+                    it
+                        "does not follow toplevel links when the completed path is relative" $ do
+                        let file = $(mkRelFile "file")
+                        let from = $(mkRelDir "from") </> file
+                        let to = $(mkRelDir "to") </> file
+                        withCurrentDir sandbox $ do
+                            ensureDir $ parent $ sandbox </> from
+                            writeFile (sandbox </> from) "contents"
+                            ensureDir $ parent $ sandbox </> to
+                            createSymbolicLink
+                                (toFilePath $ sandbox </> from)
+                                (toFilePath $ sandbox </> to)
+                        let runBake f =
+                                runReaderT
+                                    (runExceptT f)
+                                    (defaultBakeSettings
+                                     {bakeRoot = sandbox, bakeEnvironment = []})
+                        runBake (bakeFilePath (toFilePath to)) `shouldReturn`
+                            (Right $ AbsP $ sandbox </> to)
+                        runBake (bakeFilePath (toFilePath from)) `shouldReturn`
+                            (Right $ AbsP $ sandbox </> from)
+                    it
+                        "follows directory-level links when the completed path is relative" $ do
+                        let file = $(mkRelFile "file")
+                        let fromdir = $(mkRelDir "from")
+                        let from = fromdir </> file
+                        let todir = $(mkRelDir "to")
+                        let to = todir </> file
+                        withCurrentDir sandbox $ do
+                            ensureDir $ parent $ sandbox </> from
+                            writeFile (sandbox </> from) "from contents"
+                            ensureDir $ parent $ sandbox </> todir
+                            createSymbolicLink
+                                (FP.dropTrailingPathSeparator $
+                                 toFilePath $ sandbox </> fromdir)
+                                (FP.dropTrailingPathSeparator $
+                                 toFilePath $ sandbox </> todir)
+                            writeFile (sandbox </> to) "to contents"
+                        let runBake f =
+                                runReaderT
+                                    (runExceptT f)
+                                    (defaultBakeSettings
+                                     {bakeRoot = sandbox, bakeEnvironment = []})
+                        runBake (bakeFilePath (toFilePath to)) `shouldReturn`
+                            (Right $ AbsP $ sandbox </> from)
+                        runBake (bakeFilePath (toFilePath from)) `shouldReturn`
+                            (Right $ AbsP $ sandbox </> from)
         describe "defaultBakeSettings" $
             it "is valid" $ isValid defaultBakeSettings
         describe "formatBakeError" $ do
