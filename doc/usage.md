@@ -41,12 +41,24 @@ This will compile the spark card to a list of deployments.
 
 
 ### Bake
+
 Bake a spark card.
 This turns raw compiled deployments into so-called baked deployments.
 
 ```
 $ spark bake path/to/card.sus
 $ spark bake "path/to/card.sus card-name"
+```
+
+### Diagnose
+
+Diagnose the current state of the system.
+This outputs the raw state of the system.
+You probably want to use `spark check` instead.
+
+```
+$ spark diagnose path/to/card.sus
+$ spark diagnose "path/to/card.sus card-name"
 ```
 
 ### Check
