@@ -1,5 +1,6 @@
 card bash {
-  into ~
+  # into ~/.ssh
+  outof ssh
 
-  file -[ gpg --decrypt ]> file
+  config -[ gpg --decrypt ]> config
 }

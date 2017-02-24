@@ -7,7 +7,6 @@ import Data.Maybe (catMaybes)
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Diagnose.Types
 
@@ -64,9 +63,11 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
         readyCopyDir = parseBoth CopyDir parseAbsDir
         readyLinkFile = parseBoth LinkFile parseAbsFile
         readyLinkDir = parseBoth LinkDir parseAbsDir
+        readyPipeFile c = parseBoth (PipeFile c) parseAbsFile
     in case (srcd, dstd, kind) of
            (IsFile, Nonexistent, CopyDeployment) -> readyCopyFile
            (IsFile, Nonexistent, LinkDeployment) -> readyLinkFile
+           (IsFile, Nonexistent, PipeDeployment c) -> readyPipeFile c
            (IsFile, IsFile, LinkDeployment) ->
                e
                    readyLinkFile
@@ -87,6 +88,16 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                             , toPath dst
                             , "are files for a copy deployment, but they are not equal."
                             ]
+           (IsFile, IsFile, PipeDeployment c) ->
+               e
+                   (readyPipeFile c)
+                   [ "Both the source:"
+                   , toPath src
+                   , "and the destination:"
+                   , toPath dst
+                   , "are files for a pipe deployment:"
+                   , show c
+                   ]
            (IsFile, IsDirectory, LinkDeployment) ->
                e
                    readyLinkFile
@@ -104,6 +115,16 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                    , "is a file but the destination:"
                    , toPath dst
                    , "is a directory for a copy deployment."
+                   ]
+           (IsFile, IsDirectory, PipeDeployment c) ->
+               e
+                   (readyPipeFile c)
+                   [ "The source: "
+                   , toPath src
+                   , "is a file but the destination:"
+                   , toPath dst
+                   , "is a directory for a pipe deployment:"
+                   , show c
                    ]
            (IsFile, IsLinkTo l, LinkDeployment) ->
                if l == src
@@ -126,8 +147,25 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                    , toPath dst
                    , "is a link for a copy deployment."
                    ]
+           (IsFile, IsLinkTo _, PipeDeployment c) ->
+               e
+                   (readyPipeFile c)
+                   [ "The source:"
+                   , toPath src
+                   , "is a file and the destination:"
+                   , toPath dst
+                   , "is a link for a pipe deployment:"
+                   , show c
+                   ]
            (IsDirectory, Nonexistent, LinkDeployment) -> readyLinkDir
            (IsDirectory, Nonexistent, CopyDeployment) -> readyCopyDir
+           (IsDirectory, _, PipeDeployment c) ->
+               i
+                   [ "The source:"
+                   , toPath src
+                   , "is a directory for a pipe deployment:"
+                   , show c
+                   ]
            (IsDirectory, IsFile, LinkDeployment) ->
                e
                    readyLinkDir
@@ -269,6 +307,8 @@ formatInstruction (LinkFile from to) =
     unwords $ [toFilePath from, "l->", toFilePath to]
 formatInstruction (LinkDir from to) =
     unwords $ [toFilePath from, "l->", toFilePath to]
+formatInstruction (PipeFile c from to) =
+    unwords $ [toFilePath from, "-[", c, "]>", toFilePath to]
 
 formatCleanupInstruction :: CleanupInstruction -> String
 formatCleanupInstruction (CleanFile fp) = "remove file " ++ toFilePath fp

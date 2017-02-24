@@ -43,6 +43,9 @@ data Instruction
                (Path Abs File)
     | LinkDir (Path Abs Dir)
               (Path Abs Dir)
+    | PipeFile String
+               (Path Abs File)
+               (Path Abs File)
     deriving (Show, Eq, Generic)
 
 instance Validity Instruction
