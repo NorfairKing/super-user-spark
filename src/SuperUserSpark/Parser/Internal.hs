@@ -172,7 +172,7 @@ deploymentKind =
     pipe = do
         void $ string "-["
         cmd <- manyTill anyChar (try (string "]>"))
-        pure $ Just $PipeDeployment cmd
+        pure $ Just $ PipeDeployment cmd
 
 alternatives :: Parser Declaration
 alternatives = do

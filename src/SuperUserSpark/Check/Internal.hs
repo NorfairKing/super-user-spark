@@ -97,6 +97,7 @@ checkSingle (D src srcd srch) (D dst dstd dsth) kind =
                    , toPath dst
                    , "are files for a pipe deployment:"
                    , show c
+                   , "WARNING: There is no way to tell if the deployment is done already."
                    ]
            (IsFile, IsDirectory, LinkDeployment) ->
                e
