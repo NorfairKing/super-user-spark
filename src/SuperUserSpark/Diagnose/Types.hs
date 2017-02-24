@@ -68,8 +68,8 @@ instance ToJSON Diagnostics where
     toJSON Nonexistent = String "nonexistent"
     toJSON IsFile = String "file"
     toJSON IsDirectory = String "directory"
-    toJSON (IsLinkTo ap) =
-        object ["kind" .= String "link", "link destination" .= ap]
+    toJSON (IsLinkTo alp) =
+        object ["kind" .= String "link", "link destination" .= alp]
     toJSON IsWeird = String "weird"
 
 data DiagnosedFp = D

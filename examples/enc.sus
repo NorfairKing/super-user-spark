@@ -1,0 +1,5 @@
+card bash {
+  into ~
+
+  file -[ gpg --decrypt ]> file
+}

@@ -163,11 +163,16 @@ deployment :: Parser Declaration
 deployment = try longDeployment <|> shortDeployment <?> "deployment"
 
 deploymentKind :: Parser (Maybe DeploymentKind)
-deploymentKind = try link <|> try copy <|> def <?> "deployment kind"
+deploymentKind =
+    try link <|> try copy <|> try def <|> pipe <?> "deployment kind"
   where
     link = string linkKindSymbol >> return (Just LinkDeployment)
     copy = string copyKindSymbol >> return (Just CopyDeployment)
     def = string unspecifiedKindSymbol >> return Nothing
+    pipe = do
+        void $ string "-["
+        cmd <- manyTill anyChar (try (string "]>"))
+        pure $ Just $PipeDeployment cmd
 
 alternatives :: Parser Declaration
 alternatives = do
