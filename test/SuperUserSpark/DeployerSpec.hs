@@ -35,8 +35,6 @@ instanceSpec =
         genValidSpec @DeploySettings
         eqSpec @DeployError
         genValidSpec @DeployError
-        eqSpec @PreDeployment
-        genValidSpec @PreDeployment
 
 deployerSpec :: Spec
 deployerSpec =

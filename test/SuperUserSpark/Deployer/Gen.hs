@@ -24,7 +24,3 @@ instance GenUnchecked DeployError
 instance GenValid DeployError
 
 
-instance GenUnchecked PreDeployment
-
-instance GenValid PreDeployment
-

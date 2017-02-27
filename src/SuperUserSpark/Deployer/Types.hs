@@ -41,13 +41,3 @@ data DeployError
     deriving (Show, Eq, Generic)
 
 instance Validity DeployError
-
-data PreDeployment
-    = Ready FilePath
-            FilePath
-            DeploymentKind
-    | AlreadyDone
-    | Error String
-    deriving (Show, Eq, Generic)
-
-instance Validity PreDeployment

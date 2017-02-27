@@ -10,6 +10,8 @@ import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check
 import SuperUserSpark.Check.Internal
 import SuperUserSpark.Check.Types
+import SuperUserSpark.Compiler.Types
+import SuperUserSpark.CoreTypes
 import SuperUserSpark.Deployer.Internal
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Diagnose
@@ -114,10 +116,22 @@ deployAbss ds = do
         -- Check one last time.
      = do
         do ddeps3 <- liftIO $ diagnoseDeployments ds
-           let dcrsf3 = checkDeployments ddeps3
-           when (any (not . deploymentIsDone) dcrsf3) $ do
+           let dcrsf3 = flip map ddeps3 $ \ddep -> (ddep, checkDeployment ddep)
+            -- If the check result is dirty, but the deployment was a pipe,
+            -- then that's to be expected
+           let isDone =
+                   and $
+                   flip map dcrsf3 $ \(ddep, cr) ->
+                       case cr of
+                           DeploymentDone -> True
+                           DirtySituation _ _ _ ->
+                               case deploymentKind ddep of
+                                   PipeDeployment _ -> True
+                                   _ -> False
+                           _ -> False
+           when (not isDone) $ do
                err
-                   (zip ddeps3 dcrsf3)
+                   dcrsf3
                    "Something went wrong during deployment. It's not done yet."
     err :: [(DiagnosedDeployment, DeploymentCheckResult)]
         -> String
