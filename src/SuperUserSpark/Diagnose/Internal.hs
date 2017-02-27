@@ -46,14 +46,12 @@ diagnoseFp absp = do
                             -- TODO check what happens with relative links.
                             apoint <- AbsP <$> parseAbsFile point
                             return $ IsLinkTo apoint
-                        else if isDirectory s
-                                 then return IsDirectory
+                        else pure $
+                             if isDirectory s
+                                 then IsDirectory
                                  else if isRegularFile s
-                                          then return IsFile
-                                          else error $
-                                               "File " ++
-                                               fp ++
-                                               " was neither a block device, a character device, a socket, a named pipe, a symbolic link, a directory or a regular file"
+                                          then IsFile
+                                          else IsWeird
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: AbsP -> IO HashDigest
