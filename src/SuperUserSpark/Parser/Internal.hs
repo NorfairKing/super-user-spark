@@ -169,10 +169,13 @@ deploymentKind =
     link = string linkKindSymbol >> return (Just LinkDeployment)
     copy = string copyKindSymbol >> return (Just CopyDeployment)
     def = string unspecifiedKindSymbol >> return Nothing
-    pipe = do
-        void $ string "-["
-        cmd <- manyTill anyChar (try (string "]>"))
-        pure $ Just $ PipeDeployment cmd
+    pipe = Just <$> pipeDeploymentKind
+
+pipeDeploymentKind :: Parser DeploymentKind
+pipeDeploymentKind = do
+    void $ string "-["
+    cmd <- manyTill anyChar (try (string "]>"))
+    pure $ PipeDeployment cmd
 
 alternatives :: Parser Declaration
 alternatives = do

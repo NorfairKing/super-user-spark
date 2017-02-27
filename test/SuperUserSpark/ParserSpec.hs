@@ -5,7 +5,7 @@ module SuperUserSpark.ParserSpec where
 import TestImport hiding (succeeds)
 
 import Data.Either (isLeft, isRight)
-import Data.List (intercalate)
+import Data.List (intercalate, isInfixOf)
 import Text.Parsec
 
 import SuperUserSpark.CoreTypes
@@ -471,10 +471,23 @@ declarationParserTests = do
         it "succeeds for the copy deployment kind" $ do
             "c->" -=> Just CopyDeployment
         it "succeeds for the default deployment kind" $ do "->" -=> Nothing
-        it "fails for anything else" $ do
-            property $ \s ->
-                (not $ any (== s) ["l->", "c->", "->"]) ==>
-                shouldFail deploymentKind s
+        it
+            "succeeds pipeDeploymentKind if the result is a pipe deployment but not otherwise" $ do
+            forAll genValid $ \s ->
+                case parseWithoutSource deploymentKind s of
+                    Left err -> shouldFail pipeDeploymentKind s
+                    Right res ->
+                        case res of
+                            Just (PipeDeployment command) ->
+                                parseShouldSucceedAs pipeDeploymentKind s $
+                                PipeDeployment command
+                            _ -> shouldFail pipeDeploymentKind s
+    describe "pipeDeploymentKind" $ do
+        let (-=>) = parseShouldSucceedAs pipeDeploymentKind
+        it
+            "succeeds for a pipe deployment with arbitrary command that does not contain ']>'" $
+            forAll (genValid `suchThat` (not . ("]>" `isInfixOf`))) $ \command ->
+                ("-[" ++ command ++ "]>") -=> PipeDeployment command
 
 cardReferenceParserTests :: Spec
 cardReferenceParserTests = do
