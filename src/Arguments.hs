@@ -141,4 +141,4 @@ parseGlobalOptions = GlobalOptions
         <> help "Equivalent to --replace-files --replace-directories --replace-links" )
     <*> switch
       ( long "debug"
-        <> help "Show al debug information." )
+        <> help "Show all debug information." )
