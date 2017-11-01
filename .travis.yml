@@ -16,8 +16,14 @@ addons:
 # change flags or use --stack-yaml to point to a different file.
 env:
 - ARGS="--resolver lts-7"
+- ARGS="--resolver lts-8"
+- ARGS="--resolver lts-9"
 - ARGS="--resolver nightly"
 - ARGS=""
+
+matrix:
+  allow_failures:
+    - env: ARGS="--resolver nightly"
 
 # Caching so the next build will be fast too.
 cache:

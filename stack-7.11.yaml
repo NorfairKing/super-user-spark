@@ -1,6 +1,0 @@
-resolver: lts-7.11
-packages:
-- '.'
-extra-deps: []
-flags: {}
-extra-package-dbs: []
