@@ -50,6 +50,9 @@ runOptionsParser strs = execParserPure prefs optionsParser strs
       { prefMultiSuffix = "SPARK"  -- metavar suffix for multiple options
       , prefDisambiguate = True    -- automatically disambiguate abbreviations (default: False)
       , prefShowHelpOnError = True -- always show help text on parse errors (default: False)
+#if MIN_VERSION_optparse_applicative(0,13,0)
+      , prefShowHelpOnEmpty = True -- always show help text on empty values (default: False)
+#endif
       , prefBacktrack = True       -- backtrack to parent parser when a subcommand fails (default: True)
       , prefColumns = 80           -- number of columns in the terminal, used to format the help page (default: 80)
       }
