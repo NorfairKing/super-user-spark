@@ -120,8 +120,8 @@ test-suite spark-tests
   build-depends:    
         base                  >= 4.9   && < 5
       , super-user-spark
-      , hspec                 >= 2.2   && < 2.4
-      , hspec-core            >= 2.2   && < 2.4
+      , hspec                 >= 2.2   && < 2.5
+      , hspec-core            >= 2.2   && < 2.5
       , HUnit                 >= 1.2   && < 1.6
       , QuickCheck            >= 2.8   && < 2.10
       , aeson                 
