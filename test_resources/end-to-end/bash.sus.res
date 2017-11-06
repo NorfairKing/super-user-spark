@@ -1,26 +1,32 @@
 [
     {
-        "destination": "subdir/.bashrc",
-        "sources": [
-            "bash/.bashrc",
-            "bash/bashrc"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "subdir/.bashrc",
+            "sources": [
+                "bash/.bashrc",
+                "bash/bashrc"
+            ]
+        }
     },
     {
-        "destination": "subdir/.bash_aliases",
-        "sources": [
-            "bash/.bash_aliases",
-            "bash/bash_aliases"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "subdir/.bash_aliases",
+            "sources": [
+                "bash/.bash_aliases",
+                "bash/bash_aliases"
+            ]
+        }
     },
     {
-        "destination": "subdir/.bash_profile",
-        "sources": [
-            "bash/.bash_profile",
-            "bash/bash_profile"
-        ],
-        "deployment kind": "link"
+        "deployment kind": "link",
+        "directions": {
+            "destination": "subdir/.bash_profile",
+            "sources": [
+                "bash/.bash_profile",
+                "bash/bash_profile"
+            ]
+        }
     }
 ]

@@ -1,6 +1,6 @@
 module Main (main) where
 
-import           Spark
+import           SuperUserSpark
 
 main :: IO ()
 main = spark

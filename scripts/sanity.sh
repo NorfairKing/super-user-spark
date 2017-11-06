@@ -1,2 +1,5 @@
 source scripts/lib.sh
-check "Pedantic checking" make pedantic
+bld_ () {
+  stack clean && stack build --pedantic
+}
+check "Pedantic checking" bld_
