@@ -1,5 +1,4 @@
-flags: {}
-extra-package-dbs: []
+resolver: lts-9.11
 packages:
 - '.'
 extra-deps:
