@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module SuperUserSpark.Check.TestUtils where
 
 import TestImport
@@ -22,7 +20,7 @@ shouldBeImpossibleDeployment dd =
 
 -- * Test utils for checkSingle
 isDirty :: CheckResult -> Bool
-isDirty (Dirty _ _ _) = True
+isDirty Dirty{}  = True
 isDirty _ = False
 
 isReady :: CheckResult -> Bool
@@ -48,23 +46,15 @@ shouldBeDirty src dst kind eci =
         Dirty _ ins ci -> do
             ci `shouldBe` eci
             let tp = dropTrailingPathSeparator . toFilePath
+            let checkCopyDeployment isrc idst expectation = do
+                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
+                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
+                    expectation `shouldBe` kind
             case ins of
-                CopyFile isrc idst -> do
-                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
-                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
-                    CopyDeployment `shouldBe` kind
-                CopyDir isrc idst -> do
-                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
-                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
-                    CopyDeployment `shouldBe` kind
-                LinkFile isrc idst -> do
-                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
-                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
-                    LinkDeployment `shouldBe` kind
-                LinkDir isrc idst -> do
-                    tp isrc `shouldBe` toPath (diagnosedFilePath src)
-                    tp idst `shouldBe` toPath (diagnosedFilePath dst)
-                    LinkDeployment `shouldBe` kind
+                CopyFile isrc idst -> checkCopyDeployment isrc idst CopyDeployment
+                CopyDir isrc idst -> checkCopyDeployment isrc idst CopyDeployment
+                LinkFile isrc idst -> checkCopyDeployment isrc idst LinkDeployment
+                LinkDir isrc idst -> checkCopyDeployment isrc idst LinkDeployment
         t ->
             expectationFailure $
             unlines

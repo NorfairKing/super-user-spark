@@ -108,7 +108,7 @@ instance Validity PrefixPart
 data CompilerState = CompilerState
     { stateDeploymentKindLocalOverride :: Maybe DeploymentKind
     , stateInto :: Directory
-    , stateOutof_prefix :: CompilerPrefix
+    , stateOutofPrefix :: CompilerPrefix
     } deriving (Show, Eq, Generic)
 
 instance Validity CompilerState

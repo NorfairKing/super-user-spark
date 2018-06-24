@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
 
 module SuperUserSpark.EndToEnd.RegressionSpec
     ( spec
@@ -15,8 +16,7 @@ import SuperUserSpark
 import SuperUserSpark.Utils
 
 spec :: Spec
-spec = do
-    linkThenCopySpec
+spec = linkThenCopySpec
 
 linkThenCopySpec :: Spec
 linkThenCopySpec = do
@@ -25,7 +25,7 @@ linkThenCopySpec = do
     let setup = ensureDir sandbox
     let teardown = removeDirRecur sandbox
     beforeAll_ setup $
-        afterAll_ teardown $ do
+        afterAll_ teardown $
             describe "link then copy regression" $ do
                 let runSpark args = do
                         putStrLn $ unwords $ "spark" : args
@@ -40,25 +40,23 @@ linkThenCopySpec = do
                         -- Set up the file
                         ensureDir (parent from)
                         writeFile from "contents"
+                        let setUpCardFile cf = do
+                                runSpark ["parse", toFilePath cf]
+                                runSpark ["compile", toFilePath cf]
+                                runSpark ["bake", toFilePath cf]
+                                runSpark ["check", toFilePath cf]
                         -- Set up the first card file
                         writeFile
                             cf
                             "card link { kind link; into to; outof from; file }"
-                        runSpark ["parse", toFilePath cf]
-                        runSpark ["compile", toFilePath cf]
-                        runSpark ["bake", toFilePath cf]
-                        runSpark ["check", toFilePath cf]
+                        setUpCardFile cf
                         runSpark ["deploy", toFilePath cf]
                         -- Set up the second card file
                         writeFile
                             cf
                             "card link { kind copy; into to; outof from; file }"
-                        runSpark ["parse", toFilePath cf]
-                        runSpark ["compile", toFilePath cf]
-                        runSpark ["bake", toFilePath cf]
-                        runSpark ["check", toFilePath cf]
+                        setUpCardFile cf
                         runSpark ["deploy", toFilePath cf] `shouldThrow`
-                            (\e ->
-                                 case e of
-                                     ExitFailure _ -> True
-                                     _ -> False)
+                            (\case
+                                 ExitFailure _ -> True
+                                 _ -> False)

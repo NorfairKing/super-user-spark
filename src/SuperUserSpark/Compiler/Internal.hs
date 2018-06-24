@@ -20,11 +20,9 @@ compileDec (Deploy src dst kind) = do
     defaultKind <- asks compileDefaultKind
     localOverride <- gets stateDeploymentKindLocalOverride
     superOverride <- asks compileKindOverride
-    let resultKind =
-            case msum [superOverride, localOverride, kind] of
-                Nothing -> defaultKind
-                Just k -> k
-    outof <- gets stateOutof_prefix
+    let resultKind = fromMaybe defaultKind
+            $ msum [superOverride, localOverride, kind]
+    outof <- gets stateOutofPrefix
     into <- gets stateInto
     let directions =
             Directions
@@ -39,14 +37,14 @@ compileDec (IntoDir dir) = do
         then modify (\s -> s {stateInto = dir})
         else modify (\s -> s {stateInto = ip </> dir})
 compileDec (OutofDir dir) = do
-    op <- gets stateOutof_prefix
-    modify (\s -> s {stateOutof_prefix = op ++ [Literal dir]})
-compileDec (DeployKindOverride kind) = do
+    op <- gets stateOutofPrefix
+    modify (\s -> s {stateOutofPrefix = op ++ [Literal dir]})
+compileDec (DeployKindOverride kind) =
     modify (\s -> s {stateDeploymentKindLocalOverride = Just kind})
 compileDec (Block ds) = do
     before <- get
     compileDecs ds
     put before
 compileDec (Alternatives ds) = do
-    op <- gets stateOutof_prefix
-    modify (\s -> s {stateOutof_prefix = op ++ [Alts ds]})
+    op <- gets stateOutofPrefix
+    modify (\s -> s {stateOutofPrefix = op ++ [Alts ds]})

@@ -35,23 +35,19 @@ diagnoseFp absp = do
     ms <- forgivingAbsence $ getSymbolicLinkStatus fp
     case ms of
         Nothing -> pure Nonexistent
-        Just s ->
-            if isBlockDevice s ||
-               isCharacterDevice s || isSocket s || isNamedPipe s
-                then return IsWeird
-                else do
-                    if isSymbolicLink s
-                        then do
-                            point <- readSymbolicLink fp
-                            -- TODO check what happens with relative links.
-                            apoint <- AbsP <$> parseAbsFile point
-                            return $ IsLinkTo apoint
-                        else pure $
-                             if isDirectory s
-                                 then IsDirectory
-                                 else if isRegularFile s
-                                          then IsFile
-                                          else IsWeird
+        Just s | isBlockDevice s || isCharacterDevice s || isSocket s || isNamedPipe s
+                    -> return IsWeird
+               | isSymbolicLink s -> do
+                        point <- readSymbolicLink fp
+                        -- TODO check what happens with relative links.
+                        apoint <- AbsP <$> parseAbsFile point
+                        return $ IsLinkTo apoint
+               | otherwise -> pure $
+                         if isDirectory s
+                             then IsDirectory
+                             else if isRegularFile s
+                                      then IsFile
+                                      else IsWeird
 
 -- | Hash a filepath so that two filepaths with the same contents have the same hash
 hashFilePath :: AbsP -> IO HashDigest
@@ -65,7 +61,7 @@ hashFilePath fp = do
         Nonexistent -> return $ HashDigest $ hash ()
 
 hashFile :: AbsP -> IO HashDigest
-hashFile fp = (HashDigest . hash) <$> SB.readFile (toPath fp)
+hashFile fp = HashDigest . hash <$> SB.readFile (toPath fp)
 
 hashDirectory :: AbsP -> IO HashDigest
 hashDirectory fp = do

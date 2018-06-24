@@ -1,6 +1,6 @@
 module SuperUserSpark.Deployer.Internal where
 
-import Import hiding ((</>))
+import Import
 
 import Data.Text (pack)
 import System.FilePath.Posix
