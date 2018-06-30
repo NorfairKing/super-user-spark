@@ -5,8 +5,7 @@ module SuperUserSpark.Bake.Internal where
 import Import
 
 import Control.Exception (try)
-import System.FilePath
-       (isAbsolute, replaceDirectory, takeDirectory)
+import System.FilePath (isAbsolute, replaceDirectory, takeDirectory)
 
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
@@ -17,11 +16,10 @@ bakeDeployments = mapM bakeDeployment
 bakeDeployment :: RawDeployment -> SparkBaker BakedDeployment
 bakeDeployment Deployment {..} = do
     d <- bakeDirections deploymentDirections
-    pure $
-        Deployment {deploymentDirections = d, deploymentKind = deploymentKind}
+    pure Deployment {deploymentDirections = d, deploymentKind = deploymentKind}
 
-bakeDirections :: DeploymentDirections FilePath
-               -> SparkBaker (DeploymentDirections AbsP)
+bakeDirections ::
+       DeploymentDirections FilePath -> SparkBaker (DeploymentDirections AbsP)
 bakeDirections (Directions srcs dst) =
     Directions <$> mapM bakeFilePath srcs <*> bakeFilePath dst
 
@@ -37,9 +35,8 @@ bakeFilePath fp = do
     env <- asks bakeEnvironment
     root <- asks bakeRoot
     case complete env fp of
-        Left err -> throwError $ BakeError $ err
-        Right cp -> do
-            if isAbsolute cp
+        Left err -> throwError $ BakeError err
+        Right cp -> if isAbsolute cp
                 then case parseAbsFile cp of
                          Left err -> throwError $ BakeError $ show err
                          Right af -> pure $ AbsP af
@@ -72,17 +69,17 @@ parseId fp =
   where
     go :: FilePath -> [ID]
     go [] = []
-    go ('$':'(':rest) = (Var id_) : (go next)
+    go ('$':'(':rest) = Var id_ : go next
       where
-        (id_, (')':next)) = break (\c -> c == ')') rest
+        (id_, ')':next) = break (== ')') rest
     go (s:ss) =
         case go ss of
-            (Plain str):r -> (Plain (s : str)) : r
-            r -> (Plain [s]) : r
+            Plain str:r -> Plain (s : str) : r
+            r -> Plain [s] : r
 
 replaceId :: Environment -> ID -> Either String FilePath
 replaceId _ (Plain str) = return str
-replaceId e (Var str) = do
+replaceId e (Var str) =
     case lookup str e of
         Nothing ->
             Left $

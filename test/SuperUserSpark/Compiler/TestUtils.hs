@@ -92,4 +92,4 @@ shouldResultInState c s d es = do
 
 -- Filepath utils
 containsNewlineCharacter :: String -> Bool
-containsNewlineCharacter f = any (\c -> elem c f) ['\n', '\r']
+containsNewlineCharacter f = any (`elem` f) ['\n', '\r']

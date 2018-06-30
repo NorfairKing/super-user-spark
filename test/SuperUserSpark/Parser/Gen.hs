@@ -32,7 +32,7 @@ generateWhiteSpace =
     oneof [generateTab, generateSpace, generateLineFeed, generateCarriageReturn]
 
 generateWords :: Gen String
-generateWords = fmap unwords $ listOf1 generateWord
+generateWords = unwords <$> listOf1 generateWord
 
 generateEol :: Gen String
 generateEol = elements ["\n", "\r", "\r\n"]
@@ -52,12 +52,12 @@ generateIdentifier = oneof [generatePlainIdentifier, generateQuotedIdentifier]
 generateQuotedIdentifier :: Gen (String, String)
 generateQuotedIdentifier = do
     w <- generateWord
-    return $ ("\"" ++ w ++ "\"", w)
+    return ("\"" ++ w ++ "\"", w)
 
 generatePlainIdentifier :: Gen (String, String)
 generatePlainIdentifier = do
     w <- generateWord
-    return $ (w, w)
+    return (w, w)
 
 generateFilePath :: Gen (FilePath, FilePath)
 generateFilePath =

@@ -11,7 +11,7 @@ initialState =
     CompilerState
     { stateDeploymentKindLocalOverride = Nothing
     , stateInto = ""
-    , stateOutof_prefix = []
+    , stateOutofPrefix = []
     }
 
 addDeployment :: RawDeployment -> InternalCompiler ()
@@ -28,10 +28,10 @@ resolvePrefix :: CompilerPrefix -> [FilePath]
 resolvePrefix [] = []
 resolvePrefix [Literal s] = [s]
 resolvePrefix [Alts ds] = ds
-resolvePrefix ((Literal s):ps) = do
+resolvePrefix (Literal s:ps) = do
     rest <- resolvePrefix ps
     return $ s </> rest
-resolvePrefix ((Alts as):ps) = do
+resolvePrefix (Alts as:ps) = do
     a <- as
     rest <- resolvePrefix ps
     return $ a </> rest

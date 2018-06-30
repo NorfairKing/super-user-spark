@@ -20,7 +20,7 @@ data DiagnoseAssignment = DiagnoseAssignment
 
 instance Validity DiagnoseAssignment
 
-data DiagnoseSettings = DiagnoseSettings
+newtype DiagnoseSettings = DiagnoseSettings
     { diagnoseBakeSettings :: BakeSettings
     } deriving (Show, Eq, Generic)
 
@@ -52,7 +52,7 @@ instance Monoid HashDigest where
 instance Hashable HashDigest
 
 instance ToJSON HashDigest where
-    toJSON (HashDigest i) = toJSON $ (printf "%016x" i :: String)
+    toJSON (HashDigest i) = toJSON (printf "%016x" i :: String)
 
 data Diagnostics
     = Nonexistent

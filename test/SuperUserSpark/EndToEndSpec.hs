@@ -33,7 +33,7 @@ regularWorkflowSpec = do
     let teardown = removeDirectoryRecursive sandbox
     let rsc = here </> "test_resources" </> "end-to-end"
     beforeAll_ setup $
-        afterAll_ teardown $ do
+        afterAll_ teardown $
             describe "standard bash card test" $ do
                 let bashrsc = rsc </> "bash.sus"
                 let bashrscres = rsc </> "bash.sus.res"
@@ -48,11 +48,11 @@ regularWorkflowSpec = do
                                 P.writeFile "bash_profile" "bash_profile"
                 let down = do
                         removeFile cardfile
-                        withCurrentDirectory sandbox $ do
+                        withCurrentDirectory sandbox $
                             removeDirectoryRecursive "bash"
                 beforeAll_ up $
                     afterAll_ down $ do
-                        it "parses correcty" $ do
+                        it "parses correcty" $
                             withCurrentDirectory sandbox $
                                 withArgs ["parse", cardfile] spark `shouldReturn`
                                 ()
@@ -66,7 +66,7 @@ regularWorkflowSpec = do
                             actual <- P.readFile outfile
                             expected <- P.readFile bashrscres
                             unless (actual == expected) $ expectationFailure $ unlines ["Expected and actual differ:", expected, actual]
-                        it "checks without exceptions" $ do
+                        it "checks without exceptions" $
                             withCurrentDirectory sandbox $
                                 withArgs ["check", cardfile] spark `shouldReturn`
                                 ()
