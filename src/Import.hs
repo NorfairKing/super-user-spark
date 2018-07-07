@@ -2,7 +2,7 @@ module Import
     ( module X
     ) where
 
-import Prelude as X hiding (readFile, appendFile, writeFile, putStr, putStrLn)
+import Prelude as X hiding (appendFile)
 
 import Control.Arrow as X
 import Data.Maybe as X
@@ -10,7 +10,6 @@ import GHC.Generics as X
 import System.Exit as X
 import Text.Read as X (readEither)
 
-import Data.IOString as X
 import Path as X
 import Path.IO as X
 

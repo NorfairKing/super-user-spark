@@ -18,7 +18,7 @@ shouldNotCompileDir = $(mkRelDir "shouldNotCompileDir")
 
 concerningContents :: (Path Abs File -> String -> SpecWith a)
                    -> (Path Abs File -> SpecWith a)
-concerningContents func file = (runIO $ readFile file) >>= func file
+concerningContents func file = (runIO . readFile $ toFilePath file) >>= func file
 
 forFileInDirss :: [Path Abs Dir] -> (Path Abs File -> SpecWith a) -> SpecWith a
 forFileInDirss [] _ = return ()
@@ -31,3 +31,4 @@ forFileInDirss dirs func =
 
 pend :: SpecWith ()
 pend = it "is still missing some tests" pending
+

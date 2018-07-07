@@ -6,7 +6,6 @@ module SuperUserSpark.Utils where
 import Import
 
 import Data.List (isInfixOf)
-import qualified System.Directory as D (createDirectoryIfMissing)
 
 incase
     :: MonadReader c m

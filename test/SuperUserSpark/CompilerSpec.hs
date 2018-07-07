@@ -3,7 +3,7 @@
 
 module SuperUserSpark.CompilerSpec where
 
-import TestImport
+import TestImport hiding ((<.>))
 
 import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)

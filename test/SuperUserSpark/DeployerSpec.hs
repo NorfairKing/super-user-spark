@@ -67,7 +67,7 @@ cleanSpec = do
                     withCurrentDir sandbox $ do
                         let file = sandbox </> $(mkRelFile "test.txt")
                         let fp = AbsP file
-                        writeFile file "This is a test"
+                        writeFile (toFilePath file) "This is a test"
                         diagnoseFp fp `shouldReturn` IsFile
                         clean c $ CleanFile file
                         diagnoseFp fp `shouldReturn` IsFile
@@ -80,7 +80,7 @@ cleanSpec = do
                     withCurrentDir sandbox $ do
                         let file = sandbox </> $(mkRelFile "test.txt")
                         let fp = AbsP file
-                        writeFile file "This is a test"
+                        writeFile (toFilePath file) "This is a test"
                         diagnoseFp fp `shouldReturn` IsFile
                         clean c $ CleanFile file
                         diagnoseFp fp `shouldReturn` Nonexistent
@@ -119,7 +119,7 @@ cleanSpec = do
                         let link_' = AbsP link_
                         let file_ = sandbox </> $(mkRelFile "testfile")
                         let file_' = AbsP file_
-                        writeFile file_ "This is a test"
+                        writeFile (toFilePath file_) "This is a test"
                         createSymbolicLink (toFilePath file_) (toFilePath link_)
                         diagnoseFp link_' `shouldReturn` IsLinkTo file_'
                         clean c $ CleanLink link_
@@ -138,7 +138,7 @@ cleanSpec = do
                         let link_' = AbsP link_
                         let file_ = sandbox </> $(mkRelFile "testfile")
                         let file_' = AbsP file_
-                        writeFile file_ "This is a test"
+                        writeFile (toFilePath file_) "This is a test"
                         createSymbolicLink (toFilePath file_) (toFilePath link_)
                         diagnoseFp link_' `shouldReturn` IsLinkTo file_'
                         clean c $ CleanLink link_
@@ -178,7 +178,7 @@ deploymentSpec = do
                         let src' = AbsP src
                         let dst = sandbox </> $(mkRelFile "testcopy")
                         let dst' = AbsP dst
-                        writeFile src "This is a file."
+                        writeFile (toFilePath src) "This is a file."
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test
@@ -224,7 +224,7 @@ deploymentSpec = do
                         let dst' = AbsP dst
                         diagnoseFp src' `shouldReturn` Nonexistent
                         diagnoseFp dst' `shouldReturn` Nonexistent
-                        writeFile src "This is a test."
+                        writeFile (toFilePath src) "This is a test."
                         diagnoseFp src' `shouldReturn` IsFile
                         diagnoseFp dst' `shouldReturn` Nonexistent
                         -- Under test

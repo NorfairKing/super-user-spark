@@ -54,23 +54,22 @@ library
 
   build-depends:   
         base                  >= 4.9   && < 5
-      , aeson                 >= 0.11  && < 1.2
-      , aeson-pretty          >= 0.8   && < 0.9
-      , bytestring            >= 0.10  && < 0.11
-      , directory             >= 1.3   && < 1.4
-      , filepath              >= 1.4   && < 1.5
-      , mtl                   >= 2.2   && < 2.3
-      , optparse-applicative  >= 0.13  && < 0.14
-      , parsec                >= 3.1.9 && < 3.2
-      , process               >= 1.4   && < 1.6
-      , hashable              >= 1.2   && < 1.3
-      , text                  >= 1.2   && < 1.3
-      , unix                  >= 2.7   && < 2.8
-      , validity              >= 0.3.2 && < 0.4
-      , validity-path >= 0.1 && < 0.2
-      , path >= 0.5 && < 0.6
-      , path-io >= 1.2 && < 1.3
-      , iostring >= 0.0 && < 0.1
+      , aeson
+      , aeson-pretty
+      , bytestring
+      , directory
+      , filepath
+      , mtl
+      , optparse-applicative
+      , parsec
+      , process
+      , hashable
+      , text
+      , unix
+      , validity              >= 0.6.0.0
+      , validity-path
+      , path
+      , path-io
   default-language: Haskell2010
   default-extensions: NoImplicitPrelude
 
@@ -122,8 +121,7 @@ test-suite spark-tests
       , super-user-spark
       , hspec                 >= 2.2   && < 2.5
       , hspec-core            >= 2.2   && < 2.5
-      , HUnit                 >= 1.2   && < 1.6
-      , QuickCheck            >= 2.8   && < 2.10
+      , QuickCheck
       , aeson                 
       , aeson-pretty          
       , bytestring            
@@ -136,15 +134,14 @@ test-suite spark-tests
       , text                  
       , transformers          
       , unix                  
-      , genvalidity >= 0.3.1 && < 0.4
-      , genvalidity-path >= 0.1 && < 0.2
-      , genvalidity-hspec >= 0.3.1 && < 0.4
-      , genvalidity-hspec-aeson >= 0.0 && < 0.1
+      , genvalidity
+      , genvalidity-path
+      , genvalidity-hspec
+      , genvalidity-hspec-aeson
       , validity
       , validity-path
       , path
       , path-io
-      , iostring
       , hashable
   default-language:  Haskell2010
   default-extensions: NoImplicitPrelude

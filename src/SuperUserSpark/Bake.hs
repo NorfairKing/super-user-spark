@@ -17,6 +17,7 @@ module SuperUserSpark.Bake where
 import Import
 
 import qualified Data.Aeson.Encode.Pretty as JSON
+import qualified Data.ByteString.Lazy.Char8 as LB
 import System.Environment (getEnvironment)
 import System.FilePath (takeExtension)
 
@@ -57,9 +58,7 @@ parseBakeCardReference s =
              parseStrongCardFileReference f)
         _ -> pure $ Left $ unwords ["Could not parse card reference from:", s]
 
-deriveBakeSettings :: BakeCardReference
-                   -> BakeFlags
-                   -> IO (Either String BakeSettings)
+deriveBakeSettings :: BakeCardReference -> BakeFlags -> IO (Either String BakeSettings)
 deriveBakeSettings bcr BakeFlags {..} =
     BakeSettings (rootOf bcr) <$$> (Right <$> getEnvironment) <**>
     deriveCompileSettings bakeCompileFlags
@@ -87,7 +86,7 @@ bakeByCardRef :: BakeCardReference -> SparkBaker ()
 bakeByCardRef bakeCardReference = do
     deps <- compileBakeCardRef bakeCardReference
     bdeps <- bakeDeployments deps
-    putStrLn $ JSON.encodePretty bdeps
+    liftIO . LB.putStrLn $ JSON.encodePretty bdeps
 
 compileBakeCardRef :: BakeCardReference -> SparkBaker [RawDeployment]
 compileBakeCardRef (BakeCardCompiled fp) = bakerCompile $ inputCompiled fp

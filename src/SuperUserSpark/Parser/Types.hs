@@ -23,4 +23,4 @@ newtype ParseError =
     deriving (Show, Eq, Generic)
 
 instance Validity ParseError where
-    isValid (ParseError _) = True
+    validate = trivialValidation
