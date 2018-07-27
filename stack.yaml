@@ -2,7 +2,6 @@ resolver: lts-11.7
 packages:
 - '.'
 extra-deps:
-- QuickCheck-2.9.2
 - validity-0.7.0.0
 - validity-path-0.3.0.1
 - genvalidity-0.5.1.0

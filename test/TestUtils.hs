@@ -31,4 +31,3 @@ forFileInDirss dirs func =
 
 pend :: SpecWith ()
 pend = it "is still missing some tests" pending
-
