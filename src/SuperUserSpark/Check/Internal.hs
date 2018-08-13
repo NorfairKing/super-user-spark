@@ -7,7 +7,6 @@ import Data.Maybe (catMaybes)
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Diagnose.Types
 

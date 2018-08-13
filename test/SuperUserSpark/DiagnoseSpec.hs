@@ -99,7 +99,7 @@ diagnoseSpec = do
                     let link = sandbox </> $(mkRelFile "link")
                     let link' = AbsP link
                     expect "before" [(file', Nonexistent), (link', Nonexistent)]
-                    writeFile file "This is a test"
+                    writeFile (toFilePath file) "This is a test"
                     expect
                         "after file creation"
                         [(file', IsFile), (link', Nonexistent)]
@@ -137,7 +137,7 @@ diagnoseSpec = do
                     forAll (absFileIn sandbox) $ \(file, file') -> do
                         diagnoseFp file' `shouldReturn` Nonexistent
                         ensureDir $ parent file
-                        writeFile file "This is a test"
+                        writeFile (toFilePath file) "This is a test"
                         diagnoseFp file' `shouldReturn` IsFile
                         removeFile file
                         diagnoseFp file' `shouldReturn` Nonexistent
@@ -154,7 +154,7 @@ diagnoseSpec = do
                             expect
                                 "before"
                                 [(file', Nonexistent), (link', Nonexistent)]
-                            writeFile file "This is a test"
+                            writeFile (toFilePath file) "This is a test"
                             expect
                                 "after file creation"
                                 [(file', IsFile), (link', Nonexistent)]
@@ -257,7 +257,8 @@ tooManyFilesTest = do
     let setupALotOfFiles = do
             forM_ [1 .. aLot] $ \i -> do
                 f <- parseRelFile $ "file" ++ show i
-                writeFile (sandbox </> f) $ "This is file " ++ show i ++ ".\n"
+                writeFile (toFilePath $ sandbox </> f) $
+                    "This is file " ++ show i ++ ".\n"
     beforeAll_ setup $
         afterAll_ teardown $ do
             describe "hashFilePath" $ do

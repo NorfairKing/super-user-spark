@@ -13,17 +13,14 @@ instance GenUnchecked CompileAssignment
 instance GenValid CompileAssignment where
     genValid = CompileAssignment <$> genValid <*> genValid <*> genValid
 
-
 instance GenUnchecked StrongCardFileReference
 
 instance GenValid StrongCardFileReference
-
 
 instance GenUnchecked CompileSettings
 
 instance GenValid CompileSettings where
     genValid = CompileSettings <$> genValid <*> genValid
-
 
 instance GenUnchecked a =>
          GenUnchecked (Deployment a) where
@@ -44,7 +41,6 @@ instance GenUnchecked PrefixPart
 
 instance GenValid PrefixPart
 
-
 instance GenUnchecked CompilerState
 
 instance GenValid CompilerState
@@ -55,6 +51,6 @@ instance GenUnchecked CompileError where
             [ PreCompileErrors <$> genUnchecked
             , DuringCompilationError <$> genUnchecked
             ]
+    shrinkUnchecked _ = []
 
 instance GenValid CompileError
-

@@ -20,6 +20,7 @@ import Import hiding ((</>))
 import Control.Exception (try)
 import Data.Aeson (eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePretty)
+import qualified Data.ByteString.Lazy.Char8 as LB
 import Data.List (find)
 
 import SuperUserSpark.Compiler.Internal
@@ -187,12 +188,12 @@ outputCompiled out deps =
     liftIO $ do
         let bs = encodePretty deps
         case out of
-            Nothing -> putStrLn bs
-            Just fp -> writeFile fp bs
+            Nothing -> LB.putStrLn bs
+            Just fp -> LB.writeFile (toFilePath fp) bs
 
 inputCompiled :: Path Abs File -> ImpureCompiler [RawDeployment]
 inputCompiled fp = do
-    bs <- readFile fp
+    bs <- liftIO . LB.readFile $ toFilePath fp
     case eitherDecode bs of
         Left err ->
             throwError $

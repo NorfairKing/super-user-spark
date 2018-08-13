@@ -2,14 +2,10 @@ module SuperUserSpark.Deployer.Internal where
 
 import Import
 
-import Data.Text (pack)
-import System.FilePath.Posix
-       (dropFileName, dropTrailingPathSeparator)
+import System.FilePath.Posix (dropTrailingPathSeparator)
 import System.Posix.Files (createSymbolicLink, removeLink)
 
-import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
-import SuperUserSpark.CoreTypes
 import SuperUserSpark.Deployer.Types
 import SuperUserSpark.Utils
 

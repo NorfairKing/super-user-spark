@@ -84,7 +84,7 @@ bakeSpec =
                         let to = $(mkRelDir "to") </> file
                         withCurrentDir sandbox $ do
                             ensureDir $ parent $ sandbox </> from
-                            writeFile (sandbox </> from) "contents"
+                            writeFile (toFilePath $ sandbox </> from) "contents"
                             ensureDir $ parent $ sandbox </> to
                             createSymbolicLink
                                 (toFilePath $ sandbox </> from)
@@ -93,7 +93,9 @@ bakeSpec =
                                 runReaderT
                                     (runExceptT f)
                                     (defaultBakeSettings
-                                     {bakeRoot = sandbox, bakeEnvironment = []})
+                                    { bakeRoot = sandbox
+                                    , bakeEnvironment = []
+                                    })
                         runBake (bakeFilePath (toFilePath to)) `shouldReturn`
                             (Right $ AbsP $ sandbox </> to)
                         runBake (bakeFilePath (toFilePath from)) `shouldReturn`
@@ -107,19 +109,25 @@ bakeSpec =
                         let to = todir </> file
                         withCurrentDir sandbox $ do
                             ensureDir $ parent $ sandbox </> from
-                            writeFile (sandbox </> from) "from contents"
+                            writeFile
+                                (toFilePath $ sandbox </> from)
+                                "from contents"
                             ensureDir $ parent $ sandbox </> todir
                             createSymbolicLink
                                 (FP.dropTrailingPathSeparator $
                                  toFilePath $ sandbox </> fromdir)
                                 (FP.dropTrailingPathSeparator $
                                  toFilePath $ sandbox </> todir)
-                            writeFile (sandbox </> to) "to contents"
+                            writeFile
+                                (toFilePath $ sandbox </> to)
+                                "to contents"
                         let runBake f =
                                 runReaderT
                                     (runExceptT f)
                                     (defaultBakeSettings
-                                     {bakeRoot = sandbox, bakeEnvironment = []})
+                                    { bakeRoot = sandbox
+                                    , bakeEnvironment = []
+                                    })
                         runBake (bakeFilePath (toFilePath to)) `shouldReturn`
                             (Right $ AbsP $ sandbox </> from)
                         runBake (bakeFilePath (toFilePath from)) `shouldReturn`

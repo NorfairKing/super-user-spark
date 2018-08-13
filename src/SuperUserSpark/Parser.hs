@@ -39,4 +39,4 @@ formatParseError :: ParseError -> String
 formatParseError (ParseError pe) = show pe
 
 parseFile :: Path Abs File -> IO (Either ParseError SparkFile)
-parseFile file = (left ParseError . parseCardFile file) <$> readFile file
+parseFile file = (left ParseError . parseCardFile file) <$> readFile (toFilePath file)
