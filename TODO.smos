@@ -1,0 +1,15 @@
+- entry: Features
+  forest:
+  - header: A good story about storing secrets
+    contents: The pipe deployment idea may be useful already there.
+  - Refactor the parsing of 'Maybe DeploymentKind' to a seperate type for that
+  - Implement completions for the relevant arguments
+  - Parse should be able to output the AST, and compile should be able to accept it.
+  - Show all files in the depot that are not configured to be deployed
+- entry: Bugs
+  forest:
+  - It says deployment is possible in cases that deployment is not possible
+  - the replace flag has a capital D
+  - Figure out ahead of time that things aren't going to work if there are conflicting
+    destinations
+  - ! 'removeLink: does not exist bug'
