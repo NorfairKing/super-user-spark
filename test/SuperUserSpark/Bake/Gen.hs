@@ -10,25 +10,29 @@ import SuperUserSpark.Compiler.Gen ()
 instance GenUnchecked BakeAssignment
 
 instance GenValid BakeAssignment where
-    genValid = BakeAssignment <$> genValid <*> genValid
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked BakeCardReference
 
-instance GenValid BakeCardReference
+instance GenValid BakeCardReference where
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked BakeSettings
 
 instance GenValid BakeSettings where
-    genValid = BakeSettings <$> genValid <*> genValid <*> genValid
-
-instance GenUnchecked BakeError
-
-instance GenValid BakeError
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked AbsP
 
-instance GenValid AbsP
+instance GenValid AbsP where
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked ID
 
-instance GenValid ID
+instance GenValid ID where
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
