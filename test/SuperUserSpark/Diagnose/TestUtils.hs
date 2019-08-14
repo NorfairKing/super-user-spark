@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module SuperUserSpark.Diagnose.TestUtils where
 
 import TestImport

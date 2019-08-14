@@ -26,7 +26,7 @@ succeedsWithLeftover :: Parser a -> String -> Bool
 succeedsWithLeftover parser input = isRight $ parseWithoutSource parser input
 
 succeedsAnywhere :: Parser a -> String -> Bool
-succeedsAnywhere p s = or $ map (succeedsWithLeftover p) (tails s)
+succeedsAnywhere p s = any (succeedsWithLeftover p) $ tails s
   where
     tails :: [a] -> [[a]]
     tails [] = [[]]
@@ -51,4 +51,4 @@ parseShouldBe parser input result =
     parseFromSource parser testInputSource input `shouldBe` result
 
 parseWithoutSource :: Parser a -> String -> Either ParseError a
-parseWithoutSource parser input = parseFromSource parser testInputSource input
+parseWithoutSource parser = parseFromSource parser testInputSource

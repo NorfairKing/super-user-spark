@@ -15,7 +15,7 @@ data Dispatch
 
 instance Validity Dispatch
 
-data ParseArgs = ParseArgs
+newtype ParseArgs = ParseArgs
     { parseFilePath :: FilePath
     } deriving (Show, Eq, Generic)
 
@@ -43,7 +43,7 @@ data BakeArgs = BakeArgs
 
 instance Validity BakeArgs
 
-data BakeFlags = BakeFlags
+newtype BakeFlags = BakeFlags
     { bakeCompileFlags :: CompileFlags
     } deriving (Show, Eq, Generic)
 
@@ -56,7 +56,7 @@ data DiagnoseArgs = DiagnoseArgs
 
 instance Validity DiagnoseArgs
 
-data DiagnoseFlags = DiagnoseFlags
+newtype DiagnoseFlags = DiagnoseFlags
     { diagnoseBakeFlags :: BakeFlags
     } deriving (Show, Eq, Generic)
 
@@ -69,7 +69,7 @@ data CheckArgs = CheckArgs
 
 instance Validity CheckArgs
 
-data CheckFlags = CheckFlags
+newtype CheckFlags = CheckFlags
     { checkDiagnoseFlags ::DiagnoseFlags
     } deriving (Show, Eq, Generic)
 

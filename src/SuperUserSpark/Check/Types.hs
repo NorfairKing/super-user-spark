@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module SuperUserSpark.Check.Types where
 
@@ -15,7 +14,7 @@ data CheckAssignment = CheckAssignment
 
 instance Validity CheckAssignment
 
-data CheckSettings = CheckSettings
+newtype CheckSettings = CheckSettings
     { checkDiagnoseSettings :: DiagnoseSettings
     } deriving (Show, Eq, Generic)
 

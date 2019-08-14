@@ -18,6 +18,7 @@ module SuperUserSpark.Diagnose
 import Import
 
 import qualified Data.Aeson.Encode.Pretty as JSON
+import qualified Data.ByteString.Lazy.Char8 as LB
 
 import SuperUserSpark.Bake
 import SuperUserSpark.Bake.Internal
@@ -69,7 +70,7 @@ diagnoseByCardRef checkCardReference = do
         diagnoserBake $
         compileBakeCardRef checkCardReference >>= bakeDeployments
     ddeps <- liftIO $ diagnoseDeployments deps
-    putStrLn $ JSON.encodePretty ddeps
+    liftIO . LB.putStrLn $ JSON.encodePretty ddeps
 
 diagnoserBake :: SparkBaker a -> SparkDiagnoser a
 diagnoserBake =

@@ -7,7 +7,6 @@ import Data.Maybe (catMaybes)
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Check.Types
 import SuperUserSpark.Compiler.Types
-import SuperUserSpark.Constants
 import SuperUserSpark.CoreTypes
 import SuperUserSpark.Diagnose.Types
 
@@ -39,7 +38,7 @@ impossibleDeployment (ImpossibleDeployment _) = True
 impossibleDeployment _ = False
 
 dirtyDeployment :: DeploymentCheckResult -> Bool
-dirtyDeployment (DirtySituation _ _ _) = True
+dirtyDeployment DirtySituation{} = True
 dirtyDeployment _ = False
 
 deploymentReadyToDeploy :: DeploymentCheckResult -> Bool
@@ -227,11 +226,11 @@ formatDeploymentChecks dss =
                  then "Deployment is impossible."
                  else "Deployment is possible."
   where
-    output = catMaybes $ map formatDeploymentCheck dss
+    output = mapMaybe formatDeploymentCheck dss
 
 formatDeploymentCheck :: (DiagnosedDeployment, DeploymentCheckResult)
                       -> Maybe String
-formatDeploymentCheck (_, (ReadyToDeploy is)) =
+formatDeploymentCheck (_, ReadyToDeploy is) =
     Just $ "READY: " ++ formatInstruction is
 formatDeploymentCheck (_, DeploymentDone) = Nothing
 formatDeploymentCheck (d, ImpossibleDeployment ds) =
@@ -244,7 +243,7 @@ formatDeploymentCheck (d, ImpossibleDeployment ds) =
         , unlines ds
         , "\n"
         ]
-formatDeploymentCheck (d, (DirtySituation str is c)) =
+formatDeploymentCheck (d, DirtySituation str is c) =
     Just $
     concat
         [ "DIRTY: "
@@ -262,13 +261,13 @@ formatDeploymentCheck (d, (DirtySituation str is c)) =
 
 formatInstruction :: Instruction -> String
 formatInstruction (CopyFile from to) =
-    unwords $ [toFilePath from, "c->", toFilePath to]
+    unwords [toFilePath from, "c->", toFilePath to]
 formatInstruction (CopyDir from to) =
-    unwords $ [toFilePath from, "c->", toFilePath to]
+    unwords [toFilePath from, "c->", toFilePath to]
 formatInstruction (LinkFile from to) =
-    unwords $ [toFilePath from, "l->", toFilePath to]
+    unwords [toFilePath from, "l->", toFilePath to]
 formatInstruction (LinkDir from to) =
-    unwords $ [toFilePath from, "l->", toFilePath to]
+    unwords [toFilePath from, "l->", toFilePath to]
 
 formatCleanupInstruction :: CleanupInstruction -> String
 formatCleanupInstruction (CleanFile fp) = "remove file " ++ toFilePath fp

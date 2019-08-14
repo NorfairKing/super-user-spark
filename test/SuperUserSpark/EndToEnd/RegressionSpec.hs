@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
 
 module SuperUserSpark.EndToEnd.RegressionSpec
     ( spec
@@ -15,8 +16,7 @@ import SuperUserSpark
 import SuperUserSpark.Utils
 
 spec :: Spec
-spec = do
-    linkThenCopySpec
+spec = linkThenCopySpec
 
 linkThenCopySpec :: Spec
 linkThenCopySpec = do
@@ -25,40 +25,39 @@ linkThenCopySpec = do
     let setup = ensureDir sandbox
     let teardown = removeDirRecur sandbox
     beforeAll_ setup $
-        afterAll_ teardown $ do
-            describe "link then copy regression" $ do
-                let runSpark args = do
-                        putStrLn $ unwords $ "spark" : args
-                        withArgs args spark
-                it
-                    "ensures that deploy fails when there is already a link that points to the file that is being copied." $
-                    withCurrentDir sandbox $ do
-                        let cf = sandbox </> $(mkRelFile "cardfile.sus")
-                        let file = $(mkRelFile "file")
-                        let from = sandbox </> $(mkRelDir "from") </> file
-                        let to = sandbox </> $(mkRelDir "to") </> file
+        afterAll_ teardown $
+        describe "link then copy regression" $ do
+            let runSpark args = do
+                    putStrLn . unwords $ "spark" : args
+                    withArgs args spark
+            it
+                "ensures that deploy fails when there is already a link that points to the file that is being copied." $
+                withCurrentDir sandbox $ do
+                    let cf = sandbox </> $(mkRelFile "cardfile.sus")
+                    let file = $(mkRelFile "file")
+                    let from = sandbox </> $(mkRelDir "from") </> file
+                    let to = sandbox </> $(mkRelDir "to") </> file
                         -- Set up the file
-                        ensureDir (parent from)
-                        writeFile from "contents"
+                    ensureDir (parent from)
+                    writeFile (toFilePath from) "contents"
+                    let setUpCardFile cf = do
+                            runSpark ["parse", toFilePath cf]
+                            runSpark ["compile", toFilePath cf]
+                            runSpark ["bake", toFilePath cf]
+                            runSpark ["check", toFilePath cf]
+                    writeFile (toFilePath from) "contents"
                         -- Set up the first card file
-                        writeFile
-                            cf
-                            "card link { kind link; into to; outof from; file }"
-                        runSpark ["parse", toFilePath cf]
-                        runSpark ["compile", toFilePath cf]
-                        runSpark ["bake", toFilePath cf]
-                        runSpark ["check", toFilePath cf]
-                        runSpark ["deploy", toFilePath cf]
+                    writeFile
+                        (toFilePath cf)
+                        "card link { kind link; into to; outof from; file }"
+                    setUpCardFile cf
+                    runSpark ["deploy", toFilePath cf]
                         -- Set up the second card file
-                        writeFile
-                            cf
-                            "card link { kind copy; into to; outof from; file }"
-                        runSpark ["parse", toFilePath cf]
-                        runSpark ["compile", toFilePath cf]
-                        runSpark ["bake", toFilePath cf]
-                        runSpark ["check", toFilePath cf]
-                        runSpark ["deploy", toFilePath cf] `shouldThrow`
-                            (\e ->
-                                 case e of
-                                     ExitFailure _ -> True
-                                     _ -> False)
+                    writeFile
+                        (toFilePath cf)
+                        "card link { kind copy; into to; outof from; file }"
+                    setUpCardFile cf
+                    runSpark ["deploy", toFilePath cf] `shouldThrow`
+                        (\case
+                             ExitFailure _ -> True
+                             _ -> False)

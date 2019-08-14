@@ -3,7 +3,7 @@
 
 module SuperUserSpark.CompilerSpec where
 
-import TestImport
+import TestImport hiding ((<.>))
 
 import Data.Either (isLeft, isRight)
 import Data.List (isPrefixOf)
@@ -192,7 +192,7 @@ defaultCompilerState =
     CompilerState
     { stateDeploymentKindLocalOverride = Nothing
     , stateInto = ""
-    , stateOutof_prefix = []
+    , stateOutofPrefix = []
     }
 
 instanceSpec :: Spec
@@ -270,7 +270,7 @@ singleCompileDecSpec =
             it "adds the given directory to the outof state" $ do
                 forAll validFp $ \fp ->
                     shouldState (OutofDir fp) $
-                    s {stateOutof_prefix = [Literal fp]}
+                    s {stateOutofPrefix = [Literal fp]}
             pend
         describe "DeployKindOverride" $ do
             it "modifies the internal deployment kind override" $ do
@@ -287,7 +287,7 @@ singleCompileDecSpec =
                 "adds an alternatives prefix to the outof prefix in the compiler state" $ do
                 forAll (listOf validFilePath) $ \fps ->
                     shouldState (Alternatives fps) $
-                    s {stateOutof_prefix = [Alts fps]}
+                    s {stateOutofPrefix = [Alts fps]}
             pend
 
 runDefaultImpureCompiler :: ImpureCompiler a -> IO (Either CompileError a)

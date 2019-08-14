@@ -10,7 +10,7 @@ module SuperUserSpark.Check
     , checkDeployments
     ) where
 
-import Import
+import Import hiding (check)
 
 import SuperUserSpark.Bake
 import SuperUserSpark.Bake.Internal

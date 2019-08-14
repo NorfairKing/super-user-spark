@@ -1,10 +1,11 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module SuperUserSpark.Diagnose.Types where
 
-import Import
+import Import hiding ((<>))
 
 import Data.Aeson
 import Data.Hashable
@@ -13,6 +14,10 @@ import Text.Printf
 import SuperUserSpark.Bake.Types
 import SuperUserSpark.Compiler.Types
 
+#if __GLASGOW_HASKELL__ < 840
+import Data.Semigroup (Semigroup, (<>))
+#endif
+
 data DiagnoseAssignment = DiagnoseAssignment
     { diagnoseCardReference :: BakeCardReference
     , diagnoseSettings :: DiagnoseSettings
@@ -20,7 +25,7 @@ data DiagnoseAssignment = DiagnoseAssignment
 
 instance Validity DiagnoseAssignment
 
-data DiagnoseSettings = DiagnoseSettings
+newtype DiagnoseSettings = DiagnoseSettings
     { diagnoseBakeSettings :: BakeSettings
     } deriving (Show, Eq, Generic)
 
@@ -45,14 +50,17 @@ newtype HashDigest =
 
 instance Validity HashDigest
 
+instance Semigroup HashDigest where
+    HashDigest h1 <> HashDigest h2 = HashDigest $ h1 * 31 + h2
+
 instance Monoid HashDigest where
     mempty = HashDigest (hash ())
-    (HashDigest h1) `mappend` (HashDigest h2) = HashDigest $ h1 * 31 + h2
+    mappend = (<>)
 
 instance Hashable HashDigest
 
 instance ToJSON HashDigest where
-    toJSON (HashDigest i) = toJSON $ (printf "%016x" i :: String)
+    toJSON (HashDigest i) = toJSON (printf "%016x" i :: String)
 
 data Diagnostics
     = Nonexistent

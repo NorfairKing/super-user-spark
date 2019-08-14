@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module SuperUserSpark.Parser.Types where
@@ -7,7 +6,7 @@ import Import
 
 import qualified Text.Parsec as Parsec
 
-data ParseAssignment = ParseAssignment
+newtype ParseAssignment = ParseAssignment
     { fileToParse :: Path Abs File
     } deriving (Show, Eq, Generic)
 
@@ -24,4 +23,4 @@ newtype ParseError =
     deriving (Show, Eq, Generic)
 
 instance Validity ParseError where
-    isValid (ParseError _) = True
+    validate = trivialValidation

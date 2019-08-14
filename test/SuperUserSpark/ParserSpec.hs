@@ -288,30 +288,30 @@ declarationParserTests = do
         let pc = parseShouldSucceedAs card
         it "succeeds on this card with an empty name correctly" $ do
             pc "card \"\" {}" $ Card "" (Block [])
-        it "succeeds on this compressed empty cards" $ do
+        it "succeeds on this compressed empty cards" $
             forAll generateCardName $ \(a, e) ->
                 parseShouldSucceedAs card ("card" ++ a ++ "{}") $
                 Card e (Block [])
-        it "succeeds on empty cards with whitespace around the name" $ do
+        it "succeeds on empty cards with whitespace around the name" $
             forAll generateCardName $ \(a, e) ->
                 forAll (twice generateWhiteSpace) $ \(ws1, ws2) ->
                     parseShouldSucceedAs
                         card
                         ("card" ++ ws1 ++ a ++ ws2 ++ "{}") $
                     Card e (Block [])
-        it "succeeds on empty cards with whitespace between the brackets" $ do
+        it "succeeds on empty cards with whitespace between the brackets" $
             forAll generateCardName $ \(a, e) ->
                 forAll generateWhiteSpace $ \ws ->
                     parseShouldSucceedAs card ("card" ++ a ++ "{" ++ ws ++ "}") $
                     Card e (Block [])
-        it "fails on any card with an empty body" $ do
+        it "fails on any card with an empty body" $
             forAll generateCardName $ \(a, _) ->
                 forAll generateWhiteSpace $ \ws ->
                     shouldFail card ("card" ++ a ++ ws)
-        it "succeeds on this complicated example" $ do
+        it "succeeds on this complicated example" $
             parseShouldSucceedAs
                 card
-                ("card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}") $
+                "card complicated {\n  alternatives $(HOST) shared\n  hello l-> goodbye\n into $(HOME)\n  outof depot\n  spark card othercard\n  kind link\n  {\n    one c-> more\n    source -> destination\n    file\n  }\n}" $
                 Card "complicated" $
                 Block
                     [ Alternatives ["$(HOST)", "shared"]
@@ -327,12 +327,12 @@ declarationParserTests = do
                           ]
                     ]
     describe "declarations" $ do
-        it "succeeds for generated declarations'" $ do pending
+        it "succeeds for generated declarations'" pending
         let s = parseShouldSucceedAs declarations
-        it "succeeds for these cases" $ do
+        it "succeeds for these cases" $
             s "into dir;outof dir" [IntoDir "dir", OutofDir "dir"]
     describe "declaration" $ do
-        it "succeeds for generated declarations" $ do pending
+        it "succeeds for generated declarations" pending
         let s = parseShouldSucceedAs declaration
         it "succeeds for these cases" $ do
             s "into directory" (IntoDir "directory")
@@ -346,11 +346,11 @@ declarationParserTests = do
                      "iamthedestination"
                      (Just CopyDeployment))
     describe "block" $ do
-        it "succeeds for empty blocks" $ do
+        it "succeeds for empty blocks" $
             parseShouldSucceedAs block "{}" (Block [])
-        it "succeeds for a doubly nested empty block" $ do
+        it "succeeds for a doubly nested empty block" $
             parseShouldSucceedAs block "{{}}" (Block [Block []])
-        it "succeeds for a triply nested empty block" $ do
+        it "succeeds for a triply nested empty block" $
             parseShouldSucceedAs block "{{{}}}" (Block [Block [Block []]])
         let s = parseShouldSucceedAs block
         it "succeeds for these cases" $ do
@@ -361,7 +361,7 @@ declarationParserTests = do
                 "{\n    into \"~\"\n    \"xmonad\" -> \".xmonad\"\n}"
                 (Block [IntoDir "~", Deploy "xmonad" ".xmonad" Nothing])
     describe "sparkOff" $ do
-        it "succeeds for generated sparkOff declarations" $ do pending
+        it "succeeds for generated sparkOff declarations" pending
         let s f g =
                 parseShouldSucceedAs
                     sparkOff
@@ -372,7 +372,7 @@ declarationParserTests = do
             s "sparkcardname" "name"
             s "spark card \"name with spaces\"" "name with spaces"
     describe "intoDir" $ do
-        it "succeeds for generated into declarations" $ do
+        it "succeeds for generated into declarations" $
             forAll generateLineSpace $ \ls ->
                 forAll generateDirectory $ \(d, da) ->
                     parseShouldSucceedAs
@@ -385,7 +385,7 @@ declarationParserTests = do
             s "into\t.xmonad" ".xmonad"
             s "into ~" "~"
     describe "outOfDir" $ do
-        it "succeeds for generated outof declarations" $ do
+        it "succeeds for generated outof declarations" $
             forAll generateLineSpace $ \ls ->
                 forAll generateDirectory $ \(d, da) ->
                     parseShouldSucceedAs
@@ -396,30 +396,28 @@ declarationParserTests = do
         it "succeeds for these cases" $ do
             s "outof bash" "bash"
             s "outof\t.xmonad" ".xmonad"
-    describe "alternatives" $ do
-        it "succeeds for generated alternatives declarations with single spaces" $ do
+    describe "alternatives" $
+        it "succeeds for generated alternatives declarations with single spaces" $
             forAll (listOf1 generateDirectory) $ \ds ->
                 let (des, das) = unzip ds
                 in parseShouldSucceedAs
                        alternatives
-                       ("alternatives" ++ " " ++ intercalate " " des)
+                       ("alternatives" ++ " " ++ unwords des)
                        (Alternatives das)
     describe "deployment" $ do
         it "succeeds for short deployments" pending
         it "succeeds for long deployments" pending
     describe "shortDeployment" $ do
-        it "succeeds for any filepath with an identity deployment" $ do
-            property $ \f ->
-                succeeds filepath f ==>
+        it "succeeds for any filepath with an identity deployment" $
+            property $ \f -> succeeds filepath f ==>
                 parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
-        it "succeeds for generated filepaths with an identity deployment" $ do
+        it "succeeds for generated filepaths with an identity deployment" $
             forAll generateFilePath $ \(f, g) ->
                 parseShouldSucceedAs shortDeployment f (Deploy g g Nothing)
-        it "succeeds for any directory with an identity deployment" $ do
-            property $ \f ->
-                succeeds directory f ==>
+        it "succeeds for any directory with an identity deployment" $
+            property $ \f -> succeeds directory f ==>
                 parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
-        it "succeeds for generated directories with an identity deployment" $ do
+        it "succeeds for generated directories with an identity deployment" $
             forAll generateDirectory $ \(f, g) ->
                 parseShouldSucceedAs shortDeployment f (Deploy g g Nothing)
         let s f = parseShouldSucceedAs shortDeployment f (Deploy f f Nothing)
@@ -428,7 +426,7 @@ declarationParserTests = do
             s "xmonad.hs"
             s "/home/user/.bashrc"
     describe "longDeployment" $ do
-        it "succeeds for generated long deployments with quoted identifiers" $ do
+        it "succeeds for generated long deployments with quoted identifiers" $
             forAll generateDeploymentKindSymbol $ \dks ->
                 forAll generateLineSpace $ \ls1 ->
                     forAll generateLineSpace $ \ls2 ->
@@ -444,7 +442,7 @@ declarationParserTests = do
                                             (fp1 ++ ls1 ++ dks ++ ls2 ++ fp2)
                                             (Deploy fp1a fp2a dk)
         it
-            "succeeds for single-space-separated long deployments with gerenated plain identifiers" $ do
+            "succeeds for single-space-separated long deployments with gerenated plain identifiers" $
             pendingWith
                 "This would go wrong with plain identifiers they can end with \'l\' or \'c\'. Make sure to document this behaviour and write another test with plain identifiers."
         let s f g h i = parseShouldSucceedAs longDeployment f (Deploy g h i)
@@ -466,22 +464,21 @@ declarationParserTests = do
                 Nothing
     describe "deploymentKind" $ do
         let (-=>) = parseShouldSucceedAs deploymentKind
-        it "succeeds for the link deployment kind" $ do
+        it "succeeds for the link deployment kind" $
             "l->" -=> Just LinkDeployment
-        it "succeeds for the copy deployment kind" $ do
+        it "succeeds for the copy deployment kind" $
             "c->" -=> Just CopyDeployment
-        it "succeeds for the default deployment kind" $ do "->" -=> Nothing
-        it "fails for anything else" $ do
-            property $ \s ->
-                (not $ any (== s) ["l->", "c->", "->"]) ==>
+        it "succeeds for the default deployment kind" $ "->" -=> Nothing
+        it "fails for anything else" $ property $ \s ->
+            notElem s ["l->", "c->", "->"] ==>
                 shouldFail deploymentKind s
 
 cardReferenceParserTests :: Spec
 cardReferenceParserTests = do
-    describe "compilerCardReference" $ do pend
-    describe "deployerCardReference" $ do pend
-    describe "compiledCardReference" $ do pend
-    describe "cardReference" $ do pend
+    describe "compilerCardReference" pend
+    describe "deployerCardReference" pend
+    describe "compiledCardReference" pend
+    describe "cardReference" pend
     describe "cardNameReference" $ do
         pend
         let s f g =
@@ -498,7 +495,7 @@ cardReferenceParserTests = do
             s
                 "file card.sus name"
                 (CardFileReference "card.sus" $ Just $ CardNameReference "name")
-    describe "unprefixedCardFileReference" $ do pend
+    describe "unprefixedCardFileReference" pend
 
 parserBlackBoxTests :: Spec
 parserBlackBoxTests = do
@@ -509,15 +506,13 @@ parserBlackBoxTests = do
                     (testRecoursesDir </>)
                     [shouldParseDir, shouldCompileDir, shouldNotCompileDir]
         forFileInDirss dirs $
-            concerningContents $ \f contents -> do
-                it (toFilePath f) $
-                    parseCardFile f contents `shouldSatisfy` isRight
+            concerningContents $ \f contents -> it (toFilePath f) $
+                parseCardFile f contents `shouldSatisfy` isRight
     describe "Correct unsuccesfull parse examples" $ do
         let dirs = map (testRecoursesDir </>) [shouldNotParseDir]
-        forFileInDirss dirs $
-            concerningContents $ \f contents -> do
+        forFileInDirss dirs $ concerningContents $ \f contents ->
                 it (toFilePath f) $
-                    parseCardFile f contents `shouldSatisfy` isLeft
+                parseCardFile f contents `shouldSatisfy` isLeft
 
 toplevelParserTests :: Spec
 toplevelParserTests = do
@@ -525,4 +520,4 @@ toplevelParserTests = do
         it "Only ever produces valid SparkFile's" $
             validIfSucceeds2 parseCardFile
         pend
-    describe "resetPosition" $ do pend
+    describe "resetPosition" pend
