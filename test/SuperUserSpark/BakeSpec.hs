@@ -33,8 +33,6 @@ instanceSpec =
         genValidSpec @BakeCardReference
         eqSpec @BakeSettings
         genValidSpec @BakeSettings
-        eqSpec @BakeError
-        genValidSpec @BakeError
         eqSpec @BakedDeployment
         genValidSpec @BakedDeployment
         jsonSpecOnValid @BakedDeployment
@@ -134,9 +132,6 @@ bakeSpec =
                             (Right $ AbsP $ sandbox </> from)
         describe "defaultBakeSettings" $
             it "is valid" $ isValid defaultBakeSettings
-        describe "formatBakeError" $ do
-            it "only ever produces valid strings" $
-                producesValid formatBakeError
         describe "complete" $ do
             it "only ever produces a valid filepath" $ validIfSucceeds2 complete
             it

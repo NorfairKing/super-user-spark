@@ -47,8 +47,6 @@ instanceSpec = do
 checkSpec :: Spec
 checkSpec =
     parallel $ do
-        describe "formatCheckError" $
-            it "always produces valid strings" $ producesValid formatCheckError
         checkSingleSpec
         checkDeploymentSpec
         describe "formatDeploymentChecks" $

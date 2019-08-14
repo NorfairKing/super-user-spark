@@ -27,7 +27,6 @@ spec :: Spec
 spec = do
     parallel $ do
         instanceSpec
-        compileSpec
         singleCompileDecSpec
         precompileSpec
         compileUnitSpec
@@ -214,13 +213,7 @@ instanceSpec =
         genValidSpec @PrefixPart
         eqSpec @CompilerState
         genValidSpec @CompilerState
-        eqSpec @CompileError
-        genValidSpec @CompileError
 
-compileSpec :: Spec
-compileSpec = do
-    describe "formatCompileError" $
-        it "only produces valid strings" $ producesValid formatCompileError
 
 singleCompileDecSpec :: Spec
 singleCompileDecSpec =
