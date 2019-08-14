@@ -10,21 +10,17 @@ import SuperUserSpark.Deployer.Types
 instance GenUnchecked DeployAssignment
 
 instance GenValid DeployAssignment where
-    genValid = DeployAssignment <$> genValid <*> genValid
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked DeploySettings
 
 instance GenValid DeploySettings where
-    genValid =
-        DeploySettings <$> genValid <*> genValid <*> genValid <*> genValid
-
-
-instance GenUnchecked DeployError
-
-instance GenValid DeployError
-
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenUnchecked PreDeployment
 
-instance GenValid PreDeployment
-
+instance GenValid PreDeployment where
+  genValid = genValidStructurallyWithoutExtraChecking
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering

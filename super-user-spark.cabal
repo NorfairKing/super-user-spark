@@ -1,5 +1,5 @@
 name:                super-user-spark
-version:             0.4.0.1
+version:             0.4.0.2
 license:             MIT
 license-file:        LICENSE
 description:         Configure your dotfile deployment with a DSL.
@@ -119,8 +119,8 @@ test-suite spark-tests
   build-depends:    
         base                  >= 4.9   && < 5
       , super-user-spark
-      , hspec                 >= 2.2   && < 2.5
-      , hspec-core            >= 2.2   && < 2.5
+      , hspec
+      , hspec-core
       , QuickCheck
       , aeson                 
       , aeson-pretty          

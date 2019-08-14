@@ -33,8 +33,6 @@ instanceSpec =
         genValidSpec @DeployAssignment
         eqSpec @DeploySettings
         genValidSpec @DeploySettings
-        eqSpec @DeployError
-        genValidSpec @DeployError
         eqSpec @PreDeployment
         genValidSpec @PreDeployment
 
@@ -43,9 +41,6 @@ deployerSpec =
     parallel $ do
         describe "defaultDeploySettings" $
             it "is valid" $ isValid defaultDeploySettings
-        describe "formatDeployError" $ do
-            it "only ever produces valid strings" $
-                producesValid formatDeployError
 
 cleanSpec :: Spec
 cleanSpec = do

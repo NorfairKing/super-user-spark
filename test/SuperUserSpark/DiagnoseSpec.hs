@@ -47,8 +47,6 @@ instanceSpec = do
 
 diagnoseSpec :: Spec
 diagnoseSpec = do
-    describe "formatDiagnoseError" $
-        it "always produces valid strings" $ producesValid formatDiagnoseError
     sandbox <- runIO $ resolveDir' "test_sandbox"
     let setup = ensureDir sandbox
     let teardown = removeDirRecur sandbox
@@ -87,7 +85,7 @@ diagnoseSpec = do
                                         , unwords
                                               [ "stripped:"
                                               , show $
-                                                (stripDir sandbox $ unAbsP a :: Maybe (Path Rel File))
+                                                (stripProperPrefix sandbox $ unAbsP a :: Maybe (Path Rel File))
                                               ]
                                         , unwords ["expected:", show b]
                                         , unwords ["real:", show r]
