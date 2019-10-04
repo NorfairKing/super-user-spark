@@ -6,10 +6,15 @@ description:         Configure your dotfile deployment with a DSL.
 synopsis:            Configure your dotfile deployment with a DSL.
 author:              Tom Sydney Kerckhove
 maintainer:          syd.kerckhove@gmail.com
+homepage:            https://github.com/NorfairKing/super-user-spark
 category:            System
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/NorfairKing/super-user-spark
 
 library
   hs-source-dirs:   src
