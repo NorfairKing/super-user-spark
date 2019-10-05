@@ -12,6 +12,34 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
+extra-source-files:
+  test_resources/end-to-end/bash.sus
+  test_resources/end-to-end/bash.sus.res
+  test_resources/exact_compile_test_src/alternatives.sus
+  test_resources/exact_compile_test_src/alternatives.sus.res
+  test_resources/exact_compile_test_src/bash.sus
+  test_resources/exact_compile_test_src/bash.sus.res
+  test_resources/exact_compile_test_src/internal_sparkoff.sus
+  test_resources/exact_compile_test_src/internal_sparkoff.sus.res
+  test_resources/exact_compile_test_src/nesting.sus
+  test_resources/exact_compile_test_src/nesting.sus.res
+  test_resources/exact_compile_test_src/sub.sus
+  test_resources/exact_compile_test_src/sub.sus.res
+  test_resources/exact_compile_test_src/sub/subfile.sus
+  test_resources/exact_compile_test_src/sub/subfile.sus.res
+  test_resources/hop_test/hop1dir/hop1.sus
+  test_resources/hop_test/hop1dir/hop2dir/hop2.sus
+  test_resources/hop_test/hop1dir/hop2dir/hop3dir/hop3.sus
+  test_resources/hop_test/root.sus
+  test_resources/shouldCompile/bash.sus
+  test_resources/shouldCompile/complex.sus
+  test_resources/shouldNotParse/empty_file.sus
+  test_resources/shouldNotParse/missing_implementation.sus
+  test_resources/shouldParse/empty_card.sus
+  test_resources/shouldParse/littered_with_comments.sus
+  test_resources/shouldParse/short_syntax.sus
+  test_resources/shouldParse/with_quotes.sus
+
 source-repository head
   type:     git
   location: https://github.com/NorfairKing/super-user-spark
