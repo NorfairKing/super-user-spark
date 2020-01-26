@@ -1,3 +1,9 @@
-resolver: lts-14.1
+resolver: lts-14.20
 packages:
 - '.'
+nix:
+  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/323fe92057bb38475a446ff5e18d3b388c2e4403.tar.gz" ]
+  add-gc-roots: true
+  pure: true
+  packages:
+  - zlib

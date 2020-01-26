@@ -1,6 +1,7 @@
 # binary
 spark
 .stack-work
+stack.yaml.lock
 
 .HTF/
 
