@@ -5,6 +5,7 @@ module SuperUserSpark.OptParse
 
 import Import
 
+import Options.Applicative.Types
 import Options.Applicative
 import System.Environment (getArgs)
 
@@ -20,13 +21,11 @@ runOptionsParser :: [String] -> ParserResult Dispatch
 runOptionsParser strs = execParserPure prefs_ optionsParser strs
   where
     prefs_ =
-        ParserPrefs
+        defaultPrefs
         { prefMultiSuffix = ""
         , prefDisambiguate = True
         , prefShowHelpOnError = True
         , prefShowHelpOnEmpty = True
-        , prefBacktrack = True
-        , prefColumns = 80
         }
 
 optionsParser :: ParserInfo Dispatch

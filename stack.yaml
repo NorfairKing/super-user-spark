@@ -1,8 +1,8 @@
-resolver: lts-14.20
+resolver: lts-15.6
 packages:
 - '.'
 nix:
-  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/323fe92057bb38475a446ff5e18d3b388c2e4403.tar.gz" ]
+  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/d0faafe335698e3561f222bb38cf3d765cb0c31a.tar.gz" ]
   add-gc-roots: true
   pure: true
   packages:

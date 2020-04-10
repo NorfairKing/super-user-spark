@@ -51,7 +51,7 @@ cleanContentSpec = do
         it "doesn't report an emty card name" $ do
             "" `shouldSatisfy` cleanBy cleanCardName
         it "reports card names with newlines" $ do
-            forAll (genValid `suchThat` containsNewlineCharacter) $ \s ->
+            forAll (sequenceA [genValid, pure '\n', genValid]) $ \s ->
                 s `shouldNotSatisfy` cleanBy cleanCardName
     describe "cleanDeclaration" $ do
         describe "Deploy" $ do
@@ -378,8 +378,8 @@ exactTests :: Spec
 exactTests = do
     describe "exact tests" $ do
         dir <- runIO $ resolveDir' "test_resources/exact_compile_test_src"
-        forFileInDirss [dir] $ \fp ->
-            if fileExtension fp == ".res"
+        forFileInDirss [dir] $ \fp -> do
+            if fileExtension fp == Just ".res"
                 then return ()
                 else do
                     it (toFilePath fp) $ do
